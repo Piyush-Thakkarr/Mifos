@@ -1,0 +1,41 @@
+<div class="cp-container">
+  <!-- CLIENT-PORTAL-TITLE-START -->
+  <h2>Loan Transactions</h2>
+  <!-- CLIENT-PORTAL-TITLE-END -->
+
+  <!-- CLIENT-PORTAL-TRANSACTIONS-START -->
+  <div *ngIf="loading">Loading...</div>
+  <div *ngIf="error" style="color: var(--warn, #b00020)">{{ error }}</div>
+
+  <table *ngIf="!loading && transactions?.length" border="1" cellpadding="4" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Amount</th>
+        <th>Principal Portion</th>
+        <th>Interest Portion</th>
+        <th>Outstanding Balance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let t of transactions">
+        <td>{{ formatDate(t?.date) }}</td>
+        <td>{{ t?.transactionType?.value || t?.type?.value || t?.type }}</td>
+        <td>{{ formatAmount(t?.amount) }}</td>
+        <td>{{ formatAmount(t?.principalPortion) }}</td>
+        <td>{{ formatAmount(t?.interestPortion) }}</td>
+        <td>{{ formatAmount(t?.outstandingLoanBalance) }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="!loading && !transactions?.length">No transactions available</div>
+
+  <!-- CLIENT-PORTAL-BACK-START -->
+  <div style="margin-top: 8px">
+    <a [routerLink]="['/client-login', 'client-loan', loanId]">Back to Loan Details</a>
+  </div>
+  <!-- CLIENT-PORTAL-BACK-END -->
+  <!-- CLIENT-PORTAL-TRANSACTIONS-END -->
+</div>

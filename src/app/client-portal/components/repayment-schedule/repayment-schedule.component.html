@@ -1,0 +1,41 @@
+<div class="cp-container">
+  <!-- CLIENT-PORTAL-TITLE-START -->
+  <h2>Repayment Schedule</h2>
+  <!-- CLIENT-PORTAL-TITLE-END -->
+
+  <!-- CLIENT-PORTAL-REPAYMENT-SCHEDULE-START -->
+  <div *ngIf="loading">Loading...</div>
+  <div *ngIf="error" style="color: var(--warn, #b00020)">{{ error }}</div>
+
+  <table *ngIf="!loading && periods?.length" border="1" cellpadding="4" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Period</th>
+        <th>Due Date</th>
+        <th>Principal Due</th>
+        <th>Interest Due</th>
+        <th>Total Due</th>
+        <th>Principal Outstanding</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let p of periods; let i = index">
+        <td>{{ i + 1 }}</td>
+        <td>{{ formatDate(p?.dueDate) }}</td>
+        <td>{{ formatAmount(p?.principalDue) }}</td>
+        <td>{{ formatAmount(p?.interestDue) }}</td>
+        <td>{{ formatAmount(p?.totalDueForPeriod) }}</td>
+        <td>{{ formatAmount(p?.principalOutstanding) }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="!loading && !periods?.length">No repayment schedule available</div>
+
+  <!-- CLIENT-PORTAL-BACK-START -->
+  <div style="margin-top: 8px">
+    <a [routerLink]="['/client-login', 'client-loan', loanId]">Back to Loan Details</a>
+  </div>
+  <!-- CLIENT-PORTAL-BACK-END -->
+  <!-- CLIENT-PORTAL-REPAYMENT-SCHEDULE-END -->
+</div>

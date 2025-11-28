@@ -14,6 +14,11 @@ const routes: Routes = [
     path: 'callback',
     component: CallbackComponent
   },
+  // CLIENT-PORTAL: Lazy route for Client Portal (/client-login)
+  {
+    path: 'client-login',
+    loadChildren: () => import('./client-portal/client-portal.module').then((m) => m.ClientPortalModule)
+  },
   {
     path: '**',
     component: NotFoundComponent

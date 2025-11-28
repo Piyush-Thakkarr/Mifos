@@ -1,0 +1,39 @@
+<div class="cp-container">
+  <!-- CLIENT-PORTAL-TITLE-START -->
+  <h2>Client Login</h2>
+  <!-- CLIENT-PORTAL-TITLE-END -->
+
+  <!-- CLIENT-PORTAL-LOGIN-FORM-START -->
+  <form (submit)="login(); $event.preventDefault()">
+    <div>
+      <label for="cp-username">Username</label>
+      <input
+        id="cp-username"
+        type="text"
+        name="username"
+        autocomplete="username"
+        [value]="username"
+        (input)="username = $any($event.target).value"
+      />
+    </div>
+
+    <div>
+      <label for="cp-password">Password</label>
+      <input
+        id="cp-password"
+        type="password"
+        name="password"
+        autocomplete="current-password"
+        [value]="password"
+        (input)="password = $any($event.target).value"
+      />
+    </div>
+
+    <div>
+      <button type="submit">Login</button>
+    </div>
+
+    <p *ngIf="error" style="color: var(--warn, #b00020)">{{ error }}</p>
+  </form>
+  <!-- CLIENT-PORTAL-LOGIN-FORM-END -->
+</div>

@@ -1,0 +1,37 @@
+<div class="cp-container">
+  <!-- CLIENT-PORTAL-TITLE-START -->
+  <h2>Your Accounts</h2>
+  <!-- CLIENT-PORTAL-TITLE-END -->
+
+  <!-- CLIENT-PORTAL-LOGOUT-START -->
+  <div class="cp-topbar"><a [routerLink]="['/client-login']">Logout</a></div>
+  <!-- CLIENT-PORTAL-LOGOUT-END -->
+
+  <!-- CLIENT-PORTAL-DASHBOARD-START -->
+  <div *ngIf="error" style="color: var(--warn, #b00020)">{{ error }}</div>
+
+  <section *ngIf="client">
+    <h3>{{ client?.firstname }} {{ client?.lastname }}</h3>
+    <div>
+      <div>External ID: {{ client?.externalId }}</div>
+      <div>Office: {{ client?.officeName }}</div>
+      <div *ngIf="client?.mobileNo">Mobile: {{ client?.mobileNo }}</div>
+    </div>
+  </section>
+
+  <section *ngIf="loanAccounts?.length">
+    <h3>Loans</h3>
+    <div *ngFor="let loan of loanAccounts" style="border: 1px solid #ddd; padding: 8px; margin-bottom: 8px">
+      <div>ID: {{ loan?.id }}</div>
+      <div>Account: {{ accountNumber(loan) }}</div>
+      <div>Product: {{ loan?.loanProductName }}</div>
+      <div>Status: {{ loan?.status?.value }}</div>
+      <div>Principal: {{ formatAmount(loan?.principal) }}</div>
+      <div>Outstanding: {{ formatAmount(outstandingAmount(loan)) }}</div>
+      <div>Next due: {{ nextDueDate(loan) }}</div>
+      <div><a [routerLink]="['/client-login', 'client-loan', loan?.id]">View loan</a></div>
+    </div>
+    <!-- TODO: CLIENT-PORTAL: pagination, filters and sorting can be added later -->
+  </section>
+  <!-- CLIENT-PORTAL-DASHBOARD-END -->
+</div>

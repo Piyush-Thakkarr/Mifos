@@ -1,0 +1,41 @@
+<div class="cp-container">
+  <!-- CLIENT-PORTAL-TITLE-START -->
+  <h2>Loan Details</h2>
+  <!-- CLIENT-PORTAL-TITLE-END -->
+
+  <!-- CLIENT-PORTAL-LOAN-DETAILS-START -->
+  <div *ngIf="loading">Loading...</div>
+  <div *ngIf="error" style="color: var(--warn, #b00020)">{{ error }}</div>
+
+  <section *ngIf="loan">
+    <h3>{{ loan?.loanProductName }}</h3>
+    <div>Status: {{ loan?.status?.value }}</div>
+    <div>Principal: {{ formatAmount(loan?.principal) }}</div>
+    <div>Outstanding: {{ formatAmount(loan?.summary?.totalOutstanding) }}</div>
+    <div>Interest Charged: {{ formatAmount(loan?.summary?.totalInterestCharged) }}</div>
+    <div>Disbursement Date: {{ formatDate(loan?.timeline?.actualDisbursementDate) }}</div>
+    <div>Maturity Date: {{ formatDate(loan?.timeline?.expectedMaturityDate) }}</div>
+
+    <!-- CLIENT-PORTAL: View Repayment Schedule link -->
+    <div style="margin-top: 8px">
+      <a [routerLink]="['/client-login', 'client-loan', loan?.id, 'repayments']">View Repayment Schedule</a>
+    </div>
+
+    <!-- CLIENT-PORTAL: View Transactions link -->
+    <div style="margin-top: 8px">
+      <a [routerLink]="['/client-login', 'client-loan', loan?.id, 'transactions']">View Transactions</a>
+    </div>
+
+    <h3>Overview</h3>
+    <div>Loan ID: {{ loan?.id }}</div>
+    <div>Account No: {{ loan?.accountNo }}</div>
+    <div *ngIf="loan?.clientName">Client: {{ loan?.clientName }}</div>
+    <!-- CLIENT-PORTAL-BACK-START -->
+    <div style="margin-top: 8px">
+      <a [routerLink]="['/client-login', 'client-dashboard', loan?.clientId]">Back to Dashboard</a>
+    </div>
+    <!-- CLIENT-PORTAL-BACK-END -->
+    <!-- TODO: CLIENT-PORTAL: add repayment schedule and transactions sections in future steps -->
+  </section>
+  <!-- CLIENT-PORTAL-LOAN-DETAILS-END -->
+</div>
