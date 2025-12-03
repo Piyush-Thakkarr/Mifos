@@ -1,0 +1,9 @@
+# BACKEND-PLACEHOLDER-START
+"""
+WSGI entrypoint placeholder for client_portal_backend.
+No Django imports to avoid runtime requirements.
+"""
+
+# Placeholder WSGI application reference
+application = None
+# BACKEND-PLACEHOLDER-END

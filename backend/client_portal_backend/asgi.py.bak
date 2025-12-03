@@ -1,0 +1,9 @@
+# BACKEND-PLACEHOLDER-START
+"""
+ASGI entrypoint placeholder for client_portal_backend.
+No Django imports to avoid runtime requirements.
+"""
+
+# Placeholder ASGI application reference
+application = None
+# BACKEND-PLACEHOLDER-END
