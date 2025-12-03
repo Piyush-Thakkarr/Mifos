@@ -1,19 +1,19 @@
-# BACKEND-PLACEHOLDER-START
 """
-Minimal URL config placeholder for client_portal_backend.
-No routes are exposed yet.
+URL Configuration for client_portal_backend.
 """
 
 from typing import List
 from django.urls import include, path
 
-# Placeholder urlpatterns (empty)
 urlpatterns: List = []
 
-# BACKEND-PLACEHOLDER-START
+
 urlpatterns += [
     path("auth/", include("client_portal_backend.auth_app.urls")),
-    path("client-data/", include("client_portal_backend.auth_app.client_data.urls")),
+    # Map top-level endpoints to client_data urls
+    path("", include("client_portal_backend.auth_app.client_data.urls")),
+    path("", include("client_portal_backend.auth_app.savings.urls")),
+    path("", include("client_portal_backend.auth_app.dashboard.urls")),
 ]
-# BACKEND-PLACEHOLDER-END
-# BACKEND-PLACEHOLDER-END
+
+

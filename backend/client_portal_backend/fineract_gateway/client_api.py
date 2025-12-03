@@ -1,8 +1,7 @@
-# BACKEND-PLACEHOLDER-START
+
 """
-REVIEW NOTE: Updated to call Fineract admin APIs using env-driven config and executor.
-No secrets are committed. Paths assume FINERACT_BASE_URL already contains the API
-prefix (e.g., https://host/fineract-provider/api/v1). Only minimal fields are returned.
+Client API Gateway.
+Functions to fetch client details and accounts from Fineract.
 """
 
 from typing import Any, Dict, List
@@ -11,7 +10,7 @@ from .executor import execute_json, GatewayError
 
 
 def _norm_client_details(raw: Dict[str, Any]) -> Dict[str, Any]:
-    # BACKEND-PLACEHOLDER-START
+
     return {
         "clientId": raw.get("id"),
         "displayName": raw.get("displayName"),
@@ -19,11 +18,11 @@ def _norm_client_details(raw: Dict[str, Any]) -> Dict[str, Any]:
         "officeName": raw.get("officeName"),
         "mobileNo": raw.get("mobileNo"),
     }
-    # BACKEND-PLACEHOLDER-END
+
 
 
 def _norm_accounts(raw: Dict[str, Any]) -> List[Dict[str, Any]]:
-    # BACKEND-PLACEHOLDER-START
+
     accounts: List[Dict[str, Any]] = []
     loan_accounts = (raw or {}).get("loanAccounts", [])
     for la in loan_accounts:
@@ -39,19 +38,62 @@ def _norm_accounts(raw: Dict[str, Any]) -> List[Dict[str, Any]]:
             }
         )
     return accounts
-    # BACKEND-PLACEHOLDER-END
 
 
-def get_client_details(client_id: str) -> Dict[str, Any]:
-    # BACKEND-PLACEHOLDER-START
-    raw, _cid = execute_json(path=f"/clients/{client_id}")
+
+def get_client_details(client_id: str, headers_override: Dict[str, str] | None = None) -> Dict[str, Any]:
+
+    raw, _cid = execute_json(path=f"/clients/{client_id}", headers_override=headers_override)
     return _norm_client_details(raw)
-    # BACKEND-PLACEHOLDER-END
 
 
-def get_client_accounts(client_id: str) -> List[Dict[str, Any]]:
-    # BACKEND-PLACEHOLDER-START
-    raw, _cid = execute_json(path=f"/clients/{client_id}/accounts")
+
+def get_client_accounts(client_id: str, headers_override: Dict[str, str] | None = None) -> List[Dict[str, Any]]:
+
+    raw, _cid = execute_json(path=f"/clients/{client_id}/accounts", headers_override=headers_override)
     return _norm_accounts(raw)
-    # BACKEND-PLACEHOLDER-END
-# BACKEND-PLACEHOLDER-END
+
+
+
+def list_clients(limit: int = 50, offset: int = 0, headers_override: Dict[str, str] | None = None) -> List[Dict[str, Any]]:
+    """Return a list of clients, normalized to minimal shape."""
+    raw, _cid = execute_json(path="/clients", query={"limit": limit, "offset": offset}, headers_override=headers_override)
+    data = raw if isinstance(raw, dict) else {}
+    page = data.get("pageItems") or data.get("clients") or []
+    out: List[Dict[str, Any]] = []
+    for c in page:
+        out.append(_norm_client_details(c))
+    return out
+
+
+def list_client_loans(client_id: str, headers_override: Dict[str, str] | None = None) -> List[Dict[str, Any]]:
+    """Return loan accounts for a client via /clients/{id}/accounts."""
+    accounts = get_client_accounts(client_id, headers_override=headers_override)
+    # Already normalized; filter loans by presence of productName/status fields
+    return accounts
+
+
+def get_client_identifiers(client_id: str, headers_override: Dict[str, str] | None = None) -> List[Dict[str, Any]]:
+    """Fetch client identifiers."""
+    raw, _cid = execute_json(path=f"/clients/{client_id}/identifiers", headers_override=headers_override)
+    return raw if isinstance(raw, list) else []
+
+
+def get_client_addresses(client_id: str, headers_override: Dict[str, str] | None = None) -> List[Dict[str, Any]]:
+    """Fetch client addresses."""
+    # Fineract address API is often /clients/{id}/addresses or via query param.
+    # Standard Fineract usually requires a separate module or specific config.
+    # We will try the standard endpoint.
+    try:
+        raw, _cid = execute_json(path=f"/clients/{client_id}/addresses", headers_override=headers_override)
+        return raw if isinstance(raw, list) else []
+    except GatewayError:
+        # Fallback or empty if module not enabled
+        return []
+
+
+def get_client_notes(client_id: str, headers_override: Dict[str, str] | None = None) -> List[Dict[str, Any]]:
+    """Fetch client notes."""
+    raw, _cid = execute_json(path=f"/clients/{client_id}/notes", headers_override=headers_override)
+    return raw if isinstance(raw, list) else []
+

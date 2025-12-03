@@ -1,58 +1,80 @@
-# BACKEND-PLACEHOLDER-START
+
 """
-Placeholder token validator for Client Portal.
-No real validation performed.
+Auth validator that treats cp_session as a passthrough Basic credential.
+Cookie value may be either:
+- "Basic <base64(username:password)>" or
+- "<base64(username:password)>"
+This module never stores secrets; it only reconstructs Authorization header per request.
 """
 
 import logging
-from .token_generator import SESSION_PLACEHOLDER
+import base64
 
 logger = logging.getLogger("client_portal.auth")
 
 
 def validate_session_token(token: str | None):
-    # BACKEND-PLACEHOLDER-START
+
     # Consider a token "valid" only if a placeholder value is present
     return {"valid": bool(token), "placeholder": True, "token": token}
-    # BACKEND-PLACEHOLDER-END
+
 
 
 def validate_refresh_token(token: str | None):
-    # BACKEND-PLACEHOLDER-START
+
     return {"valid": True, "placeholder": True, "token": token}
-    # BACKEND-PLACEHOLDER-END
+
 
 
 def validate_request_session(request):
-    # BACKEND-PLACEHOLDER-START
-    """
-    Placeholder request-aware validator.
-    - Reads cp_session cookie
-    - If matches the placeholder token, attach a placeholder client id to the request
-    - Returns a small result dict including validity and client id
-    """
     # Resilient, case-insensitive cookie lookup
-    token = None
+    raw = None
     try:
         cookies = getattr(request, "COOKIES", {}) or {}
         if isinstance(cookies, dict):
             for k, v in cookies.items():
                 if isinstance(k, str) and k.lower() == "cp_session":
-                    token = v
+                    raw = v
                     break
     except Exception:
-        token = None
+        raw = None
 
-    if token == SESSION_PLACEHOLDER:
-        # Attach placeholder client id for downstream usage
-        setattr(request, "_portal_client_id", "CL-0001")
-        logger.debug("Auth success via cp_session placeholder; client_id=CL-0001")
-        return {"valid": True, "placeholder": True, "clientId": "CL-0001"}
-
-    if token is None:
+    if not raw:
         logger.debug("Auth failed: cp_session cookie missing")
-    else:
-        logger.debug("Auth failed: cp_session provided but invalid for placeholder")
-    return {"valid": False, "placeholder": True}
-    # BACKEND-PLACEHOLDER-END
-# BACKEND-PLACEHOLDER-END
+        return {"valid": False}
+
+    try:
+        parts = str(raw).strip().split()
+        if len(parts) == 2 and parts[0].lower() == "basic":
+            b64 = parts[1]
+        else:
+            b64 = parts[0]
+        decoded = base64.b64decode(b64).decode("utf-8", errors="ignore")
+        if ":" not in decoded:
+            raise ValueError("invalid basic payload")
+        username, _password = decoded.split(":", 1)
+        auth_header = f"Basic {b64}"
+        # Attach for downstream use in gateway calls
+        setattr(request, "_basic_auth_header", auth_header)
+        setattr(request, "_auth_username", username)
+        logger.debug("Auth success via cp_session passthrough; user=%s", username)
+        return {"valid": True, "username": username}
+    except Exception:
+        logger.debug("Auth failed: cp_session present but invalid")
+        return {"valid": False}
+
+
+def get_auth_headers_from_request(request):
+    """Return headers dict with Authorization from request, if present."""
+    try:
+        hdr = getattr(request, "_basic_auth_header", None)
+        if hdr:
+            return {"Authorization": hdr}
+        # Fallback: try to reconstruct from cookie on demand
+        res = validate_request_session(request)
+        if res.get("valid") and getattr(request, "_basic_auth_header", None):
+            return {"Authorization": getattr(request, "_basic_auth_header")}
+    except Exception:
+        pass
+    return {}
+

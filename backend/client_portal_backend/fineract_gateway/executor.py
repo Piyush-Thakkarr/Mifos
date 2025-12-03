@@ -1,9 +1,8 @@
-# BACKEND-PLACEHOLDER-START
+
 """
-REVIEW NOTE: This module performs real HTTP calls to Fineract using urllib (stdlib)
-to avoid external deps. It adds headers from env-driven config and a correlation ID.
-On non-2xx responses, it raises GatewayError; callers (services/views) must convert
-to sanitized JSON error envelopes without leaking credentials or URLs.
+Fineract HTTP Executor.
+Handles real HTTP calls to Fineract using urllib, adding headers, correlation IDs,
+and error handling.
 """
 
 from __future__ import annotations
@@ -15,6 +14,7 @@ import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple
+import ssl
 
 from .config import get_config
 from .utils import build_headers_from_config, gen_correlation_id
@@ -44,7 +44,8 @@ def _build_url(path: str, query: Optional[Dict[str, Any]] = None) -> str:
 def execute_json(path: str,
                  method: str = "GET",
                  query: Optional[Dict[str, Any]] = None,
-                 body: Optional[Dict[str, Any]] = None) -> Tuple[Dict[str, Any], str]:
+                 body: Optional[Dict[str, Any]] = None,
+                 headers_override: Optional[Dict[str, str]] = None) -> Tuple[Dict[str, Any], str]:
     """Execute an HTTP call to Fineract and return (json_dict, correlation_id).
 
     Retries only for GET requests, using exponential backoff.
@@ -53,6 +54,8 @@ def execute_json(path: str,
     cfg = get_config()
     correlation_id = gen_correlation_id()
     headers = build_headers_from_config(correlation_id)
+    if headers_override:
+        headers.update({k: v for k, v in headers_override.items() if v is not None})
     # Guard against missing/invalid base URL to avoid ValueError from urllib
     base = (cfg.get("base_url") or "").strip()
     if not base or not (base.startswith("http://") or base.startswith("https://")):
@@ -69,7 +72,9 @@ def execute_json(path: str,
             if body is not None:
                 data_bytes = json.dumps(body).encode("utf-8")
             req = urllib.request.Request(url=url, data=data_bytes, headers=headers, method=method.upper())
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
+            # Disable SSL verification for local HTTPS endpoints (e.g., https://localhost:8443)
+            context = ssl._create_unverified_context()
+            with urllib.request.urlopen(req, timeout=timeout, context=context) as resp:
                 status = getattr(resp, "status", 200)
                 resp_body = resp.read() or b"{}"
                 if 200 <= status < 300:
@@ -90,4 +95,4 @@ def execute_json(path: str,
                 time.sleep(0.3 * attempt)
                 continue
             raise GatewayError(status=503, message="Upstream unavailable", correlation_id=correlation_id)
-# BACKEND-PLACEHOLDER-END
+

@@ -3,46 +3,44 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# BACKEND-PLACEHOLDER-START
+
 """
-Minimal Django settings placeholder for client_portal_backend.
-No real configuration, databases, middleware, or apps are defined.
+Django settings for client_portal_backend.
+Configured for local development with Fineract integration.
 """
 
-# Core metadata (placeholders only)
+# Core metadata
 SECRET_KEY = "PLACEHOLDER_SECRET_KEY"
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
-# Project references (placeholders)
+# Project references
 ROOT_URLCONF = "client_portal_backend.urls"
 WSGI_APPLICATION = "client_portal_backend.wsgi.application"
 ASGI_APPLICATION = "client_portal_backend.asgi.application"
 
 # Apps and middleware (minimal runnable set)
 INSTALLED_APPS = [
-    # BACKEND-PLACEHOLDER-START
+
     "django.contrib.auth",
     "django.contrib.contenttypes",
     'django.contrib.sessions',
     "django.contrib.staticfiles",
-    # BACKEND-PLACEHOLDER-START
+
     "client_portal_backend.auth_app",
-    # BACKEND-PLACEHOLDER-END
+
 ]
 MIDDLEWARE = [
-    # BACKEND-PLACEHOLDER-START
+
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    # BACKEND-PLACEHOLDER-END
+
 ]
 
-# BACKEND-PLACEHOLDER-START
-# (placeholder) 'client_portal_backend.auth_app.middleware.session_guard.ClientPortalSessionMiddleware'
-# BACKEND-PLACEHOLDER-END
 
-# Templates (minimal placeholder)
+
+# Templates
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -60,18 +58,18 @@ DATABASES = {
     }
 }
 
-# Internationalization (placeholder values)
+# Internationalization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# Static files (placeholder)
+# Static files
 STATIC_URL = "/static/"
-# BACKEND-PLACEHOLDER-END
 
-# BACKEND-PLACEHOLDER-START
-# Minimal logging to surface placeholder auth debug logs in development
+
+
+# Minimal logging to surface auth debug logs in development
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -88,4 +86,4 @@ LOGGING = {
         }
     },
 }
-# BACKEND-PLACEHOLDER-END
+

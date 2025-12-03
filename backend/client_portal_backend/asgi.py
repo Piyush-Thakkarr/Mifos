@@ -1,9 +1,5 @@
-# BACKEND-PLACEHOLDER-START
 """
 ASGI entrypoint for client_portal_backend.
-Wrapped in reviewer markers. This file attempts to load Django's ASGI app;
-if that fails it exposes a minimal fallback ASGI app that returns 500 with a traceback.
-REVIEW NOTE: This is deliberately minimal and safe for local dev.
 """
 
 import os
@@ -31,4 +27,4 @@ except Exception:
             }
         )
         await send({"type": "http.response.body", "body": body})
-# BACKEND-PLACEHOLDER-END
+

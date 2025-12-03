@@ -1,9 +1,5 @@
-# BACKEND-PLACEHOLDER-START
 """
 WSGI entrypoint for client_portal_backend.
-Wrapped in reviewer markers. This file attempts to load Django's WSGI app;
-if that fails it exposes a minimal fallback WSGI app that returns 500 with a traceback.
-REVIEW NOTE: This is deliberately minimal and safe for local dev.
 """
 
 import os
@@ -24,4 +20,4 @@ except Exception:
         start_response("500 Internal Server Error", [("Content-Type", "text/plain; charset=utf-8")])
         body = ("WSGI application failed to initialize.\n\n" + tb).encode("utf-8")
         return [body]
-# BACKEND-PLACEHOLDER-END
+

@@ -29,13 +29,13 @@ class PlaceholderAuthFlowTests(TestCase):
         self.assertEqual(body.get("error", {}).get("code"), "unauthenticated")
 
     def test_login_sets_cookie_and_allows_client_data_access(self):
-        # Form-encoded login using placeholder creds
-        login_resp = self.client.post(
-            "/auth/login",
-            {"username": "client", "password": "password"},
-        )
+        # Mock Fineract authentication success
+        with patch("client_portal_backend.auth_app.views.execute_json", return_value=({}, "CIDAUTH")):
+            login_resp = self.client.post(
+                "/auth/login",
+                {"username": "mifos", "password": "password"},
+            )
         self.assertEqual(login_resp.status_code, 200)
-        # Ensure placeholder cookie was set (cp_session)
         self.assertIn("cp_session", login_resp.cookies)
 
         def fake_execute_json(path, method="GET", query=None, body=None):
@@ -74,17 +74,22 @@ class PlaceholderAuthFlowTests(TestCase):
             self.assertEqual(txns.status_code, 200)
             self.assertIn("transactions", txns.json())
 
-        # /auth/me should return 200 with client id when cp_session is present
+        # /auth/me should return 200 when cp_session is present
         me = self.client.get("/auth/me")
         self.assertEqual(me.status_code, 200)
-        self.assertIn("client_id", me.json())
+        self.assertIn("status", me.json())
 
     def test_login_wrong_credentials_fails(self):
-        bad = self.client.post(
-            "/auth/login",
-            {"username": "mifos", "password": "mifos"},
-        )
-        self.assertEqual(bad.status_code, 400)
+        # Mock authentication failure from gateway
+        def auth_fail(*args, **kwargs):
+            raise GatewayError(status=401, message="", correlation_id="CID401")
+
+        with patch("client_portal_backend.auth_app.views.execute_json", side_effect=auth_fail):
+            bad = self.client.post(
+                "/auth/login",
+                {"username": "mifos", "password": "wrong"},
+            )
+        self.assertEqual(bad.status_code, 401)
 
     def test_gateway_unauthorized_maps_401(self):
         # Login first
