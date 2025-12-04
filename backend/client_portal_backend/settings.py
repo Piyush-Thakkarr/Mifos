@@ -1,5 +1,6 @@
 
 from pathlib import Path
+import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -9,9 +10,9 @@ Django settings for client_portal_backend.
 Configured for local development with Fineract integration.
 """
 
-# Core metadata
-SECRET_KEY = "PLACEHOLDER_SECRET_KEY"
-DEBUG = True
+# Core metadata (placeholders only)
+SECRET_KEY = os.environ.get("SECRET_KEY", "PLACEHOLDER_SECRET_KEY")
+DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 ALLOWED_HOSTS = ["*"]
 
 # Project references
@@ -21,7 +22,7 @@ ASGI_APPLICATION = "client_portal_backend.asgi.application"
 
 # Apps and middleware (minimal runnable set)
 INSTALLED_APPS = [
-
+    "corsheaders",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     'django.contrib.sessions',
@@ -31,7 +32,7 @@ INSTALLED_APPS = [
 
 ]
 MIDDLEWARE = [
-
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -87,3 +88,27 @@ LOGGING = {
     },
 }
 
+# CORS configuration (configurable for Render / prod)
+_cors_env = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:4200")
+CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_env.split(",") if o.strip()]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'fineract-platform-tenantid',
+]
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
