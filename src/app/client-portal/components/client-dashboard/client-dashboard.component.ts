@@ -22,63 +22,89 @@ export class ClientDashboardComponent implements OnInit {
   loanAccounts: any[] = [];
   error: string | null = null;
 
+  savingsAccounts: any[] = [];
+
   constructor(
     private route: ActivatedRoute,
     private clientApi: ClientApiService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
-    const idParam = this.route.snapshot.paramMap.get('clientId');
+    // Get clientId from parent route params (portal/:clientId/dashboard)
+    const idParam = this.route.parent?.snapshot.paramMap.get('clientId') ||
+      this.route.snapshot.paramMap.get('clientId');
     const clientId = idParam ?? '';
     if (!clientId) {
       this.error = 'Unable to load client data';
+      console.error('Dashboard: No clientId found in route params');
       return;
     }
 
+    console.log('Dashboard: Fetching data for client', clientId);
     forkJoin({
       client: this.clientApi.getClient(clientId),
-      accounts: this.clientApi.getClientAccounts(clientId)
+      loans: this.clientApi.getClientAccounts(clientId),
+      savings: this.clientApi.getClientSavings(clientId)
     }).subscribe({
-      next: ({ client, accounts }) => {
-        this.client = client;
-        this.accounts = accounts;
-        this.loanAccounts = accounts?.loanAccounts ?? accounts?.loans ?? [];
+      next: ({ client, loans, savings }) => {
+        console.log('Dashboard: Data received', { client, loans, savings });
+        // Extract client details from nested structure
+        this.client = client?.details || client;
+        // Django /loans endpoint returns { loans: [...] }
+        this.loanAccounts = Array.isArray(loans?.loans) ? loans.loans :
+          Array.isArray(loans) ? loans : [];
+        // Django /savings endpoint returns { savings: [...] }
+        this.savingsAccounts = Array.isArray(savings?.savings) ? savings.savings :
+          Array.isArray(savings) ? savings : [];
+        console.log('Dashboard: Processed data', {
+          client: this.client,
+          loans: this.loanAccounts,
+          savings: this.savingsAccounts
+        });
       },
-      error: () => {
+      error: (err) => {
+        console.error('Dashboard error:', err);
         this.error = 'Unable to load client data';
       }
     });
   }
 
-  formatAmount(value: any): string {
-    const num = Number(value);
-    return Number.isFinite(num) ? num.toFixed(2) : '';
+  accountNumber(account: any): string {
+    return account?.accountNo || 'N/A';
   }
 
-  formatDate(value: any): string {
-    if (!value) return 'No due date';
-    if (Array.isArray(value)) {
-      const [
-        y,
-        m,
-        d
-      ] = value;
-      return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    }
-    const date = new Date(value);
-    return isNaN(date.getTime()) ? String(value) : date.toISOString().slice(0, 10);
+  formatAmount(amount: any): string {
+    if (amount === null || amount === undefined) return '0.00';
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
+  }
+
+  outstandingAmount(loan: any): number {
+    return loan?.principalOutstanding || 0;
   }
 
   nextDueDate(loan: any): string {
-    const date = loan?.timeline?.nextRepaymentDate ?? loan?.nextDueDate;
-    return this.formatDate(date);
+    if (!loan?.nextDueDate) return '';
+    // Format date nicely
+    const date = new Date(loan.nextDueDate);
+    return isNaN(date.getTime()) ? loan.nextDueDate : date.toLocaleDateString();
   }
 
-  accountNumber(loan: any): string {
-    return loan?.accountNo ?? loan?.clientAccountNo ?? '';
+  // Helper for summary cards
+  getTotalOutstanding(): number {
+    return this.loanAccounts.reduce((sum, loan) => sum + (loan.principalOutstanding || 0), 0);
   }
 
-  outstandingAmount(loan: any): any {
-    return loan?.summary && loan.summary.totalOutstanding != null ? loan.summary.totalOutstanding : loan?.outstanding;
+  // Show principal if outstanding is 0 (e.g. for pending loans)
+  getDisplayAmount(loan: any): number {
+    return loan?.principalOutstanding > 0 ? loan.principalOutstanding : (loan?.principal || 0);
+  }
+
+  getTotalSavings(): number {
+    return this.savingsAccounts.reduce((sum, acc) => sum + (acc.accountBalance || 0), 0);
+  }
+
+  getNextEmiAmount(): number {
+    // Placeholder as we don't have next repayment amount in the list view
+    return 0;
   }
 }

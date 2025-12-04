@@ -59,3 +59,10 @@ cypress/
 
 src/assets/env.js
 src/environments/.env.ts
+
+# Backend
+backend/db.sqlite3
+backend/__pycache__/
+backend/venv/
+backend/.env
+*.pyc

@@ -1,0 +1,65 @@
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon">
+                <i class="fa fa-home"></i>
+            </div>
+            <div class="logo-text">
+                <span class="brand">MFI Client Portal</span>
+                <span class="subtitle">Microfinance Services</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a [routerLink]="['/client-login', 'portal', clientId, 'dashboard']" routerLinkActive="active"
+                class="nav-item">
+                <i class="fa fa-dashboard"></i> Dashboard
+            </a>
+            <a [routerLink]="['/client-login', 'portal', clientId, 'loans']" routerLinkActive="active" class="nav-item">
+                <i class="fa fa-file-text-o"></i> Loans
+            </a>
+            <a [routerLink]="['/client-login', 'portal', clientId, 'transactions']" routerLinkActive="active"
+                class="nav-item">
+                <i class="fa fa-credit-card"></i> Transactions
+            </a>
+            <a [routerLink]="['/client-login', 'portal', clientId, 'notifications']" routerLinkActive="active"
+                class="nav-item">
+                <i class="fa fa-bell-o"></i> Notifications
+            </a>
+            <div class="nav-divider"></div>
+            <a [routerLink]="['/client-login', 'portal', clientId, 'support']" routerLinkActive="active"
+                class="nav-item">
+                <i class="fa fa-comments-o"></i> Support
+            </a>
+            <a href="javascript:void(0)" class="nav-item">
+                <i class="fa fa-cog"></i> Settings
+            </a>
+            <a [routerLink]="['/client-login']" class="nav-item logout">
+                <i class="fa fa-sign-out"></i> Logout
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Bar -->
+        <header class="top-bar">
+            <div class="search-bar">
+                <!-- Placeholder for search -->
+            </div>
+            <div class="user-actions">
+                <button class="icon-btn"><i class="fa fa-bell-o"></i><span class="badge"></span></button>
+                <div class="user-profile">
+                    <div class="avatar">{{ client?.displayName?.charAt(0) || 'U' }}</div>
+                    <span class="username">{{ client?.displayName || 'User' }}</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Child Route Content -->
+        <div class="content-wrapper">
+            <router-outlet></router-outlet>
+        </div>
+    </main>
+</div>

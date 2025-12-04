@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'mifosx-client-login',
@@ -10,25 +11,39 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule]
 })
 export class ClientLoginComponent {
-  // CLIENT-PORTAL: Minimal, isolated client login state
+  // CLIENT-PORTAL: Client login state
   username = '';
   password = '';
   error: string | null = null;
+  loading = false;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private http: HttpClient
+  ) { }
 
-  // CLIENT-PORTAL: Minimal, isolated login handler (no shared services/state)
+  // CLIENT-PORTAL: Login handler that calls Django backend
   login(): void {
-    if (this.username === 'client' && this.password === 'password') {
-      this.error = null;
-      // Navigate within Client Portal lazy module
-      this.router.navigate([
-        '/client-login',
-        'client-dashboard',
-        1
-      ]);
-    } else {
-      this.error = 'Wrong credentials';
-    }
+    this.loading = true;
+    this.error = null;
+
+    const formData = {
+      username: this.username,
+      password: this.password
+    };
+
+    this.http.post<any>('http://localhost:8000/auth/login', formData, { withCredentials: true })
+      .subscribe({
+        next: (response) => {
+          this.loading = false;
+          const clientId = response.clientId || 1;
+          // Navigate to new portal route structure
+          this.router.navigate(['/client-login', 'portal', clientId, 'dashboard']);
+        },
+        error: (err) => {
+          this.loading = false;
+          this.error = err.error?.error?.message || 'Login failed. Please try again.';
+        }
+      });
   }
 }

@@ -16,9 +16,8 @@ export const environment = {
     loadedEnv['fineractApiUrls'] ||
     'https://sandbox.mifos.community,https://demo.mifos.community,https://localhost:8443,' + window.location.origin,
   // For connecting to server running elsewhere set the base API URL
-  baseApiUrl:
-    loadedEnv['fineractApiUrl'] ||
-    (loadedEnv['fineractApiUrls']?.length > 0 ? loadedEnv['fineractApiUrls'].split(',')[0] : window.location.origin),
+  // For connecting to server running elsewhere set the base API URL
+  baseApiUrl: 'https://client-portal-backend.onrender.com',
   oauthServerUrl: loadedEnv['oauthServerUrl'] || loadedEnv['fineractApiUrl'] + loadedEnv['apiProvider'],
   allowServerSwitch: loadedEnv.allowServerSwitch || 'true',
   apiProvider: loadedEnv['apiProvider'] || '/fineract-provider/api',

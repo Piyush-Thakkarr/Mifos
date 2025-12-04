@@ -1,39 +1,46 @@
-<div class="cp-container">
-  <!-- CLIENT-PORTAL-TITLE-START -->
-  <h2>Client Login</h2>
-  <!-- CLIENT-PORTAL-TITLE-END -->
-
-  <!-- CLIENT-PORTAL-LOGIN-FORM-START -->
-  <form (submit)="login(); $event.preventDefault()">
-    <div>
-      <label for="cp-username">Username</label>
-      <input
-        id="cp-username"
-        type="text"
-        name="username"
-        autocomplete="username"
-        [value]="username"
-        (input)="username = $any($event.target).value"
-      />
+<div class="login-container">
+  <div class="login-card">
+    <div class="brand-section">
+      <div class="logo-icon">
+        <i class="fa fa-home"></i>
+      </div>
+      <h1>MFI Client Portal</h1>
+      <p class="subtitle">Secure Access to Your Finances</p>
     </div>
 
-    <div>
-      <label for="cp-password">Password</label>
-      <input
-        id="cp-password"
-        type="password"
-        name="password"
-        autocomplete="current-password"
-        [value]="password"
-        (input)="password = $any($event.target).value"
-      />
-    </div>
+    <form (submit)="login(); $event.preventDefault()" class="login-form">
+      <div class="form-group">
+        <label for="cp-username">Username</label>
+        <div class="input-wrapper">
+          <i class="fa fa-user input-icon"></i>
+          <input id="cp-username" type="text" name="username" placeholder="Enter your username" autocomplete="username"
+            [value]="username" (input)="username = $any($event.target).value" />
+        </div>
+      </div>
 
-    <div>
-      <button type="submit">Login</button>
-    </div>
+      <div class="form-group">
+        <label for="cp-password">Password</label>
+        <div class="input-wrapper">
+          <i class="fa fa-lock input-icon"></i>
+          <input id="cp-password" type="password" name="password" placeholder="Enter your password"
+            autocomplete="current-password" [value]="password" (input)="password = $any($event.target).value" />
+        </div>
+      </div>
 
-    <p *ngIf="error" style="color: var(--warn, #b00020)">{{ error }}</p>
-  </form>
-  <!-- CLIENT-PORTAL-LOGIN-FORM-END -->
+      <div class="form-actions">
+        <button type="submit" class="btn-login" [disabled]="loading">
+          <span *ngIf="!loading">Login</span>
+          <span *ngIf="loading"><i class="fa fa-spinner fa-spin"></i> Signing in...</span>
+        </button>
+      </div>
+
+      <div *ngIf="error" class="error-message">
+        <i class="fa fa-exclamation-circle"></i> {{ error }}
+      </div>
+    </form>
+
+    <div class="login-footer">
+      <p>Need help? <a href="#">Contact Support</a></p>
+    </div>
+  </div>
 </div>

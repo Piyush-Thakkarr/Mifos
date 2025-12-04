@@ -1,37 +1,164 @@
-<div class="cp-container">
-  <!-- CLIENT-PORTAL-TITLE-START -->
-  <h2>Your Accounts</h2>
-  <!-- CLIENT-PORTAL-TITLE-END -->
+<div class="dashboard-layout">
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="content-wrapper">
+      <!-- Profile Card -->
+      <div class="profile-card">
+        <div class="profile-info">
+          <div class="big-avatar">
+            <i class="fa fa-user"></i>
+          </div>
+          <div class="details">
+            <h2>{{ client?.displayName || 'Client' }}</h2>
+            <div class="meta">Client ID: {{ client?.externalId || client?.clientId }}</div>
+            <div class="meta">Last Login: {{ 'Today' }}</div>
+            <span class="status-pill active">Active</span>
+          </div>
+        </div>
 
-  <!-- CLIENT-PORTAL-LOGOUT-START -->
-  <div class="cp-topbar"><a [routerLink]="['/client-login']">Logout</a></div>
-  <!-- CLIENT-PORTAL-LOGOUT-END -->
+      </div>
 
-  <!-- CLIENT-PORTAL-DASHBOARD-START -->
-  <div *ngIf="error" style="color: var(--warn, #b00020)">{{ error }}</div>
+      <!-- Banner -->
+      <div class="promo-banner">
+        <div class="banner-content">
+          <h3>Need Additional Funds?</h3>
+          <p>Apply for a new loan today! Quick approval process with competitive interest rates.</p>
+        </div>
+        <a [routerLink]="['../loans']" class="btn btn-light"><i class="fa fa-plus"></i> Apply for New Loan</a>
+      </div>
 
-  <section *ngIf="client">
-    <h3>{{ client?.firstname }} {{ client?.lastname }}</h3>
-    <div>
-      <div>External ID: {{ client?.externalId }}</div>
-      <div>Office: {{ client?.officeName }}</div>
-      <div *ngIf="client?.mobileNo">Mobile: {{ client?.mobileNo }}</div>
+      <!-- Summary Widgets -->
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="icon-box blue"><i class="fa fa-wallet"></i></div>
+          <div class="summary-details">
+            <span class="label">Outstanding Balance</span>
+            <span class="value">{{ formatAmount(getTotalOutstanding()) }}</span>
+            <span class="sub-text">Across all active loans</span>
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="icon-box orange"><i class="fa fa-calendar"></i></div>
+          <div class="summary-details">
+            <span class="label">Next EMI</span>
+            <span class="value">{{ formatAmount(getNextEmiAmount()) }}</span>
+            <span class="sub-text">Due: {{ 'Upcoming' }}</span>
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="icon-box green"><i class="fa fa-file-text"></i></div>
+          <div class="summary-details">
+            <span class="label">Total Loans</span>
+            <span class="value">{{ loanAccounts.length }}</span>
+            <span class="sub-text">Active & Pending</span>
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="icon-box teal"><i class="fa fa-piggy-bank"></i></div>
+          <div class="summary-details">
+            <span class="label">Savings Balance</span>
+            <span class="value">{{ formatAmount(getTotalSavings()) }}</span>
+            <span class="sub-text">In savings account</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Loans Table -->
+      <div class="table-section">
+        <div class="section-header">
+          <h2>Your Loans</h2>
+          <a [routerLink]="['../loans']" class="view-all">View All <i class="fa fa-arrow-right"></i></a>
+        </div>
+        <p class="section-subtitle">Current and pending loan accounts</p>
+
+        <div class="table-responsive">
+          <table class="loans-table">
+            <thead>
+              <tr>
+                <th>Account Number</th>
+                <th>Product Type</th>
+                <th>Disbursed</th>
+                <th>Outstanding / Principal</th>
+                <th>Next Due Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let loan of loanAccounts">
+                <td>{{ accountNumber(loan) }}</td>
+                <td>{{ loan?.productName }}</td>
+                <td>{{ formatAmount(loan?.principal) }}</td>
+                <td>{{ formatAmount(getDisplayAmount(loan)) }}</td>
+                <td>{{ nextDueDate(loan) || 'N/A' }}</td>
+                <td><span class="status-badge" [ngClass]="loan?.statusCode || 'pending'">{{ loan?.status }}</span></td>
+                <td>
+                  <a [routerLink]="['../loan', loan?.id]" class="action-link">View Details</a>
+                </td>
+              </tr>
+              <tr *ngIf="!loanAccounts.length">
+                <td colspan="7" class="text-center">No loans found</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="table-section" style="margin-top: 24px;">
+        <div class="section-header">
+          <h3>Recent Transactions</h3>
+          <a href="javascript:void(0)" class="view-all">View All <i class="fa fa-arrow-right"></i></a>
+        </div>
+        <p class="section-subtitle">Latest payment activities</p>
+
+        <div class="transactions-list">
+          <div class="transaction-item">
+            <div class="transaction-icon success">
+              <i class="fa fa-arrow-down"></i>
+            </div>
+            <div class="transaction-details">
+              <span class="transaction-type">Repayment</span>
+              <span class="transaction-date">2025-11-20</span>
+            </div>
+            <div class="transaction-amount success">+₹2,000</div>
+            <div class="transaction-status">
+              <span class="status-badge active">Success</span>
+            </div>
+          </div>
+
+          <div class="transaction-item">
+            <div class="transaction-icon success">
+              <i class="fa fa-arrow-down"></i>
+            </div>
+            <div class="transaction-details">
+              <span class="transaction-type">Repayment</span>
+              <span class="transaction-date">2025-10-20</span>
+            </div>
+            <div class="transaction-amount success">+₹2,000</div>
+            <div class="transaction-status">
+              <span class="status-badge active">Success</span>
+            </div>
+          </div>
+
+          <div class="transaction-item">
+            <div class="transaction-icon warning">
+              <i class="fa fa-arrow-up"></i>
+            </div>
+            <div class="transaction-details">
+              <span class="transaction-type">Processing Fee</span>
+              <span class="transaction-date">2025-10-05</span>
+            </div>
+            <div class="transaction-amount warning">₹150</div>
+            <div class="transaction-status">
+              <span class="status-badge active">Success</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  </section>
-
-  <section *ngIf="loanAccounts?.length">
-    <h3>Loans</h3>
-    <div *ngFor="let loan of loanAccounts" style="border: 1px solid #ddd; padding: 8px; margin-bottom: 8px">
-      <div>ID: {{ loan?.id }}</div>
-      <div>Account: {{ accountNumber(loan) }}</div>
-      <div>Product: {{ loan?.loanProductName }}</div>
-      <div>Status: {{ loan?.status?.value }}</div>
-      <div>Principal: {{ formatAmount(loan?.principal) }}</div>
-      <div>Outstanding: {{ formatAmount(outstandingAmount(loan)) }}</div>
-      <div>Next due: {{ nextDueDate(loan) }}</div>
-      <div><a [routerLink]="['/client-login', 'client-loan', loan?.id]">View loan</a></div>
-    </div>
-    <!-- TODO: CLIENT-PORTAL: pagination, filters and sorting can be added later -->
-  </section>
-  <!-- CLIENT-PORTAL-DASHBOARD-END -->
+  </main>
 </div>

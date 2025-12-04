@@ -23,7 +23,7 @@ export class LoanDetailsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private loanApi: LoanApiService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('loanId');
@@ -35,10 +35,12 @@ export class LoanDetailsComponent implements OnInit {
     this.loading = true;
     this.loanApi.getLoan(loanId).subscribe({
       next: (loan) => {
+        console.log('Loan details received:', loan);
         this.loan = loan;
         this.loading = false;
       },
-      error: () => {
+      error: (err) => {
+        console.error('Loan details error:', err);
         this.error = 'Unable to load loan details';
         this.loading = false;
       }

@@ -21,11 +21,11 @@ def get_config() -> dict:
     - FINERACT_RETRY_COUNT (default 2)
     """
     return {
-        "base_url": os.environ.get("FINERACT_BASE_URL", ""),
-        "tenant": os.environ.get("FINERACT_TENANT_ID", ""),
+        "base_url": os.environ.get("FINERACT_BASE_URL", "https://localhost:8443/fineract-provider/api/v1"),
+        "tenant": os.environ.get("FINERACT_TENANT_ID", "default"),
         "use_basic_auth": os.environ.get("FINERACT_USE_BASIC_AUTH", "1") == "1",
-        "username": os.environ.get("FINERACT_ADMIN_USERNAME", ""),
-        "password": os.environ.get("FINERACT_ADMIN_PASSWORD", ""),
+        "username": os.environ.get("FINERACT_ADMIN_USERNAME", "mifos"),
+        "password": os.environ.get("FINERACT_ADMIN_PASSWORD", "password"),
         "timeout": float(os.environ.get("FINERACT_TIMEOUT_SECS", "10")),
         "retries": int(os.environ.get("FINERACT_RETRY_COUNT", "2")),
     }

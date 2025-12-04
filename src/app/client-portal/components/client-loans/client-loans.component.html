@@ -1,0 +1,121 @@
+<div class="loans-page">
+    <div class="page-header">
+        <h1>My Loans</h1>
+        <p class="subtitle">Manage and track all your loan accounts</p>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="icon-box blue">
+                <i class="fa fa-file-text"></i>
+            </div>
+            <div class="summary-details">
+                <span class="label">Total Loans</span>
+                <span class="value">{{ getTotalLoans() }}</span>
+                <span class="sub-text">All loan accounts</span>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="icon-box green">
+                <i class="fa fa-check-circle"></i>
+            </div>
+            <div class="summary-details">
+                <span class="label">Active Loans</span>
+                <span class="value">{{ getActiveLoans() }}</span>
+                <span class="sub-text">Currently active</span>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="icon-box orange">
+                <i class="fa fa-money"></i>
+            </div>
+            <div class="summary-details">
+                <span class="label">Total Disbursed</span>
+                <span class="value">{{ formatAmount(getTotalDisbursed()) }}</span>
+                <span class="sub-text">Total amount borrowed</span>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="icon-box red">
+                <i class="fa fa-exclamation-circle"></i>
+            </div>
+            <div class="summary-details">
+                <span class="label">Outstanding</span>
+                <span class="value">{{ formatAmount(getTotalOutstanding()) }}</span>
+                <span class="sub-text">Amount to be repaid</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loans List -->
+    <div class="loans-section">
+        <div class="section-header">
+            <h2>Your Loan Accounts</h2>
+            <button class="btn btn-primary">
+                <i class="fa fa-plus"></i> Apply for New Loan
+            </button>
+        </div>
+
+        <div class="loans-grid" *ngIf="loans.length > 0">
+            <div class="loan-card" *ngFor="let loan of loans">
+                <div class="loan-header">
+                    <div class="loan-title">
+                        <h3>{{ loan.productName || 'Loan' }}</h3>
+                        <span class="account-no">{{ loan.accountNo }}</span>
+                    </div>
+                    <span class="status-badge" [ngClass]="getStatusClass(loan.statusCode)">
+                        {{ loan.status }}
+                    </span>
+                </div>
+
+                <div class="loan-details">
+                    <div class="detail-row">
+                        <span class="label">Principal Amount</span>
+                        <span class="value">{{ formatAmount(loan.principal) }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Outstanding</span>
+                        <span class="value strong">{{ formatAmount(loan.principalOutstanding) }}</span>
+                    </div>
+                </div>
+
+                <div class="progress-section" *ngIf="loan.principal > 0">
+                    <div class="progress-header">
+                        <span class="label">Repayment Progress</span>
+                        <span class="percentage">{{ getProgress(loan) }}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" [style.width.%]="getProgress(loan)"></div>
+                    </div>
+                </div>
+
+                <div class="loan-actions">
+                    <a [routerLink]="['../', 'loan', loan.id]" class="btn btn-outline">
+                        <i class="fa fa-eye"></i> View Details
+                    </a>
+                    <button class="btn btn-outline" *ngIf="loan.statusCode?.includes('active')">
+                        <i class="fa fa-credit-card"></i> Make Payment
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="empty-state" *ngIf="loans.length === 0 && !error">
+            <i class="fa fa-file-text-o"></i>
+            <h3>No Loans Found</h3>
+            <p>You don't have any loan accounts yet.</p>
+            <button class="btn btn-primary">Apply for a Loan</button>
+        </div>
+
+        <div class="error-state" *ngIf="error">
+            <i class="fa fa-exclamation-triangle"></i>
+            <h3>Unable to Load Loans</h3>
+            <p>{{ error }}</p>
+            <button class="btn btn-primary" (click)="fetchLoans()">Try Again</button>
+        </div>
+    </div>
+</div>

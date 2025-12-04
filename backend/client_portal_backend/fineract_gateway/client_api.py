@@ -74,9 +74,30 @@ def list_clients(limit: int = 50, offset: int = 0, headers_override: Dict[str, s
 
 
 def list_client_loans(client_id: str, headers_override: Dict[str, str] | None = None) -> List[Dict[str, Any]]:
-    """Return loan accounts for a client via /clients/{id}/accounts."""
-    accounts = get_client_accounts(client_id, headers_override=headers_override)
-    # Already normalized; filter loans by presence of productName/status fields
+    """Return loan accounts for a client via /loans?clientId={id}."""
+    raw, _cid = execute_json(path="/loans", query={"clientId": client_id}, headers_override=headers_override)
+    data = raw if isinstance(raw, dict) else {}
+    page = data.get("pageItems") or []
+    
+    accounts: List[Dict[str, Any]] = []
+    for la in page:
+        # Handle status object or value
+        status_obj = la.get("status", {}) if isinstance(la.get("status"), dict) else {"code": la.get("status"), "value": la.get("status")}
+        status_code = status_obj.get("code")
+        status_value = status_obj.get("value")
+
+        accounts.append(
+            {
+                "id": la.get("id"),
+                "accountNo": la.get("accountNo"),
+                "productName": (la.get("productName") or la.get("loanProductName")),
+                "status": status_value,
+                "statusCode": status_code,
+                "principal": la.get("principal") or la.get("approvedPrincipal"),
+                "principalOutstanding": la.get("totalOutstanding") or la.get("principalOutstanding") or 0, # totalOutstanding often used in list view
+                "nextDueDate": None,
+            }
+        )
     return accounts
 
 

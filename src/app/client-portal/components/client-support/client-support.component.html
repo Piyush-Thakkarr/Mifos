@@ -1,0 +1,135 @@
+<div class="support-page">
+    <div class="page-header">
+        <h1>Support & Help</h1>
+        <p class="subtitle">We're here to help you with any questions or concerns</p>
+    </div>
+
+    <!-- Contact Cards -->
+    <div class="contact-grid">
+        <div class="contact-card">
+            <div class="contact-icon blue">
+                <i class="fa fa-user"></i>
+            </div>
+            <h3>Loan Officer</h3>
+            <p class="contact-name">Rajesh Kumar</p>
+            <div class="contact-details">
+                <div class="detail-item">
+                    <i class="fa fa-phone"></i>
+                    <span>+91 98765 43210</span>
+                </div>
+                <div class="detail-item">
+                    <i class="fa fa-envelope"></i>
+                    <span>rajesh.kumar&#64;mfi.com</span>
+                </div>
+                <div class="detail-item">
+                    <i class="fa fa-clock-o"></i>
+                    <span>Response: Within 24 hours</span>
+                </div>
+            </div>
+            <div class="contact-actions">
+                <button class="btn btn-primary">
+                    <i class="fa fa-phone"></i> Call Now
+                </button>
+                <button class="btn btn-outline">
+                    <i class="fa fa-envelope"></i> Email
+                </button>
+            </div>
+        </div>
+
+        <div class="contact-card">
+            <div class="contact-icon green">
+                <i class="fa fa-building"></i>
+            </div>
+            <h3>Branch Office</h3>
+            <p class="contact-name">Head Office</p>
+            <div class="contact-details">
+                <div class="detail-item">
+                    <i class="fa fa-map-marker"></i>
+                    <span>123 MG Road, Mumbai - 400001</span>
+                </div>
+                <div class="detail-item">
+                    <i class="fa fa-phone"></i>
+                    <span>+91 22 1234 5678</span>
+                </div>
+                <div class="detail-item">
+                    <i class="fa fa-clock-o"></i>
+                    <span>Mon-Sat: 9:00 AM - 6:00 PM</span>
+                </div>
+            </div>
+            <div class="contact-actions">
+                <button class="btn btn-primary">
+                    <i class="fa fa-map-marker"></i> Get Directions
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Form -->
+    <div class="support-form-section">
+        <div class="section-header">
+            <h2>Submit a Request</h2>
+            <p>Fill out the form below and we'll get back to you as soon as possible</p>
+        </div>
+
+        <div class="success-message" *ngIf="submitted">
+            <i class="fa fa-check-circle"></i>
+            <p>Your request has been submitted successfully! We'll get back to you soon.</p>
+        </div>
+
+        <form class="support-form" (ngSubmit)="submitRequest()" *ngIf="!submitted">
+            <div class="form-group">
+                <label for="subject">Subject *</label>
+                <input type="text" id="subject" [(ngModel)]="subject" name="subject"
+                    placeholder="Brief description of your issue" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="category">Category *</label>
+                <select id="category" [(ngModel)]="category" name="category" class="form-control">
+                    <option value="general">General Inquiry</option>
+                    <option value="loan">Loan Related</option>
+                    <option value="payment">Payment Issue</option>
+                    <option value="account">Account Issue</option>
+                    <option value="complaint">Complaint</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="message">Message *</label>
+                <textarea id="message" [(ngModel)]="message" name="message" rows="6"
+                    placeholder="Please provide details about your request..." required class="form-control"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-submit">
+                <i class="fa fa-paper-plane"></i> Submit Request
+            </button>
+        </form>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        <div class="faq-grid">
+            <div class="faq-card">
+                <h3><i class="fa fa-question-circle"></i> How do I make a payment?</h3>
+                <p>You can make payments through our online portal, mobile app, or by visiting any of our branch
+                    offices.</p>
+            </div>
+            <div class="faq-card">
+                <h3><i class="fa fa-question-circle"></i> What if I miss an EMI payment?</h3>
+                <p>Please contact your loan officer immediately. We offer flexible repayment options to help you stay on
+                    track.</p>
+            </div>
+            <div class="faq-card">
+                <h3><i class="fa fa-question-circle"></i> How can I check my loan balance?</h3>
+                <p>Your current loan balance is always available on the Dashboard and Loans pages of this portal.</p>
+            </div>
+            <div class="faq-card">
+                <h3><i class="fa fa-question-circle"></i> Can I prepay my loan?</h3>
+                <p>Yes, you can prepay your loan at any time. Contact your loan officer for prepayment details and
+                    charges.</p>
+            </div>
+        </div>
+    </div>
+</div>

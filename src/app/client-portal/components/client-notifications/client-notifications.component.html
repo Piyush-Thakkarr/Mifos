@@ -1,0 +1,38 @@
+<div class="notifications-page">
+    <div class="page-header">
+        <div>
+            <h1>Notifications</h1>
+            <p class="subtitle">Stay updated with your account activities</p>
+        </div>
+        <button class="btn btn-outline" (click)="markAllAsRead()" *ngIf="getUnreadCount() > 0">
+            <i class="fa fa-check"></i> Mark All as Read
+        </button>
+    </div>
+
+    <div class="unread-badge" *ngIf="getUnreadCount() > 0">
+        {{ getUnreadCount() }} unread notification{{ getUnreadCount() > 1 ? 's' : '' }}
+    </div>
+
+    <div class="notifications-list">
+        <div class="notification-card" *ngFor="let notification of notifications"
+            [ngClass]="{'unread': !notification.read}" (click)="markAsRead(notification)">
+            <div class="notification-icon" [ngClass]="notification.color">
+                <i class="fa" [ngClass]="notification.icon"></i>
+            </div>
+            <div class="notification-content">
+                <h3>{{ notification.title }}</h3>
+                <p>{{ notification.message }}</p>
+                <span class="notification-date">{{ formatDate(notification.date) }}</span>
+            </div>
+            <div class="notification-status">
+                <span class="unread-dot" *ngIf="!notification.read"></span>
+            </div>
+        </div>
+
+        <div class="empty-state" *ngIf="notifications.length === 0">
+            <i class="fa fa-bell-slash-o"></i>
+            <h3>No Notifications</h3>
+            <p>You're all caught up!</p>
+        </div>
+    </div>
+</div>
