@@ -1,3 +1,10 @@
 
-Django>=4.2,<5.1
+# Server framework
+Django>=5.2,<5.3
+
+# Production WSGI server
+gunicorn>=21.2,<22
+
+# CORS middleware
+django-cors-headers>=4.3,<5
 

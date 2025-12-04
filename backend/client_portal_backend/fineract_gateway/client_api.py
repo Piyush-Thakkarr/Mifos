@@ -26,14 +26,21 @@ def _norm_accounts(raw: Dict[str, Any]) -> List[Dict[str, Any]]:
     accounts: List[Dict[str, Any]] = []
     loan_accounts = (raw or {}).get("loanAccounts", [])
     for la in loan_accounts:
+        # Handle status object or value
+        status_obj = la.get("status", {}) if isinstance(la.get("status"), dict) else {"code": la.get("status"), "value": la.get("status")}
+        status_code = status_obj.get("code")
+        status_value = status_obj.get("value")
+
         accounts.append(
             {
                 "id": la.get("id"),
                 "accountNo": la.get("accountNo"),
                 "productName": (la.get("productName") or la.get("loanProductName")),
-                "status": (la.get("status", {}) or {}).get("code") or la.get("status"),
-                "principal": la.get("principal") or la.get("originalLoan"),
-                "principalOutstanding": la.get("principalOutstanding"),
+                "status": status_value, # Use human readable value if available
+                "statusCode": status_code,
+                # Principal logic: originalLoan -> approvedPrincipal -> principal
+                "principal": la.get("originalLoan") or la.get("approvedPrincipal") or la.get("principal"),
+                "principalOutstanding": la.get("loanBalance") or la.get("principalOutstanding"),
                 "nextDueDate": None,  # Not all endpoints provide this; view layer may enrich later
             }
         )

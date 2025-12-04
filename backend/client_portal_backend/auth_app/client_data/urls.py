@@ -22,12 +22,23 @@ urlpatterns: List = [
     # Client Endpoints
     path("client", client_details_view, name="client_details"),
     path("client/", client_details_view, name="client_details"),
+    path("client/<str:clientId>", client_details_view, name="client_details_id"),
+    path("client/<str:clientId>/", client_details_view, name="client_details_id"),
+    
     path("client/identifiers", client_identifiers_view, name="client_identifiers"),
     path("client/identifiers/", client_identifiers_view, name="client_identifiers"),
+    path("client/<str:clientId>/identifiers", client_identifiers_view, name="client_identifiers_id"),
+    path("client/<str:clientId>/identifiers/", client_identifiers_view, name="client_identifiers_id"),
+
     path("client/address", client_address_view, name="client_address"),
     path("client/address/", client_address_view, name="client_address"),
+    path("client/<str:clientId>/address", client_address_view, name="client_address_id"),
+    path("client/<str:clientId>/address/", client_address_view, name="client_address_id"),
+
     path("client/notes", client_notes_view, name="client_notes"),
     path("client/notes/", client_notes_view, name="client_notes"),
+    path("client/<str:clientId>/notes", client_notes_view, name="client_notes_id"),
+    path("client/<str:clientId>/notes/", client_notes_view, name="client_notes_id"),
 
     # Loan Endpoints
     path("loans", client_loans_view, name="client_loans"),
