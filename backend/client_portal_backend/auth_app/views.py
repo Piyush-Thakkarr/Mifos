@@ -38,11 +38,20 @@ def login_view(request):
             b64_admin = b64encode(f"{admin_username}:{admin_password}".encode("utf-8")).decode("ascii")
             _probe, _cid = execute_json(path="/clients", query={"limit": 1}, headers_override={"Authorization": f"Basic {b64_admin}"})
         except GatewayError as e:
-            code, status = ("unauthenticated", 401) if e.status in (401, 403) else ("upstream_error" if e.status >= 500 else "invalid_request", 502 if e.status >= 500 else 400)
+            # DEBUG: Log the error to help diagnosis
+            print(f"Login failed: Fineract returned {e.status}. Details: {e.message}")
+            
+            # If Fineract returns 404, it means the API endpoint is wrong, not that our login view is missing.
+            # We return 502 (Bad Gateway) to distinguish this from a 404 on our own server.
+            status_code = 502 if e.status == 404 else (401 if e.status in (401, 403) else 500)
+            
             return JsonResponse({
-                "error": {"code": code, "message": "Authentication service unavailable" if status >= 500 else "Invalid credentials" if status == 401 else "Invalid request"},
+                "error": {
+                    "code": "upstream_error", 
+                    "message": f"Fineract Connection Failed: {e.message} (Status: {e.status})"
+                },
                 "correlationId": e.correlation_id,
-            }, status=status)
+            }, status=status_code)
         
         # Build Basic cookie with admin credentials for subsequent requests
         auth_cookie = f"Basic {b64_admin}"
