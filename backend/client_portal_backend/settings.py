@@ -89,6 +89,7 @@ LOGGING = {
 }
 
 # CORS configuration (configurable for Render / prod)
+CORS_ALLOW_ALL_ORIGINS = True
 _cors_env = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:4200")
 CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_env.split(",") if o.strip()]
 # FAILSAFE: Explicitly allow the frontend URL
