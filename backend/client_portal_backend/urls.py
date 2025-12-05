@@ -13,6 +13,7 @@ urlpatterns: List = []
 urlpatterns += [
     # Health check
     path("healthz", lambda request: JsonResponse({"status": "ok"})),
+    path("", lambda request: JsonResponse({"status": "ok", "message": "Mifos Backend is Running"})),
     # Auth and client-data APIs
     path("auth/", include("client_portal_backend.auth_app.urls")),
     path("client-data/", include("client_portal_backend.auth_app.client_data.urls")),

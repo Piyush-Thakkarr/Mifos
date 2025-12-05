@@ -3,6 +3,7 @@ services:
   - type: web
     name: client-portal-backend
     env: docker
+    startCommand: cd backend && gunicorn client_portal_backend.wsgi:application --bind 0.0.0.0:$PORT
     rootDir: backend
     plan: free
     autoDeploy: true

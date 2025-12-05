@@ -7,4 +7,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY client_portal_backend ./client_portal_backend
 COPY manage.py ./
 ENV PORT=10000
-CMD gunicorn client_portal_backend.wsgi:application --bind 0.0.0.0:${PORT} --workers 2 --timeout 120
+CMD gunicorn client_portal_backend.wsgi:application --bind 0.0.0.0:10000 --workers 2 --timeout 120
