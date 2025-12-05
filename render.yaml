@@ -10,7 +10,7 @@ services:
     healthCheckPath: /healthz
     envVars:
       - key: FINERACT_BASE_URL
-        sync: false
+        value: 'https://species-stockholm-frederick-glance.trycloudflare.com/fineract-provider/api/v1'
       - key: FINERACT_TENANT_ID
         value: 'default'
       - key: FINERACT_USE_BASIC_AUTH
