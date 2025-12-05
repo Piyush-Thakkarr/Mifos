@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 
+import { environment } from '../../../../environments/environment';
+
 @Component({
   selector: 'mifosx-client-login',
   templateUrl: './client-login.component.html',
@@ -32,7 +34,8 @@ export class ClientLoginComponent {
       password: this.password
     };
 
-    this.http.post<any>('http://localhost:8000/auth/login', formData, { withCredentials: true })
+    const loginUrl = `${environment.baseApiUrl}/auth/login`;
+    this.http.post<any>(loginUrl, formData, { withCredentials: true })
       .subscribe({
         next: (response) => {
           this.loading = false;
