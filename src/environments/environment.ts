@@ -22,7 +22,7 @@ export const environment = {
     'https://sandbox.mifos.community,https://demo.mifos.community,https://localhost:8443,' + window.location.origin,
   // For connecting to server running elsewhere set the base API URL
   // For connecting to server running elsewhere set the base API URL
-  baseApiUrl: 'http://localhost:8000',
+  baseApiUrl: 'https://mifos.onrender.com',
   allowServerSwitch: loadedEnv.allowServerSwitch || 'true',
   apiProvider: loadedEnv.apiProvider || '/fineract-provider/api',
   apiVersion: loadedEnv.apiVersion || '/v1',
