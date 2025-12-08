@@ -61,7 +61,7 @@ export const environment = {
   interbankTransfers: window.env?.interbankTransfers || false,
 
   minPasswordLength: loadedEnv.minPasswordLength || 12,
-  djangoApiUrl: 'http://localhost:8000',
+  djangoApiUrl: loadedEnv.djangoApiUrl || window.env?.djangoApiUrl || 'http://localhost:8000',
 
   OIDC: {
     oidcServerEnabled: window['env']['oidcServerEnabled'] || false,

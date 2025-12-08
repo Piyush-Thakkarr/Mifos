@@ -4,6 +4,12 @@ from pathlib import Path
 from corsheaders.defaults import default_headers
 from dotenv import load_dotenv
 
+# Import dj-database-url for Render PostgreSQL support
+try:
+    import dj_database_url
+except ImportError:
+    dj_database_url = None
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
@@ -11,10 +17,18 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key-change-me")
 DEBUG = os.getenv("DEBUG", "true").lower() == "true"
 
+# Allow Render and localhost
 ALLOWED_HOSTS: list[str] = [
     "localhost",
     "127.0.0.1",
+    ".onrender.com",  # Render subdomains
+    ".render.com",    # Render domains
 ]
+# Add custom domain if provided
+if os.getenv("RENDER_EXTERNAL_HOSTNAME"):
+    ALLOWED_HOSTS.append(os.getenv("RENDER_EXTERNAL_HOSTNAME"))
+if os.getenv("ALLOWED_HOSTS"):
+    ALLOWED_HOSTS.extend(os.getenv("ALLOWED_HOSTS").split(","))
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -28,8 +42,21 @@ INSTALLED_APPS = [
     "core",
 ]
 
+# Build middleware list - add WhiteNoise if available and in production
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+]
+
+# Add WhiteNoise for static files in production (only if installed)
+try:
+    import whitenoise
+    if not DEBUG:
+        MIDDLEWARE.append("whitenoise.middleware.WhiteNoiseMiddleware")
+except ImportError:
+    pass  # WhiteNoise not installed, skip it
+
+# Add remaining middleware
+MIDDLEWARE.extend([
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -37,7 +64,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-]
+])
 
 ROOT_URLCONF = "portal_backend.urls"
 
@@ -59,12 +86,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "portal_backend.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+# Database configuration - use PostgreSQL on Render, SQLite locally
+if os.getenv("DATABASE_URL") and dj_database_url:
+    # Render provides DATABASE_URL for PostgreSQL
+    DATABASES = {
+        "default": dj_database_url.parse(os.getenv("DATABASE_URL"))
     }
-}
+else:
+    # Local development - use SQLite
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS: list[dict] = []
 
@@ -74,14 +109,37 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# WhiteNoise for serving static files in production (only if installed)
+try:
+    import whitenoise
+    if not DEBUG:
+        STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+except ImportError:
+    pass  # WhiteNoise not installed, skip it
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOW_CREDENTIALS = True
+
+# CORS origins - support both local and production
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
     "http://127.0.0.1:4200",
 ]
+# Add Render frontend URL if provided
+if os.getenv("FRONTEND_URL"):
+    frontend_url = os.getenv("FRONTEND_URL")
+    if not frontend_url.startswith("http"):
+        frontend_url = f"https://{frontend_url}"
+    CORS_ALLOWED_ORIGINS.append(frontend_url)
+# Add from CORS_ALLOWED_ORIGINS env var if provided
+if os.getenv("CORS_ALLOWED_ORIGINS"):
+    CORS_ALLOWED_ORIGINS.extend(os.getenv("CORS_ALLOWED_ORIGINS").split(","))
+# Allow all origins in development (for local testing)
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "X-Correlation-ID",
     "Fineract-Platform-TenantId",

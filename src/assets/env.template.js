@@ -64,4 +64,7 @@
   window['env']['oidcClientId'] = '$FINERACT_PLUGIN_OIDC_CLIENT_ID';
   window['env']['oidcApiUrl'] = '$FINERACT_PLUGIN_OIDC_API_URL';
   window['env']['oidcFrontUrl'] = '$FINERACT_PLUGIN_OIDC_FRONTEND_URL';
+
+  // Client Portal Django API URL
+  window['env']['djangoApiUrl'] = '$DJANGO_API_URL';
 })(this);
