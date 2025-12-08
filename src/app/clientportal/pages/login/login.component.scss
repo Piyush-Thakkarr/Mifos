@@ -1,0 +1,19 @@
+.clientportal-login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+
+  mat-card {
+    width: 360px;
+  }
+
+  .full-width {
+    width: 100%;
+  }
+
+  .error {
+    color: #c62828;
+    margin-bottom: 8px;
+  }
+}

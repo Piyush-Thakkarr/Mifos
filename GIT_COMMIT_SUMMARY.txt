@@ -1,0 +1,71 @@
+===========================================
+CLIENT PORTAL - GIT COMMIT SUMMARY
+===========================================
+(All paths are relative to Mifos/ folder)
+
+✅ FILES TO COMMIT:
+------------------
+
+1. Frontend Components (Angular):
+   - src/app/clientportal/pages/login/
+   - src/app/clientportal/pages/dashboard/
+   - src/app/clientportal/pages/loans/
+   - src/app/clientportal/pages/loans/loan-details/
+   - src/app/clientportal/pages/transactions/
+   - src/app/clientportal/pages/notifications/
+   - src/app/clientportal/pages/support/
+   - src/app/clientportal/services/auth.service.ts
+   - src/app/clientportal/clientportal.module.ts
+   - src/app/clientportal/clientportal-routing.module.ts
+
+2. Backend (Django):
+   - portal_backend/core/views.py
+   - portal_backend/core/urls.py
+   - portal_backend/mifos_client/client.py
+   - portal_backend/portal_backend/settings.py (review for secrets)
+   - portal_backend/requirements.txt
+   - portal_backend/manage.py
+   - portal_backend/README.md
+
+3. Configuration:
+   - .gitignore (UPDATED - portal_backend ignores added)
+
+❌ FILES TO NEVER COMMIT:
+-------------------------
+- .env files (any .env file)
+- portal_backend/db.sqlite3
+- portal_backend/__pycache__/
+- portal_backend/**/*.pyc
+- node_modules/
+- dist/
+- .DS_Store
+- portal_backend/cookies.txt
+
+QUICK COMMIT COMMANDS:
+---------------------
+1. Navigate to Mifos folder:
+   cd Mifos
+
+2. Review what will be committed:
+   git status
+
+3. Add all changes (respects .gitignore):
+   git add -A
+
+4. Review staged files (IMPORTANT!):
+   git status
+
+5. Commit:
+   git commit -m "feat: Add Client Portal Self-Service Module
+
+   - Implement login, dashboard, loans, transactions, notifications, and support pages
+   - Add Django backend API endpoints for Fineract integration
+   - Add Angular frontend components with responsive design
+   - Configure routing and module structure"
+
+6. Push:
+   git push origin main
+   (or your branch name)
+
+IMPORTANT: Always check 'git status' before committing to ensure
+no .env files or sensitive data are included!

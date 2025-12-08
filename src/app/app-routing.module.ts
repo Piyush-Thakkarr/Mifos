@@ -15,6 +15,10 @@ const routes: Routes = [
     component: CallbackComponent
   },
   {
+    path: 'clientportal',
+    loadChildren: () => import('./clientportal/clientportal.module').then((m) => m.ClientportalModule)
+  },
+  {
     path: '**',
     component: NotFoundComponent
   }

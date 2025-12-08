@@ -1,0 +1,210 @@
+<div class="clientportal-transactions">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">🏠</span>
+        <div class="logo-text">
+          <div class="logo-title">MFI Client Portal</div>
+          <div class="logo-subtitle">Microfinance Services</div>
+        </div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a routerLink="/clientportal/dashboard" class="nav-item">
+        <span class="nav-icon">🏠</span>
+        <span>Dashboard</span>
+      </a>
+      <a routerLink="/clientportal/loans" class="nav-item">
+        <span class="nav-icon">📄</span>
+        <span>Loans</span>
+      </a>
+      <a routerLink="/clientportal/transactions" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">💳</span>
+        <span>Transactions</span>
+      </a>
+      <a routerLink="/clientportal/notifications" class="nav-item">
+        <span class="nav-icon">🔔</span>
+        <span>Notifications</span>
+      </a>
+      <a routerLink="/clientportal/support" class="nav-item">
+        <span class="nav-icon">💬</span>
+        <span>Support</span>
+      </a>
+      <a routerLink="/clientportal/login" class="nav-item logout">
+        <span class="nav-icon">🚪</span>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Header -->
+    <header class="top-header">
+      <div class="header-right">
+        <button class="icon-button">
+          <span>🔔</span>
+        </button>
+        <div class="user-info">
+          <span class="user-icon">👤</span>
+          <span class="user-name">{{ getUserName() }}</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="content-wrapper" *ngIf="!loading && !error">
+      <h1>Transactions</h1>
+      <p class="subtitle">View all your payment activities</p>
+
+      <!-- Summary Cards -->
+      <div class="summary-cards" *ngIf="summary">
+        <div class="summary-card">
+          <div class="card-icon">📊</div>
+          <div class="card-content">
+            <div class="card-value">{{ summary.totalTransactions }}</div>
+            <div class="card-label">Total Transactions</div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="card-icon credit">📈</div>
+          <div class="card-content">
+            <div class="card-value credit">₹{{ summary.totalCredit | number: '1.0-0' }}</div>
+            <div class="card-label">Total Credit</div>
+            <div class="card-sublabel">Money Received</div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="card-icon debit">📉</div>
+          <div class="card-content">
+            <div class="card-value debit">₹{{ summary.totalDebit | number: '1.0-0' }}</div>
+            <div class="card-label">Total Debit</div>
+            <div class="card-sublabel">Money Paid</div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div
+            class="card-icon"
+            [class.remaining-positive]="summary.remaining >= 0"
+            [class.remaining-negative]="summary.remaining < 0"
+          >
+            💰
+          </div>
+          <div class="card-content">
+            <div
+              class="card-value"
+              [class.remaining-positive]="summary.remaining >= 0"
+              [class.remaining-negative]="summary.remaining < 0"
+            >
+              ₹{{ summary.remaining || 0 | number: '1.0-0' }}
+            </div>
+            <div class="card-label">Remaining</div>
+            <div class="card-sublabel">{{ summary.remaining >= 0 ? 'Amount Owed' : 'Overpaid' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters Section -->
+      <div class="filters-section">
+        <h3>Filters</h3>
+        <div class="filters-grid">
+          <div class="filter-group">
+            <label>Search</label>
+            <div class="search-input-wrapper">
+              <span class="search-icon">🔍</span>
+              <input
+                type="text"
+                class="search-input"
+                placeholder="Reference or description..."
+                [(ngModel)]="searchQuery"
+                (input)="onFilterChange()"
+              />
+            </div>
+          </div>
+          <div class="filter-group">
+            <label>Transaction Type</label>
+            <select class="filter-select" [(ngModel)]="transactionType" (change)="onFilterChange()">
+              <option value="all">All Types</option>
+              <option value="repayment">Repayment</option>
+              <option value="disbursement">Disbursement</option>
+              <option value="processing fee">Processing Fee</option>
+              <option value="late fee">Late Fee</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Loan Account</label>
+            <select class="filter-select" [(ngModel)]="loanAccount" (change)="onFilterChange()">
+              <option *ngFor="let account of loanAccounts" [value]="account.value">
+                {{ account.label }}
+              </option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <button class="download-btn" (click)="downloadStatement()">
+              <span>⬇️</span>
+              Download Statement
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transaction History Table -->
+      <div class="transactions-section">
+        <h3>Transaction History</h3>
+        <div class="table-container">
+          <table *ngIf="transactions.length > 0; else noTransactions">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Loan Account</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Reference</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let txn of transactions">
+                <td>{{ formatDate(txn.date) }}</td>
+                <td>{{ txn.type || '—' }}</td>
+                <td>{{ txn.accountNo || '—' }}</td>
+                <td>{{ txn.description || txn.type || '—' }}</td>
+                <td>
+                  <span
+                    class="amount"
+                    [class.credit]="isCredit(txn.type, txn.amount)"
+                    [class.debit]="!isCredit(txn.type, txn.amount)"
+                  >
+                    {{ isCredit(txn.type, txn.amount) ? '+' : '' }}₹{{ txn.amount || 0 | number: '1.0-0' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="status-badge success">
+                    <span class="status-icon">✓</span>
+                    {{ getStatus(txn.status) }}
+                  </span>
+                </td>
+                <td>{{ txn.reference || txn.id || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <ng-template #noTransactions>
+            <div class="empty-state">No transactions found.</div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Loading transactions...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state" *ngIf="error">
+      <p class="error">{{ error }}</p>
+    </div>
+  </div>
+</div>

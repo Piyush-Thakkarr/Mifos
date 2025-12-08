@@ -1,0 +1,106 @@
+<div class="clientportal-notifications">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">🏠</span>
+        <div class="logo-text">
+          <div class="logo-title">MFI Client Portal</div>
+          <div class="logo-subtitle">Microfinance Services</div>
+        </div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a routerLink="/clientportal/dashboard" class="nav-item">
+        <span class="nav-icon">🏠</span>
+        <span>Dashboard</span>
+      </a>
+      <a routerLink="/clientportal/loans" class="nav-item">
+        <span class="nav-icon">📄</span>
+        <span>Loans</span>
+      </a>
+      <a routerLink="/clientportal/transactions" class="nav-item">
+        <span class="nav-icon">💳</span>
+        <span>Transactions</span>
+      </a>
+      <a routerLink="/clientportal/notifications" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">🔔</span>
+        <span>Notifications</span>
+      </a>
+      <a routerLink="/clientportal/support" class="nav-item">
+        <span class="nav-icon">💬</span>
+        <span>Support</span>
+      </a>
+      <a routerLink="/clientportal/login" class="nav-item logout">
+        <span class="nav-icon">🚪</span>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Header -->
+    <header class="top-header">
+      <div class="header-right">
+        <button class="icon-button">
+          <span>🔔</span>
+        </button>
+        <div class="user-info">
+          <span class="user-icon">👤</span>
+          <span class="user-name">{{ getUserName() }}</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="content-wrapper" *ngIf="!loading && !error">
+      <div class="page-header">
+        <div>
+          <h1>Notifications</h1>
+          <p class="subtitle">
+            You have {{ unreadCount }} unread {{ unreadCount === 1 ? 'notification' : 'notifications' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Notifications List -->
+      <div class="notifications-list" *ngIf="notifications.length > 0">
+        <div
+          class="notification-card"
+          *ngFor="let notification of notifications"
+          [class.unread]="!notification.read"
+          (click)="!notification.read && markAsRead(notification.id)"
+        >
+          <div class="notification-icon" [ngClass]="getNotificationIconClass(notification.type)">
+            <span>{{ getNotificationIcon(notification.type) }}</span>
+          </div>
+          <div class="notification-content">
+            <div class="notification-header">
+              <h3 class="notification-title">{{ notification.title }}</h3>
+              <span class="status-badge new" *ngIf="!notification.read">New</span>
+            </div>
+            <p class="notification-description">{{ notification.description }}</p>
+            <span class="notification-time">{{ formatDate(notification.timestamp) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="notifications.length === 0">
+        <div class="empty-icon">🔔</div>
+        <p>No notifications</p>
+        <p class="empty-subtitle">You're all caught up!</p>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Loading notifications...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state" *ngIf="error">
+      <p class="error">{{ error }}</p>
+    </div>
+  </div>
+</div>

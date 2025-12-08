@@ -1,0 +1,198 @@
+<div class="clientportal-dashboard">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">🏠</span>
+        <div class="logo-text">
+          <div class="logo-title">MFI Client Portal</div>
+          <div class="logo-subtitle">Microfinance Services</div>
+        </div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a routerLink="/clientportal/dashboard" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">🏠</span>
+        <span>Dashboard</span>
+      </a>
+      <a routerLink="/clientportal/loans" class="nav-item">
+        <span class="nav-icon">📄</span>
+        <span>Loans</span>
+      </a>
+      <a routerLink="/clientportal/transactions" class="nav-item">
+        <span class="nav-icon">💳</span>
+        <span>Transactions</span>
+      </a>
+      <a routerLink="/clientportal/notifications" class="nav-item">
+        <span class="nav-icon">🔔</span>
+        <span>Notifications</span>
+      </a>
+      <a routerLink="/clientportal/support" class="nav-item">
+        <span class="nav-icon">💬</span>
+        <span>Support</span>
+      </a>
+      <a routerLink="/clientportal/login" class="nav-item logout">
+        <span class="nav-icon">🚪</span>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Header -->
+    <header class="top-header">
+      <div class="header-right">
+        <button class="icon-button">
+          <span>🔔</span>
+        </button>
+        <div class="user-info">
+          <span class="user-icon">👤</span>
+          <span class="user-name">{{ dashboard?.client?.profile?.displayName || 'User' }}</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="content-wrapper" *ngIf="!loading && !error && dashboard as d">
+      <!-- User Profile Card -->
+      <div class="profile-card">
+        <div class="profile-avatar">👤</div>
+        <div class="profile-info">
+          <h2>{{ d.client?.profile?.displayName || 'Client' }}</h2>
+          <p class="client-id">Client ID: {{ d.client?.profile?.accountNo || d.client?.profile?.id || 'N/A' }}</p>
+          <p class="last-login">Last Login: {{ getLastLoginDate() }}</p>
+          <span class="status-badge active">Active</span>
+        </div>
+      </div>
+
+      <!-- Need Additional Funds Banner -->
+      <div class="funds-banner">
+        <div class="banner-content">
+          <h3>Need Additional Funds?</h3>
+          <p>Apply for a new loan today! Quick approval process with competitive interest rates.</p>
+        </div>
+        <button class="apply-loan-btn">+ Apply for New Loan</button>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="summary-cards">
+        <div class="summary-card">
+          <div class="card-icon outstanding">💰</div>
+          <div class="card-content">
+            <div class="card-amount">₹{{ getTotalOutstanding(d.loans?.loans) | number: '1.0-0' }}</div>
+            <div class="card-label">Across all active loans</div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="card-icon emi">📅</div>
+          <div class="card-content">
+            <div class="card-amount">₹{{ getNextEMI(d.loans?.loans) | number: '1.0-0' }}</div>
+            <div class="card-label">Due: {{ getNextEMIDate(d.loans?.loans) }}</div>
+            <span class="status-badge upcoming">Upcoming</span>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="card-icon loans">✅</div>
+          <div class="card-content">
+            <div class="card-amount">{{ d.loans?.loans?.length || 0 }}</div>
+            <div class="card-label">All in good standing</div>
+            <span class="status-badge active">Active</span>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="card-icon savings">🐷</div>
+          <div class="card-content">
+            <div class="card-amount">₹{{ getTotalSavings(d.savings?.savings) | number: '1.0-0' }}</div>
+            <div class="card-label">In savings account</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Loans Section -->
+      <section class="loans-section">
+        <div class="section-header">
+          <div>
+            <h3>Active Loans</h3>
+            <p class="section-subtitle">Your current loan accounts</p>
+          </div>
+          <a href="#" class="view-all-link">View All →</a>
+        </div>
+        <div class="table-container" *ngIf="d.loans?.loans?.length; else noLoans">
+          <table>
+            <thead>
+              <tr>
+                <th>Account Number</th>
+                <th>Product Type</th>
+                <th>Disbursed</th>
+                <th>Outstanding</th>
+                <th>Next EMI Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let loan of d.loans.loans">
+                <td>{{ loan.accountNo || loan.id }}</td>
+                <td>{{ loan.productName || '—' }}</td>
+                <td>₹{{ loan.principal || 0 | number: '1.0-0' }}</td>
+                <td>₹{{ loan.outstanding || loan.principal || 0 | number: '1.0-0' }}</td>
+                <td>{{ loan.nextRepaymentDate || '—' }}</td>
+                <td>
+                  <span class="status-badge active">{{ getStatus(loan.status) }}</span>
+                </td>
+                <td><a href="#" class="view-details-link">View Details</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noLoans>
+          <div class="empty-state">No loans found.</div>
+        </ng-template>
+      </section>
+
+      <!-- Recent Transactions Section -->
+      <section class="transactions-section">
+        <div class="section-header">
+          <div>
+            <h3>Recent Transactions</h3>
+            <p class="section-subtitle">Latest payment activities</p>
+          </div>
+          <a href="#" class="view-all-link">View All →</a>
+        </div>
+        <div class="transactions-list" *ngIf="d.transactions?.transactions?.length; else noTransactions">
+          <div class="transaction-item" *ngFor="let txn of d.transactions.transactions">
+            <div
+              class="transaction-icon"
+              [class.repayment]="txn.type?.toLowerCase().includes('repayment')"
+              [class.fee]="txn.type?.toLowerCase().includes('fee')"
+            >
+              📈
+            </div>
+            <div class="transaction-details">
+              <div class="transaction-type">{{ txn.type || 'Transaction' }}</div>
+              <div class="transaction-date">{{ formatDate(txn.date) }}</div>
+            </div>
+            <div class="transaction-amount" [class.positive]="(txn.amount || 0) > 0">
+              {{ (txn.amount || 0) > 0 ? '+' : '' }}₹{{ txn.amount || 0 | number: '1.0-0' }}
+            </div>
+            <div class="transaction-status success">Success</div>
+          </div>
+        </div>
+        <ng-template #noTransactions>
+          <div class="empty-state">No transactions found.</div>
+        </ng-template>
+      </section>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Loading dashboard data...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state" *ngIf="error">
+      <p class="error">{{ error }}</p>
+    </div>
+  </div>
+</div>
