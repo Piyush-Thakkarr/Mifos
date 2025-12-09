@@ -32,12 +32,14 @@ def login_view(request: HttpRequest):
         return response
     
     if request.method != "POST":
-        return JsonResponse({"error": "method_not_allowed"}, status=405)
+        response = JsonResponse({"error": "method_not_allowed"}, status=405)
+        return add_cors_headers(response, request)
 
     try:
         body = json.loads(request.body.decode("utf-8"))
     except json.JSONDecodeError:
-        return JsonResponse({"error": "invalid_json"}, status=400)
+        response = JsonResponse({"error": "invalid_json"}, status=400)
+        return add_cors_headers(response, request)
 
     username = body.get("username")
     password = body.get("password")
@@ -48,7 +50,8 @@ def login_view(request: HttpRequest):
             "Invalid clientportal credentials",
             extra={"correlation_id": correlation_id, "username": username},
         )
-        return JsonResponse({"error": "invalid_credentials", "correlation_id": correlation_id}, status=401)
+        response = JsonResponse({"error": "invalid_credentials", "correlation_id": correlation_id}, status=401)
+        return add_cors_headers(response, request)
 
     client = MifosClient()
 
@@ -58,12 +61,14 @@ def login_view(request: HttpRequest):
     except (MifosAuthError, MifosUpstreamError) as e:
         correlation_id = new_correlation_id()
         logger.exception("Upstream Fineract error during admin auth_check", extra={"correlation_id": correlation_id, "error": str(e)})
-        return JsonResponse({"error": "upstream_unavailable", "correlation_id": correlation_id, "message": str(e)}, status=503)
+        response = JsonResponse({"error": "upstream_unavailable", "correlation_id": correlation_id, "message": str(e)}, status=503)
+        return add_cors_headers(response, request)
     except Exception as e:
         # Catch any other unexpected errors
         correlation_id = new_correlation_id()
         logger.exception("Unexpected error during login", extra={"correlation_id": correlation_id, "error": str(e)})
-        return JsonResponse({"error": "internal_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
+        response = JsonResponse({"error": "internal_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
+        return add_cors_headers(response, request)
 
     try:
         request.session["cp_user"] = {
@@ -74,7 +79,8 @@ def login_view(request: HttpRequest):
     except Exception as e:
         correlation_id = new_correlation_id()
         logger.exception("Failed to save session", extra={"correlation_id": correlation_id, "error": str(e)})
-        return JsonResponse({"error": "session_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
+        response = JsonResponse({"error": "session_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
+        return add_cors_headers(response, request)
 
     try:
         response = JsonResponse(
@@ -93,7 +99,8 @@ def login_view(request: HttpRequest):
     except Exception as e:
         correlation_id = new_correlation_id()
         logger.exception("Failed to create response", extra={"correlation_id": correlation_id, "error": str(e)})
-        return JsonResponse({"error": "response_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
+        response = JsonResponse({"error": "response_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
+        return add_cors_headers(response, request)
 
 
 def me_view(request: HttpRequest):
@@ -141,7 +148,9 @@ def _require_session(request: HttpRequest):
     if not user:
         correlation_id = new_correlation_id()
         logger.info("Unauthorized resource access", extra={"correlation_id": correlation_id})
-        return None, JsonResponse({"error": "unauthorized", "correlation_id": correlation_id}, status=401)
+        response = JsonResponse({"error": "unauthorized", "correlation_id": correlation_id}, status=401)
+        response = add_cors_headers(response, request)
+        return None, response
     return user, None
 
 
@@ -156,7 +165,8 @@ def client_view(request: HttpRequest):
     except MifosNotFoundError:
         # Client doesn't exist in Fineract - return empty profile
         logger.info("Client not found in Fineract, returning empty profile")
-        return JsonResponse({"profile": {}}, status=200)
+        response = JsonResponse({"profile": {}}, status=200)
+        return add_cors_headers(response, request)
     except (MifosAuthError, MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
         logger.exception("Failed to fetch client bundle", extra={"correlation_id": correlation_id})
@@ -170,7 +180,8 @@ def client_view(request: HttpRequest):
         "status": bundle.get("status"),
         "officeName": bundle.get("officeName"),
     }
-    return JsonResponse({"profile": profile}, status=200)
+    response = JsonResponse({"profile": profile}, status=200)
+    return add_cors_headers(response, request)
 
 
 def loans_view(request: HttpRequest):
@@ -184,7 +195,8 @@ def loans_view(request: HttpRequest):
     except (MifosAuthError, MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
         logger.exception("Failed to fetch loan data", extra={"correlation_id": correlation_id})
-        return JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        return add_cors_headers(response, request)
 
     loans = []
     for item in loan_accounts:
@@ -259,7 +271,8 @@ def loans_view(request: HttpRequest):
             }
         )
 
-    return JsonResponse({"loans": loans}, status=200)
+    response = JsonResponse({"loans": loans}, status=200)
+    return add_cors_headers(response, request)
 
 
 def savings_view(request: HttpRequest):
@@ -273,7 +286,8 @@ def savings_view(request: HttpRequest):
     except (MifosAuthError, MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
         logger.exception("Failed to fetch savings data", extra={"correlation_id": correlation_id})
-        return JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        return add_cors_headers(response, request)
 
     savings = []
     for item in savings_accounts:
@@ -296,7 +310,8 @@ def savings_view(request: HttpRequest):
             }
         )
 
-    return JsonResponse({"savings": savings}, status=200)
+    response = JsonResponse({"savings": savings}, status=200)
+    return add_cors_headers(response, request)
 
 
 def transactions_view(request: HttpRequest):
@@ -314,7 +329,8 @@ def transactions_view(request: HttpRequest):
     except (MifosAuthError, MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
         logger.exception("Failed to fetch transactions data", extra={"correlation_id": correlation_id})
-        return JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        return add_cors_headers(response, request)
 
     # Fetch savings account transactions
     for savings_account in savings_accounts:
@@ -415,7 +431,8 @@ def transactions_view(request: HttpRequest):
     # Remove limit to show all transactions
     # all_transactions = all_transactions[:10]
 
-    return JsonResponse({"transactions": all_transactions}, status=200)
+    response = JsonResponse({"transactions": all_transactions}, status=200)
+    return add_cors_headers(response, request)
 
 
 def _fetch_all_transactions(client: MifosClient) -> list:
@@ -558,7 +575,8 @@ def download_transactions_statement(request: HttpRequest):
     except (MifosAuthError, MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
         logger.exception("Failed to fetch transactions for statement", extra={"correlation_id": correlation_id})
-        return JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        return add_cors_headers(response, request)
     
     # Apply filters
     filtered_transactions = _apply_transaction_filters(all_transactions, search_query, transaction_type, loan_account)
@@ -659,11 +677,13 @@ def loan_details_view(request: HttpRequest, loan_id: int):
     except MifosNotFoundError:
         correlation_id = new_correlation_id()
         logger.info("Loan not found", extra={"correlation_id": correlation_id, "loan_id": loan_id})
-        return JsonResponse({"error": "not_found", "correlation_id": correlation_id}, status=404)
+        response = JsonResponse({"error": "not_found", "correlation_id": correlation_id}, status=404)
+        return add_cors_headers(response, request)
     except (MifosAuthError, MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
         logger.exception("Failed to fetch loan details", extra={"correlation_id": correlation_id, "loan_id": loan_id})
-        return JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        return add_cors_headers(response, request)
 
     # Extract loan information
     status_obj = loan_data.get("status", {})
@@ -783,7 +803,8 @@ def loan_details_view(request: HttpRequest, loan_id: int):
         "remainingEMIs": total_emis - paid_emis if total_emis > 0 else 0,
     }
 
-    return JsonResponse({"loan": loan, "emiSchedule": emi_schedule}, status=200)
+    response = JsonResponse({"loan": loan, "emiSchedule": emi_schedule}, status=200)
+    return add_cors_headers(response, request)
 
 
 def download_loan_statement(request: HttpRequest, loan_id: int):
@@ -798,11 +819,13 @@ def download_loan_statement(request: HttpRequest, loan_id: int):
     except MifosNotFoundError:
         correlation_id = new_correlation_id()
         logger.info("Loan not found for statement", extra={"correlation_id": correlation_id, "loan_id": loan_id})
-        return JsonResponse({"error": "not_found", "correlation_id": correlation_id}, status=404)
+        response = JsonResponse({"error": "not_found", "correlation_id": correlation_id}, status=404)
+        return add_cors_headers(response, request)
     except (MifosAuthError, MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
         logger.exception("Failed to fetch loan data for statement", extra={"correlation_id": correlation_id, "loan_id": loan_id})
-        return JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        return add_cors_headers(response, request)
 
     # Extract loan information
     status_obj = loan_data.get("status", {})
@@ -1069,11 +1092,13 @@ def download_repayment_schedule(request: HttpRequest, loan_id: int):
     except MifosNotFoundError:
         correlation_id = new_correlation_id()
         logger.info("Loan not found for schedule", extra={"correlation_id": correlation_id, "loan_id": loan_id})
-        return JsonResponse({"error": "not_found", "correlation_id": correlation_id}, status=404)
+        response = JsonResponse({"error": "not_found", "correlation_id": correlation_id}, status=404)
+        return add_cors_headers(response, request)
     except (MifosAuthError, MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
         logger.exception("Failed to fetch loan data for schedule", extra={"correlation_id": correlation_id, "loan_id": loan_id})
-        return JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        return add_cors_headers(response, request)
 
     # Get repayment schedule
     repayment_schedule = loan_data.get("repaymentSchedule", {})
@@ -1268,9 +1293,11 @@ def notifications_view(request: HttpRequest):
     except (MifosAuthError, MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
         logger.exception("Failed to fetch notifications data", extra={"correlation_id": correlation_id})
-        return JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        return add_cors_headers(response, request)
 
-    return JsonResponse({"notifications": notifications}, status=200)
+    response = JsonResponse({"notifications": notifications}, status=200)
+    return add_cors_headers(response, request)
 
 
 @csrf_exempt
@@ -1282,7 +1309,8 @@ def mark_notification_read_view(request: HttpRequest, notification_id: int):
     
     # In a real system, this would update the database
     # For now, just return success
-    return JsonResponse({"success": True}, status=200)
+    response = JsonResponse({"success": True}, status=200)
+    return add_cors_headers(response, request)
 
 
 @csrf_exempt
@@ -1294,7 +1322,8 @@ def mark_all_notifications_read_view(request: HttpRequest):
     
     # In a real system, this would update the database
     # For now, just return success
-    return JsonResponse({"success": True}, status=200)
+    response = JsonResponse({"success": True}, status=200)
+    return add_cors_headers(response, request)
 
 
 @csrf_exempt
@@ -1306,4 +1335,5 @@ def delete_notification_view(request: HttpRequest, notification_id: int):
     
     # In a real system, this would delete from database
     # For now, just return success
-    return JsonResponse({"success": True}, status=200)
+    response = JsonResponse({"success": True}, status=200)
+    return add_cors_headers(response, request)
