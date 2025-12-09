@@ -23,6 +23,7 @@ import { ResetPasswordComponent } from './reset-password/reset-password.componen
 import { TwoFactorAuthenticationComponent } from './two-factor-authentication/two-factor-authentication.component';
 import { MatList, MatListItem } from '@angular/material/list';
 import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
+import { MatButton } from '@angular/material/button';
 import { FooterComponent } from '../shared/footer/footer.component';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
@@ -46,6 +47,7 @@ import { STANDALONE_SHARED_IMPORTS } from 'app/standalone-shared.module';
     MatList,
     MatListItem,
     MatMenuTrigger,
+    MatButton,
     FooterComponent,
     FaIconComponent,
     MatMenu,
@@ -113,5 +115,9 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   allowServerSwitch(): boolean {
     return environment.allowServerSwitch === 'false' ? false : true;
+  }
+
+  navigateToClientPortal(): void {
+    this.router.navigate(['/clientportal/login']);
   }
 }

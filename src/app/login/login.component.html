@@ -68,6 +68,16 @@
         <mifosx-reset-password *ngIf="resetPassword"></mifosx-reset-password>
         <mifosx-two-factor-authentication *ngIf="twoFactorAuthenticationRequired"></mifosx-two-factor-authentication>
       </div>
+
+      <!-- Client Portal Login Button -->
+      <div class="client-portal-link-container" *ngIf="!resetPassword && !twoFactorAuthenticationRequired">
+        <div class="divider-line"></div>
+        <button mat-stroked-button class="client-portal-button" (click)="navigateToClientPortal()">
+          <fa-icon icon="user" class="client-portal-icon"></fa-icon>
+          <span>Client Portal Login</span>
+        </button>
+        <p class="client-portal-description">Access your account as a client</p>
+      </div>
     </div>
 
     <div class="layout-row">
