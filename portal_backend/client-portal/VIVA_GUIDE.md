@@ -1363,5 +1363,497 @@ def loans_view(request: HttpRequest):
 
 ---
 
-**Next Section**: More Views (Transactions, Downloads, Notifications) - coming next...
+### **5.4 Transaction Views**
+
+#### **Transactions View (Lines 236-350+)**
+
+```python
+def transactions_view(request: HttpRequest):
+    user, error_response = _require_session(request)
+    if error_response:
+        return error_response
+    
+    client = MifosClient()
+    
+    # Fetch all transactions from loans and savings
+    all_transactions = []
+    
+    try:
+        # Get savings transactions
+        savings_accounts = client.fetch_client_savings()
+        for account in savings_accounts:
+            account_id = account.get("id")
+            if account_id:
+                transactions = client.fetch_savings_transactions(account_id, limit=1000)
+                for txn in transactions:
+                    all_transactions.append({
+                        "id": txn.get("id"),
+                        "type": txn.get("transactionType", {}).get("value", "Unknown"),
+                        "amount": txn.get("amount", 0),
+                        "date": format_date(txn.get("date")),
+                        "accountType": "Savings",
+                        "accountNo": account.get("accountNo"),
+                        "description": f"{txn.get('transactionType', {}).get('value', 'Transaction')} - {account.get('accountNo')}",
+                        "reference": txn.get("id"),
+                        "status": "Success" if txn.get("reversed") is False else "Reversed",
+                    })
+        
+        # Get loan transactions
+        loans = client.fetch_client_loans()
+        for loan in loans:
+            loan_id = loan.get("id")
+            if loan_id:
+                transactions = client.fetch_loan_transactions(loan_id)
+                for txn in transactions:
+                    all_transactions.append({
+                        "id": txn.get("id"),
+                        "type": txn.get("type", {}).get("value", "Unknown"),
+                        "amount": txn.get("amount", 0),
+                        "date": format_date(txn.get("date")),
+                        "accountType": "Loan",
+                        "accountNo": loan.get("accountNo"),
+                        "description": build_transaction_description(txn, loan),
+                        "reference": txn.get("id"),
+                        "status": "Success",
+                    })
+    except (MifosAuthError, MifosUpstreamError):
+        return JsonResponse({"error": "upstream_unavailable"}, status=503)
+    except MifosNotFoundError:
+        # No accounts found - return empty list
+        pass
+    
+    # Calculate summary
+    total = len(all_transactions)
+    total_credit = sum(t["amount"] for t in all_transactions if t["amount"] > 0)
+    total_debit = abs(sum(t["amount"] for t in all_transactions if t["amount"] < 0))
+    remaining = total_credit - total_debit
+    
+    return JsonResponse({
+        "transactions": all_transactions,
+        "summary": {
+            "total": total,
+            "totalCredit": total_credit,
+            "totalDebit": total_debit,
+            "remaining": remaining,
+        }
+    }, status=200)
+```
+
+**What**: Fetches all transactions from loans and savings accounts
+
+**Key Logic**:
+- **Credit**: Positive amounts (money coming IN - e.g., disbursement)
+- **Debit**: Negative amounts (money going OUT - e.g., repayment, fees)
+- **Remaining**: `Total Credit - Total Debit`
+
+**Data Aggregation**: Combines transactions from multiple sources (savings + loans)
+
+---
+
+### **5.5 Download Views**
+
+#### **Loan Statement Download (Lines 500+)**
+
+```python
+def download_loan_statement(request: HttpRequest, loan_id: int):
+    user, error_response = _require_session(request)
+    if error_response:
+        return error_response
+    
+    client = MifosClient()
+    try:
+        loan_data = client.fetch_loan_details(loan_id)
+    except (MifosAuthError, MifosUpstreamError):
+        return JsonResponse({"error": "upstream_unavailable"}, status=503)
+    except MifosNotFoundError:
+        return JsonResponse({"error": "not_found"}, status=404)
+    
+    # Generate HTML statement
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Loan Statement - {loan_data.get('accountNo')}</title>
+        <style>
+            body {{ font-family: Arial; margin: 20px; }}
+            table {{ border-collapse: collapse; width: 100%; }}
+            th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+        </style>
+    </head>
+    <body>
+        <h1>Loan Statement</h1>
+        <p>Account: {loan_data.get('accountNo')}</p>
+        <p>Principal: ₹{loan_data.get('principal')}</p>
+        <p>Outstanding: ₹{loan_data.get('totalOutstanding')}</p>
+        <!-- Transaction table -->
+    </body>
+    </html>
+    """
+    
+    response = HttpResponse(html, content_type="text/html")
+    response["Content-Disposition"] = f'attachment; filename="loan_statement_{loan_id}.html"'
+    return response
+```
+
+**What**: Generates HTML statement for printing/PDF conversion
+
+**Why HTML**: Browser can print to PDF, no external library needed
+
+---
+
+#### **Repayment Schedule Download (CSV)**
+
+```python
+def download_repayment_schedule(request: HttpRequest, loan_id: int):
+    # ... fetch loan data ...
+    
+    # Generate CSV
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["EMI #", "Due Date", "Amount", "Principal", "Interest", "Status", "Payment Date", "Reference"])
+    
+    for period in repayment_schedule.get("periods", []):
+        writer.writerow([
+            period.get("period"),
+            format_date(period.get("dueDate")),
+            period.get("totalDueForPeriod"),
+            period.get("principalDue"),
+            period.get("interestDue"),
+            "Paid" if period.get("complete") else "Pending",
+            format_date(period.get("actualPaymentDate")),
+            period.get("id"),
+        ])
+    
+    response = HttpResponse(output.getvalue(), content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="repayment_schedule_{loan_id}.csv"'
+    return response
+```
+
+**What**: Generates CSV file with EMI schedule
+
+**Why CSV**: Easy to open in Excel, lightweight format
+
+---
+
+### **5.6 Notification Views**
+
+#### **Notifications View (Lines 800+)**
+
+```python
+def notifications_view(request: HttpRequest):
+    user, error_response = _require_session(request)
+    if error_response:
+        return error_response
+    
+    client = MifosClient()
+    notifications = []
+    
+    try:
+        # Generate EMI reminders from loans
+        loans = client.fetch_client_loans()
+        for loan in loans:
+            next_repayment = loan.get("nextRepaymentDate")
+            if next_repayment:
+                due_date = datetime.strptime(next_repayment, "%Y-%m-%d").date()
+                days_until = (due_date - date.today()).days
+                
+                if 0 <= days_until <= 7:  # Due within 7 days
+                    notifications.append({
+                        "id": f"emi_reminder_{loan.get('id')}",
+                        "type": "EMI Due Reminder",
+                        "title": "EMI Due Reminder",
+                        "description": f"Your EMI of ₹{loan.get('emiAmount')} for loan {loan.get('accountNo')} is due on {format_date(next_repayment)}",
+                        "timestamp": datetime.now().strftime("%Y-%m-%d %I:%M %p"),
+                        "read": False,
+                    })
+        
+        # Generate payment received notifications from transactions
+        # ... (similar logic)
+        
+        # Add sample notifications
+        notifications.extend([
+            {
+                "id": "sample_1",
+                "type": "Loan Update",
+                "title": "Loan Approved",
+                "description": "Your loan application has been approved.",
+                "timestamp": "2025-12-08 10:00 AM",
+                "read": False,
+            },
+            # ... more samples
+        ])
+    except (MifosAuthError, MifosUpstreamError):
+        return JsonResponse({"error": "upstream_unavailable"}, status=503)
+    
+    # Sort by timestamp (most recent first)
+    notifications.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+    
+    return JsonResponse({"notifications": notifications}, status=200)
+```
+
+**What**: Generates notifications from loan/transaction data
+
+**Notification Types**:
+- **EMI Reminders**: Generated from loan repayment dates
+- **Payment Received**: Generated from successful transactions
+- **Loan Updates**: Sample notifications
+- **Messages**: Sample notifications
+- **Document Verification**: Sample notifications
+
+**Note**: Currently mock implementation - notifications generated on-the-fly, not stored in database
+
+---
+
+## 6. URL Routing (`core/urls.py`)
+
+This file maps URL patterns to view functions.
+
+### **6.1 URL Patterns**
+
+```python
+from django.urls import path
+from .views import (
+    login_view,
+    me_view,
+    dashboard_view,
+    client_view,
+    loans_view,
+    loan_details_view,
+    savings_view,
+    transactions_view,
+    download_loan_statement,
+    download_repayment_schedule,
+    download_transactions_statement,
+    notifications_view,
+    mark_notification_read_view,
+    mark_all_notifications_read_view,
+    delete_notification_view,
+)
+
+urlpatterns = [
+    # Authentication
+    path("auth/login", login_view, name="login"),
+    path("auth/me", me_view, name="me"),
+    
+    # Dashboard
+    path("dashboard", dashboard_view, name="dashboard"),
+    
+    # Client data
+    path("clientportal/client", client_view, name="client"),
+    path("clientportal/loans", loans_view, name="loans"),
+    path("clientportal/loans/<int:loan_id>", loan_details_view, name="loan_details"),
+    path("clientportal/savings", savings_view, name="savings"),
+    path("clientportal/transactions", transactions_view, name="transactions"),
+    
+    # Downloads
+    path("clientportal/loans/<int:loan_id>/statement", download_loan_statement, name="loan_statement"),
+    path("clientportal/loans/<int:loan_id>/schedule", download_repayment_schedule, name="repayment_schedule"),
+    path("clientportal/transactions/download", download_transactions_statement, name="transactions_download"),
+    
+    # Notifications
+    path("clientportal/notifications", notifications_view, name="notifications"),
+    path("clientportal/notifications/<int:notification_id>/read", mark_notification_read_view, name="mark_notification_read"),
+    path("clientportal/notifications/read-all", mark_all_notifications_read_view, name="mark_all_read"),
+    path("clientportal/notifications/<int:notification_id>", delete_notification_view, name="delete_notification"),
+]
+```
+
+**What**: Defines URL patterns and their corresponding view functions
+
+**URL Pattern Syntax**:
+- `"auth/login"` → `/auth/login`
+- `"clientportal/loans/<int:loan_id>"` → `/clientportal/loans/1` (captures `loan_id` as integer)
+
+**Name Parameter**: Used for reverse URL lookup in templates/views
+
+---
+
+### **6.2 Main URL Configuration (`portal_backend/urls.py`)**
+
+```python
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("", include("core.urls")),
+]
+```
+
+**What**: Main URL configuration - includes `core.urls`
+
+**Why**: Django projects can have multiple apps, each with its own `urls.py`
+
+---
+
+## 7. Common Questions & Answers
+
+### **Q1: Why does Django act as middleware between Angular and Fineract?**
+
+**A**: 
+- **Security**: Fineract admin credentials stay on backend, never exposed to frontend
+- **Session Management**: Django handles authentication/sessions (cookies)
+- **Data Normalization**: Backend transforms Fineract's complex responses into simple JSON
+- **Error Handling**: Backend catches Fineract errors and returns user-friendly messages
+- **CORS**: Backend handles CORS for cross-origin requests
+
+---
+
+### **Q2: How does authentication work?**
+
+**A**:
+1. **Client Login**: Frontend sends `username: "client"`, `password: "password"` to Django
+2. **Local Validation**: Django validates credentials (hardcoded, NOT against Fineract)
+3. **Fineract Check**: Django uses admin credentials (`mifos/password`) to verify Fineract is up
+4. **Session Creation**: Django creates session with `cp_user` data, sets cookie `cp_session`
+5. **Subsequent Requests**: Frontend sends cookie with each request, Django validates session
+
+**Key Point**: Client credentials are NOT authenticated against Fineract - Django validates locally and uses admin credentials to fetch data.
+
+---
+
+### **Q3: Why do we need `@csrf_exempt` on some views?**
+
+**A**: 
+- **CSRF Protection**: Django protects against Cross-Site Request Forgery by requiring CSRF tokens
+- **API Endpoints**: REST APIs typically don't use CSRF tokens (use session cookies or JWT instead)
+- **`@csrf_exempt`**: Disables CSRF protection for specific endpoints
+- **Used On**: POST endpoints that don't use Django forms (login, notification actions)
+
+**Note**: Login uses `@csrf_exempt` because Angular sends JSON, not form data.
+
+---
+
+### **Q4: How are transactions categorized as Credit/Debit?**
+
+**A**:
+- **Credit** (positive amount): Money coming IN to client
+  - Example: Loan disbursement (client receives money)
+- **Debit** (negative amount): Money going OUT from client
+  - Example: Loan repayment (client pays money), fees (client pays charges)
+- **Remaining**: `Total Credit - Total Debit` (net balance from client's perspective)
+
+**Banking Perspective**: From the client's point of view, not the bank's.
+
+---
+
+### **Q5: Why do we fetch loan details individually after getting the list?**
+
+**A**:
+- **List Endpoint**: `GET /loans?clientId=3` returns basic loan info (no repayment schedule)
+- **Detail Endpoint**: `GET /loans/{id}?associations=repaymentSchedule` returns full details with EMI schedule
+- **Data Enrichment**: We need repayment schedule to calculate:
+  - Next repayment date
+  - Paid/remaining EMIs
+  - Progress percentage
+  - Outstanding balance
+
+**Trade-off**: More API calls, but richer data for frontend.
+
+---
+
+### **Q6: How does error handling work?**
+
+**A**:
+1. **MifosClient Methods**: Raise custom exceptions (`MifosAuthError`, `MifosUpstreamError`, `MifosNotFoundError`)
+2. **Views Catch Exceptions**: Try/except blocks in views catch these exceptions
+3. **Error Responses**: Return appropriate HTTP status codes:
+   - `401`: Authentication failed
+   - `404`: Resource not found
+   - `503`: Fineract unavailable
+4. **Correlation IDs**: Each error includes unique ID for debugging
+
+**Example**:
+```python
+try:
+    data = client.fetch_client_loans()
+except MifosNotFoundError:
+    return JsonResponse({"loans": []}, status=200)  # Empty list, not error
+except (MifosAuthError, MifosUpstreamError):
+    return JsonResponse({"error": "upstream_unavailable"}, status=503)
+```
+
+---
+
+### **Q7: Why use Django sessions instead of JWT tokens?**
+
+**A**:
+- **Simplicity**: Django sessions are built-in, no extra libraries needed
+- **Security**: Sessions stored server-side, more secure than client-side tokens
+- **Cookie-based**: Browser automatically sends cookies, no manual token management
+- **Session Management**: Django handles session expiration, cleanup automatically
+
+**Trade-off**: Sessions are stateful (stored on server), but simpler for this use case.
+
+---
+
+### **Q8: How does CORS work in this project?**
+
+**A**:
+1. **Frontend** (Angular): Runs on `localhost:4200` or `https://frontend.onrender.com`
+2. **Backend** (Django): Runs on `localhost:8000` or `https://backend.onrender.com`
+3. **CORS Issue**: Browser blocks cross-origin requests by default
+4. **Solution**: 
+   - `django-cors-headers` middleware adds CORS headers to responses
+   - `CORS_ALLOWED_ORIGINS` in settings.py lists allowed frontend URLs
+   - `CORS_ALLOW_CREDENTIALS = True` allows cookies in CORS requests
+
+**Headers Added**:
+- `Access-Control-Allow-Origin: https://frontend.onrender.com`
+- `Access-Control-Allow-Credentials: true`
+- `Access-Control-Allow-Methods: GET, POST, OPTIONS`
+
+---
+
+### **Q9: What happens if Fineract is down?**
+
+**A**:
+1. **Login**: `client.auth_check()` fails → Returns `503 upstream_unavailable`
+2. **Data Fetching**: `client.fetch_*()` raises `MifosUpstreamError` → View returns `503`
+3. **Frontend**: Shows error message to user
+4. **Logging**: Error logged with correlation ID for debugging
+
+**Graceful Degradation**: Some views return empty data (e.g., empty loans list) instead of error if client not found.
+
+---
+
+### **Q10: How are dates formatted?**
+
+**A**:
+- **Fineract Format**: `[2024, 10, 15]` (array) or `"2024-10-15"` (string)
+- **Frontend Format**: `"2024-10-15"` (ISO date string)
+- **Helper Function**: `format_date()` converts Fineract dates to strings
+
+**Example**:
+```python
+def format_date(date_value):
+    if isinstance(date_value, list) and len(date_value) == 3:
+        return f"{date_value[0]}-{date_value[1]:02d}-{date_value[2]:02d}"
+    return date_value or ""
+```
+
+---
+
+## Summary
+
+This backend implements a **middleware pattern** between Angular frontend and Fineract core banking engine:
+
+1. **Authentication**: Local validation + Fineract health check
+2. **Data Fetching**: Admin credentials fetch client data from Fineract
+3. **Data Transformation**: Complex Fineract responses → Simple JSON for frontend
+4. **Error Handling**: Fineract errors → User-friendly HTTP responses
+5. **Session Management**: Django sessions with cookies
+6. **CORS**: Handles cross-origin requests between frontend and backend
+
+**Key Files**:
+- `settings.py`: Configuration (CORS, database, Fineract connection)
+- `mifos_client/client.py`: Fineract API communication
+- `core/views.py`: API endpoints logic
+- `core/urls.py`: URL routing
+
+**Architecture**: Angular → Django → Fineract
+
+---
+
+**End of VIVA Guide**
 
