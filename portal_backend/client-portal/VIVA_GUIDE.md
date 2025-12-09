@@ -377,5 +377,279 @@ portal_backend/
 
 ---
 
-**Next Section**: Settings Configuration (coming next...)
+## 3. Settings Configuration (`portal_backend/settings.py`)
+
+This file configures Django framework behavior, security, database, CORS, and external service connections.
+
+### **Key Sections Explained**
+
+#### **3.1 Imports and Setup (Lines 1-15)**
+
+```python
+import os
+from pathlib import Path
+from corsheaders.defaults import default_headers
+from dotenv import load_dotenv
+```
+
+**What**: Import necessary libraries
+- `os`: Access environment variables
+- `Path`: Modern file path handling
+- `corsheaders`: CORS headers for cross-origin requests
+- `load_dotenv`: Load `.env` file
+
+```python
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
+```
+
+**What**: 
+- `BASE_DIR`: Absolute path to project root (2 directories up from settings.py)
+- `load_dotenv()`: Loads environment variables from `.env` file
+
+**Why**: Keeps sensitive data (passwords, API keys) out of code
+
+---
+
+#### **3.2 Security Settings (Lines 17-31)**
+
+```python
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key-change-me")
+DEBUG = os.getenv("DEBUG", "true").lower() == "true"
+```
+
+**What**:
+- `SECRET_KEY`: Cryptographic key for signing sessions, cookies, CSRF tokens
+- `DEBUG`: Show detailed error pages (True in dev, False in production)
+
+**Why**: 
+- Secret key must be unique in production
+- DEBUG=False hides sensitive info in production
+
+```python
+ALLOWED_HOSTS: list[str] = [
+    "localhost",
+    "127.0.0.1",
+    ".onrender.com",  # Render subdomains
+    ".render.com",
+]
+```
+
+**What**: List of hostnames Django accepts requests from
+
+**Why**: Security feature - prevents HTTP Host header attacks
+
+---
+
+#### **3.3 Installed Apps (Lines 33-43)**
+
+```python
+INSTALLED_APPS = [
+    "django.contrib.admin",      # Admin interface
+    "django.contrib.auth",       # Authentication
+    "django.contrib.sessions",   # Session management
+    "rest_framework",            # REST API framework
+    "corsheaders",               # CORS middleware
+    "core",                      # Our custom app
+]
+```
+
+**What**: Django apps to load
+- Built-in apps: admin, auth, sessions, etc.
+- Third-party: `rest_framework`, `corsheaders`
+- Custom: `core` (our app)
+
+**Why**: Django needs to know which apps to initialize
+
+---
+
+#### **3.4 Middleware (Lines 45-67)**
+
+```python
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Only in production
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+]
+```
+
+**What**: Middleware = code that runs on every request/response
+
+**Order Matters!** They execute in this order:
+1. **SecurityMiddleware**: Adds security headers (HTTPS redirect, etc.)
+2. **WhiteNoiseMiddleware**: Serves static files in production
+3. **SessionMiddleware**: Manages user sessions (creates `request.session`)
+4. **CorsMiddleware**: Handles CORS headers (MUST be before CSRF)
+5. **CommonMiddleware**: Common utilities
+6. **CsrfViewMiddleware**: CSRF protection
+7. **AuthenticationMiddleware**: Adds `request.user` object
+8. **MessagesMiddleware**: Flash messages
+
+**Why**: Each middleware processes request/response. Order is critical!
+
+---
+
+#### **3.5 Database Configuration (Lines 89-102)**
+
+```python
+if os.getenv("DATABASE_URL") and dj_database_url:
+    # Production: PostgreSQL
+    DATABASES = {
+        "default": dj_database_url.parse(os.getenv("DATABASE_URL"))
+    }
+else:
+    # Development: SQLite
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+```
+
+**What**: 
+- **Production**: Uses PostgreSQL (from `DATABASE_URL` environment variable)
+- **Development**: Uses SQLite (file-based database)
+
+**Why**: 
+- PostgreSQL: Better for production (concurrent access, performance)
+- SQLite: Simpler for development (no server setup needed)
+
+---
+
+#### **3.6 CORS Configuration (Lines 124-171)**
+
+```python
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+]
+```
+
+**What**: CORS = Cross-Origin Resource Sharing
+- Allows frontend (different domain/port) to call backend API
+- `CORS_ALLOW_CREDENTIALS`: Allow cookies in CORS requests
+
+**Why**: Browser security blocks cross-origin requests by default. We need CORS because:
+- Frontend: `localhost:4200` or `https://frontend.onrender.com`
+- Backend: `localhost:8000` or `https://backend.onrender.com`
+
+```python
+if not DEBUG:
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^https://.*\.onrender\.com$",
+    ]
+else:
+    CORS_ALLOW_ALL_ORIGINS = True
+```
+
+**What**: 
+- **Production**: Only allow `.onrender.com` subdomains (regex pattern)
+- **Development**: Allow all origins (for testing)
+
+**Why**: Security - restrict origins in production
+
+```python
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "X-Correlation-ID",
+    "Fineract-Platform-TenantId",
+    "Content-Type",
+    "Authorization",
+]
+```
+
+**What**: Headers frontend can send in requests
+- Custom: `X-Correlation-ID` (for request tracking)
+- Fineract: `Fineract-Platform-TenantId` (required by Fineract)
+
+---
+
+#### **3.7 Session Configuration (Lines 173-176)**
+
+```python
+SESSION_COOKIE_NAME = "cp_session"
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = not DEBUG
+```
+
+**What**: Session cookie settings
+- `SESSION_COOKIE_NAME`: Cookie name (`cp_session` = Client Portal session)
+- `SESSION_COOKIE_HTTPONLY`: JavaScript can't access (prevents XSS)
+- `SESSION_COOKIE_SAMESITE`: When to send cookie (`Lax` = same-site + top-level nav)
+- `SESSION_COOKIE_SECURE`: Only send over HTTPS (production only)
+
+**Why**: Security best practices for session management
+
+---
+
+#### **3.8 Fineract Configuration (Lines 178-183)**
+
+```python
+MIFOS_BASE_URL = os.getenv("MIFOS_BASE_URL", "https://localhost:8443/fineract-provider/api/v1")
+MIFOS_TENANT_ID = os.getenv("MIFOS_TENANT_ID", "default")
+MIFOS_ADMIN_USER = os.getenv("MIFOS_ADMIN_USER", "mifos")
+MIFOS_ADMIN_PASS = os.getenv("MIFOS_ADMIN_PASS", "password")
+MIFOS_VERIFY_SSL = os.getenv("MIFOS_VERIFY_SSL", "true").lower() == "true"
+MIFOS_CLIENT_ID = os.getenv("MIFOS_CLIENT_ID", "3")
+```
+
+**What**: Configuration for connecting to Fineract (core banking engine)
+
+**Why**: 
+- Django backend acts as middleware between frontend and Fineract
+- Uses admin credentials to fetch client data
+- `MIFOS_CLIENT_ID` determines which client's data to show
+
+**Example**: Backend uses `mifos/password` to login to Fineract, then fetches data for client ID 3
+
+---
+
+#### **3.9 Logging Configuration (Lines 185-212)**
+
+```python
+LOGGING = {
+    "version": 1,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "mifos_client": {"level": "DEBUG"},
+        "core": {"level": "DEBUG"},
+    },
+}
+```
+
+**What**: Python logging configuration
+- **Formatters**: How to format log messages (level, timestamp, module, message)
+- **Handlers**: Where to send logs (console = print to terminal)
+- **Loggers**: Which modules to log (`mifos_client`, `core` at DEBUG level)
+
+**Why**: 
+- Debugging: See what's happening in code
+- Monitoring: Track errors and requests
+
+**Example Log Output**:
+```
+DEBUG 2025-12-09 10:30:45,123 mifos_client Mifos admin fetch
+INFO 2025-12-09 10:30:45,456 core Login request received
+```
+
+---
+
+**Next Section**: MifosClient - Fineract Communication (coming next...)
 
