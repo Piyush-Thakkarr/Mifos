@@ -10,11 +10,11 @@ const { HttpsProxyAgent } = require('https-proxy-agent');
  */
 const proxyConfig = [
   {
-    context: '/api',
-    pathRewrite: { '^/api': '' },
-    target: 'https://api.chucknorris.io',
+    context: '/fineract-provider',
+    target: 'https://localhost:8443',
     changeOrigin: true,
-    secure: false
+    secure: false, // Bypass SSL certificate verification for self-signed certs
+    logLevel: 'debug'
   }
 ];
 
