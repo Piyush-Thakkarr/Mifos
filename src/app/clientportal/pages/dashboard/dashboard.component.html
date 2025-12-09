@@ -71,7 +71,7 @@
           <h3>Need Additional Funds?</h3>
           <p>Apply for a new loan today! Quick approval process with competitive interest rates.</p>
         </div>
-        <button class="apply-loan-btn">+ Apply for New Loan</button>
+        <button class="apply-loan-btn" (click)="showComingSoon()">+ Apply for New Loan</button>
       </div>
 
       <!-- Summary Cards -->
@@ -193,6 +193,24 @@
     <!-- Error State -->
     <div class="error-state" *ngIf="error">
       <p class="error">{{ error }}</p>
+    </div>
+  </div>
+
+  <!-- Coming Soon Popup -->
+  <div class="coming-soon-overlay" *ngIf="showComingSoonPopup" (click)="closeComingSoonPopup()">
+    <div class="coming-soon-popup" (click)="$event.stopPropagation()">
+      <div class="popup-header">
+        <h3>Coming Soon!</h3>
+        <button class="close-btn" (click)="closeComingSoonPopup()">×</button>
+      </div>
+      <div class="popup-content">
+        <div class="popup-icon">🚀</div>
+        <p>Loan application feature will be available soon.</p>
+        <p class="popup-subtext">Please contact your loan officer for assistance with new loan applications.</p>
+      </div>
+      <div class="popup-footer">
+        <button class="popup-ok-btn" (click)="closeComingSoonPopup()">OK</button>
+      </div>
     </div>
   </div>
 </div>

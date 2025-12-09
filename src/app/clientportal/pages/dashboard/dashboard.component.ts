@@ -13,6 +13,7 @@ export class ClientportalDashboardComponent {
   loading = false;
   error: string | null = null;
   dashboard: any = null;
+  showComingSoonPopup = false;
 
   constructor(private authService: AuthService) {
     this.load();
@@ -93,5 +94,13 @@ export class ClientportalDashboardComponent {
       return `${date[0]}-${String(date[1]).padStart(2, '0')}-${String(date[2]).padStart(2, '0')}`;
     }
     return String(date);
+  }
+
+  showComingSoon(): void {
+    this.showComingSoonPopup = true;
+  }
+
+  closeComingSoonPopup(): void {
+    this.showComingSoonPopup = false;
   }
 }
