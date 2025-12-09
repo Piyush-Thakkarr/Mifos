@@ -10,22 +10,13 @@ const { HttpsProxyAgent } = require('https-proxy-agent');
  */
 const proxyConfig = [
   {
-    context: '/fineract-provider',
+    context: ['/fineract-provider'],
     target: 'https://localhost:8443',
-    changeOrigin: true,
     secure: false, // Bypass SSL certificate verification for self-signed certs
+    changeOrigin: true,
     logLevel: 'debug',
-    onProxyRes: function(proxyRes, req, res) {
-      // Ensure proper headers are forwarded
-      proxyRes.headers['access-control-allow-origin'] = '*';
-      proxyRes.headers['access-control-allow-credentials'] = 'true';
-    },
-    onError: function(err, req, res) {
-      console.error('Proxy error:', err);
-      res.writeHead(500, {
-        'Content-Type': 'text/plain'
-      });
-      res.end('Proxy error: ' + err.message);
+    headers: {
+      'Connection': 'keep-alive'
     }
   }
 ];
