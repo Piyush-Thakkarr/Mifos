@@ -9,20 +9,31 @@ npm install --legacy-peer-deps
 
 echo "Generating environment file..."
 # Create env.js from template with Render environment variables
+# Ensure URLs have proper protocol (http:// or https://)
+FINERACT_URL="${FINERACT_API_URL:-https://localhost:8443}"
+if [[ ! "$FINERACT_URL" =~ ^https?:// ]]; then
+  FINERACT_URL="https://${FINERACT_URL}"
+fi
+
+DJANGO_URL="${DJANGO_API_URL:-http://localhost:8000}"
+if [[ ! "$DJANGO_URL" =~ ^https?:// ]]; then
+  DJANGO_URL="https://${DJANGO_URL}"
+fi
+
 cat > src/assets/env.js << EOF
 (function (window) {
   window['env'] = window['env'] || {};
 
   // BackEnd Environment variables
-  window['env']['fineractApiUrls'] = '${FINERACT_API_URLS:-https://localhost:8443}';
-  window['env']['fineractApiUrl'] = '${FINERACT_API_URL:-https://localhost:8443}';
+  window['env']['fineractApiUrls'] = '${FINERACT_API_URLS:-${FINERACT_URL}}';
+  window['env']['fineractApiUrl'] = '${FINERACT_URL}';
   window['env']['apiProvider'] = '${FINERACT_API_PROVIDER:-/fineract-provider/api}';
   window['env']['apiVersion'] = '${FINERACT_API_VERSION:-/v1}';
   window['env']['fineractPlatformTenantId'] = '${FINERACT_PLATFORM_TENANT_IDENTIFIER:-default}';
   window['env']['fineractPlatformTenantIds'] = '${FINERACT_PLATFORMS_TENANTS_IDENTIFIER:-default}';
 
   // Client Portal Django API URL
-  window['env']['djangoApiUrl'] = '${DJANGO_API_URL:-http://localhost:8000}';
+  window['env']['djangoApiUrl'] = '${DJANGO_URL}';
 
   // Language Environment variables
   window['env']['defaultLanguage'] = '${MIFOS_DEFAULT_LANGUAGE:-en-US}';

@@ -137,5 +137,9 @@ services:
           type: web
           name: fineract-backend
           property: host
+      - key: FINERACT_API_PROVIDER
+        value: /fineract-provider/api
+      - key: FINERACT_API_VERSION
+        value: /v1
       - key: FINERACT_PLATFORM_TENANT_IDENTIFIER
         value: default
