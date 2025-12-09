@@ -23,23 +23,37 @@ export class ApiPrefixInterceptor implements HttpInterceptor {
    */
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     let baseUrl = this.settingsService.serverUrl;
+    const serverHost = this.settingsService.serverHost;
+    
+    // Check if we're in development mode (localhost)
+    const isDevelopment = serverHost && (serverHost.includes('localhost') || serverHost.includes('127.0.0.1'));
 
     const versionRegex = /^\/(v[1-9][0-9]*\/).*$/;
     if (versionRegex.test(request.url)) {
       baseUrl = this.settingsService.baseServerUrl;
     }
-    if (request.url.includes('/actuator/')) {
-      // For actuator requests:
-      // - In development (localhost): use relative path to go through Angular proxy (bypasses SSL)
-      // - In production: use full URL from window.env (direct connection)
-      const serverHost = this.settingsService.serverHost;
-      // Check if we're in development mode (localhost) and not production
-      const isDevelopment = serverHost && (serverHost.includes('localhost') || serverHost.includes('127.0.0.1'));
-      // Only use relative path in development to leverage proxy
-      if (isDevelopment) {
+    
+    // In development mode: use relative paths for ALL API requests to go through Angular proxy
+    // This bypasses SSL certificate issues with self-signed certificates
+    // In production: use full URLs from window.env (direct connection)
+    if (isDevelopment) {
+      // For development, use relative paths so requests go through proxy
+      // This applies to all Fineract API requests (authentication, actuator, etc.)
+      if (request.url.includes('/actuator/') || 
+          request.url.includes('/fineract-provider/') ||
+          request.url.startsWith('/authentication') ||
+          request.url.startsWith('/self/') ||
+          request.url.startsWith('/users/') ||
+          request.url.startsWith('/clients/') ||
+          request.url.startsWith('/loans/') ||
+          request.url.startsWith('/savingsaccounts/') ||
+          request.url.startsWith('/api/') ||
+          request.url.startsWith('/v1/')) {
         baseUrl = '';
-      } else {
-        // Production: use full URL from environment
+      }
+    } else {
+      // Production: use full URLs from environment
+      if (request.url.includes('/actuator/')) {
         baseUrl = serverHost || '';
       }
     }
