@@ -46,11 +46,12 @@ services:
     name: client-portal-frontend
     env: node
     plan: free
-    dockerfilePath: ""
+    autoDeploy: false
     buildCommand: |
       chmod +x build-frontend.sh &&
       ./build-frontend.sh
     startCommand: npx serve -s dist/web-app/browser -l $PORT
+    skipCache: false
     envVars:
       - key: NODE_VERSION
         value: 20.x
