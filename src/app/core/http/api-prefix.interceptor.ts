@@ -29,7 +29,15 @@ export class ApiPrefixInterceptor implements HttpInterceptor {
       baseUrl = this.settingsService.baseServerUrl;
     }
     if (request.url.includes('/actuator/')) {
-      baseUrl = this.settingsService.serverHost;
+      // Use relative path for actuator requests to go through Angular proxy
+      // This bypasses SSL certificate issues in development
+      const serverHost = this.settingsService.serverHost;
+      // If serverHost is localhost, use relative path (empty string) to use proxy
+      if (serverHost && (serverHost.includes('localhost') || serverHost.includes('127.0.0.1'))) {
+        baseUrl = '';
+      } else {
+        baseUrl = serverHost;
+      }
     }
 
     /**
