@@ -21,6 +21,16 @@ def new_correlation_id() -> str:
 
 @csrf_exempt
 def login_view(request: HttpRequest):
+    # Handle OPTIONS preflight request
+    if request.method == "OPTIONS":
+        response = JsonResponse({})
+        response["Access-Control-Allow-Origin"] = request.headers.get("Origin", "*")
+        response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
+        response["Access-Control-Allow-Credentials"] = "true"
+        response["Access-Control-Max-Age"] = "86400"
+        return response
+    
     if request.method != "POST":
         return JsonResponse({"error": "method_not_allowed"}, status=405)
 
@@ -50,19 +60,25 @@ def login_view(request: HttpRequest):
         logger.exception("Upstream Fineract error during admin auth_check", extra={"correlation_id": correlation_id})
         return JsonResponse({"error": "upstream_unavailable", "correlation_id": correlation_id}, status=503)
 
-    request.session["cp_user"] = {
-        "username": "client",
-        "displayName": "client",
-    }
-    request.session.save()
+           request.session["cp_user"] = {
+               "username": "client",
+               "displayName": "client",
+           }
+           request.session.save()
 
-    return JsonResponse(
-        {
-            "username": "client",
-            "display_name": "client",
-        },
-        status=200,
-    )
+           response = JsonResponse(
+               {
+                   "username": "client",
+                   "display_name": "client",
+               },
+               status=200,
+           )
+           # Add CORS headers explicitly
+           origin = request.headers.get("Origin")
+           if origin:
+               response["Access-Control-Allow-Origin"] = origin
+               response["Access-Control-Allow-Credentials"] = "true"
+           return response
 
 
 def me_view(request: HttpRequest):

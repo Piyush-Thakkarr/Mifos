@@ -121,6 +121,7 @@ except ImportError:
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# CORS Configuration
 CORS_ALLOW_CREDENTIALS = True
 
 # CORS origins - support both local and production
@@ -128,26 +129,46 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
     "http://127.0.0.1:4200",
 ]
+
 # Add Render frontend URL if provided
 if os.getenv("FRONTEND_URL"):
     frontend_url = os.getenv("FRONTEND_URL")
     if not frontend_url.startswith("http"):
         frontend_url = f"https://{frontend_url}"
-    CORS_ALLOWED_ORIGINS.append(frontend_url)
-# Add from CORS_ALLOWED_ORIGINS env var if provided
+    if frontend_url not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(frontend_url)
+
+# Add from CORS_ALLOWED_ORIGINS env var if provided (comma-separated)
 if os.getenv("CORS_ALLOWED_ORIGINS"):
-    CORS_ALLOWED_ORIGINS.extend(os.getenv("CORS_ALLOWED_ORIGINS").split(","))
-# Allow all origins in development (for local testing)
-if DEBUG:
+    origins = [origin.strip() for origin in os.getenv("CORS_ALLOWED_ORIGINS").split(",")]
+    for origin in origins:
+        if origin and origin not in CORS_ALLOWED_ORIGINS:
+            if not origin.startswith("http"):
+                origin = f"https://{origin}"
+            CORS_ALLOWED_ORIGINS.append(origin)
+
+# In production, allow any .onrender.com subdomain for flexibility
+if not DEBUG:
+    # Allow any Render subdomain (regex pattern)
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^https://.*\.onrender\.com$",
+    ]
+else:
+    # Allow all origins in development (for local testing)
     CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "X-Correlation-ID",
     "Fineract-Platform-TenantId",
     "fineract-platform-tenantid",
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
 ]
 CORS_EXPOSE_HEADERS = [
     "X-Correlation-ID",
 ]
+# Allow preflight requests to be cached
+CORS_PREFLIGHT_MAX_AGE = 86400
 
 SESSION_COOKIE_NAME = "cp_session"
 SESSION_COOKIE_HTTPONLY = True
