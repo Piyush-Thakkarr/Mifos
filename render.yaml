@@ -1,10 +1,51 @@
 services:
-  # PostgreSQL Database for Fineract (if deploying Fineract on Render)
+  # PostgreSQL Database for Fineract
   - type: pspg
     name: fineract-database
     plan: free
-    databaseName: fineract_default
+    databaseName: fineract_tenants
     user: fineract_user
+
+  # Fineract Backend Service (Docker)
+  - type: web
+    name: fineract-backend
+    plan: starter
+    dockerfilePath: ./fineract/Dockerfile
+    dockerContext: ./fineract
+    dockerCommand: |
+      docker run -d \
+        -p $PORT:8443 \
+        -e FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME=org.postgresql.Driver \
+        -e FINERACT_HIKARI_JDBC_URL=jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME} \
+        -e FINERACT_HIKARI_USERNAME=${DATABASE_USER} \
+        -e FINERACT_HIKARI_PASSWORD=${DATABASE_PASSWORD} \
+        -e FINERACT_DEFAULT_TENANTDB_HOST=${DATABASE_HOST} \
+        -e FINERACT_DEFAULT_TENANTDB_PORT=${DATABASE_PORT} \
+        -e FINERACT_DEFAULT_TENANTDB_UID=${DATABASE_USER} \
+        -e FINERACT_DEFAULT_TENANTDB_PWD=${DATABASE_PASSWORD} \
+        -e FINERACT_DEFAULT_TENANTDB_NAME=fineract_default \
+        apache/fineract:latest
+    envVars:
+      - key: DATABASE_HOST
+        fromDatabase:
+          name: fineract-database
+          property: host
+      - key: DATABASE_PORT
+        fromDatabase:
+          name: fineract-database
+          property: port
+      - key: DATABASE_NAME
+        fromDatabase:
+          name: fineract-database
+          property: database
+      - key: DATABASE_USER
+        fromDatabase:
+          name: fineract-database
+          property: user
+      - key: DATABASE_PASSWORD
+        fromDatabase:
+          name: fineract-database
+          property: password
 
   # Django Backend Service
   - type: web
@@ -25,21 +66,21 @@ services:
         generateValue: true
       - key: DEBUG
         value: false
-      # Fineract Configuration
-      # Option 1: Use public Fineract sandbox (recommended for testing)
+      # Fineract Configuration - points to deployed Fineract service
       - key: MIFOS_BASE_URL
-        value: https://sandbox.mifos.community/fineract-provider/api/v1
-      # Option 2: Use your own Fineract instance (uncomment and set your URL)
-      # - key: MIFOS_BASE_URL
-      #   sync: false
+        fromService:
+          type: web
+          name: fineract-backend
+          property: host
+        value: https://fineract-backend.onrender.com/fineract-provider/api/v1
       - key: MIFOS_TENANT_ID
         value: default
       - key: MIFOS_ADMIN_USER
-        value: mifos
+        sync: false
       - key: MIFOS_ADMIN_PASS
-        value: password
+        sync: false
       - key: MIFOS_VERIFY_SSL
-        value: true
+        value: false
       - key: MIFOS_CLIENT_ID
         value: 3
       # Frontend URL for CORS
@@ -79,28 +120,9 @@ services:
           property: host
       # Fineract API URL (for main Mifos app, not client portal)
       - key: FINERACT_API_URL
-        value: https://sandbox.mifos.community
+        fromService:
+          type: web
+          name: fineract-backend
+          property: host
       - key: FINERACT_PLATFORM_TENANT_IDENTIFIER
         value: default
-
-  # Fineract Service (Optional - Docker deployment)
-  # Uncomment this section if you want to deploy Fineract on Render
-  # Note: This requires Render's paid plan for Docker support
-  # - type: web
-  #   name: fineract-backend
-  #   plan: starter
-  #   dockerfilePath: ./fineract/Dockerfile
-  #   dockerContext: ./fineract
-  #   dockerCommand: |
-  #     docker run -d \
-  #       -p $PORT:8443 \
-  #       -e FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME=org.mariadb.jdbc.Driver \
-  #       -e FINERACT_HIKARI_JDBC_URL=jdbc:mariadb://fineract-database:5432/fineract_default \
-  #       -e FINERACT_HIKARI_USERNAME=fineract_user \
-  #       -e FINERACT_HIKARI_PASSWORD=${DATABASE_PASSWORD} \
-  #       apache/fineract:latest
-  #   envVars:
-  #     - key: DATABASE_URL
-  #       fromDatabase:
-  #         name: fineract-database
-  #         property: connectionString

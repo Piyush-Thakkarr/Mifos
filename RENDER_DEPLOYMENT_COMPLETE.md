@@ -1,26 +1,25 @@
-# Complete Render Deployment Guide
+# Complete Render Deployment Guide - With Your Own Fineract
 
-This guide provides step-by-step instructions for deploying the entire Client Portal application stack on Render.
+This guide provides step-by-step instructions for deploying the entire Client Portal application stack on Render, including your own Fineract Docker instance.
 
 ## Architecture Overview
 
 The deployment consists of:
-1. **Angular Frontend** - Static web service
-2. **Django Backend** - Python web service (middleware)
-3. **Fineract Backend** - Core banking engine (optional: use public sandbox or deploy your own)
+1. **PostgreSQL Database** - For Fineract data storage
+2. **Fineract Backend** - Core banking engine (Docker container)
+3. **Django Backend** - Python web service (middleware)
+4. **Angular Frontend** - Static web service
 
-## Option 1: Using Public Fineract Sandbox (Recommended for Testing)
-
-This is the easiest option - use the public Fineract sandbox at `sandbox.mifos.community`.
-
-### Prerequisites
+## Prerequisites
 
 1. **Render Account** - Sign up at [render.com](https://render.com)
+   - **Starter Plan Required** ($7/month) for Docker support (Fineract deployment)
+   - Free tier for Django and Angular services
 2. **GitHub Repository** - Your code should be in a GitHub repository
 
-### Deployment Steps
+## Deployment Steps
 
-#### Step 1: Connect Repository to Render
+### Step 1: Connect Repository to Render
 
 1. Go to [Render Dashboard](https://dashboard.render.com)
 2. Click "New +" → "Blueprint"
@@ -28,91 +27,124 @@ This is the easiest option - use the public Fineract sandbox at `sandbox.mifos.c
 4. Select the repository containing this project
 5. Render will detect `render.yaml` automatically
 
-#### Step 2: Review and Deploy
+### Step 2: Review Services
 
-1. Render will show all services from `render.yaml`
-2. Review the configuration:
-   - **client-portal-backend** - Django backend
-   - **client-portal-frontend** - Angular frontend
-   - **fineract-database** - PostgreSQL (optional, for future Fineract deployment)
+Render will show all services from `render.yaml`:
+- **fineract-database** - PostgreSQL database
+- **fineract-backend** - Fineract Docker service (requires Starter plan)
+- **client-portal-backend** - Django backend
+- **client-portal-frontend** - Angular frontend
 
-3. **Important Environment Variables to Set:**
+### Step 3: Configure Environment Variables
 
-   For **client-portal-backend** service:
-   - `MIFOS_BASE_URL`: `https://sandbox.mifos.community/fineract-provider/api/v1` (already set)
-   - `MIFOS_ADMIN_USER`: `mifos` (already set)
-   - `MIFOS_ADMIN_PASS`: `password` (already set)
-   - `MIFOS_CLIENT_ID`: `3` (or your client ID in the sandbox)
+#### For fineract-backend Service:
 
-   For **client-portal-frontend** service:
-   - `DJANGO_API_URL`: Auto-populated from backend service
-   - `FINERACT_API_URL`: `https://sandbox.mifos.community` (already set)
+The database connection is auto-configured, but you may need to set:
 
-4. Click "Apply" to deploy all services
+- `FINERACT_DEFAULT_TENANTDB_NAME`: `fineract_default` (default tenant database name)
 
-#### Step 3: Create Test Client in Fineract Sandbox
+#### For client-portal-backend Service:
 
-1. Go to [Fineract Sandbox UI](https://sandbox.mifos.community)
-2. Login with:
-   - Username: `mifos`
-   - Password: `password`
-   - Tenant: `default`
-3. Create a client (or use existing client ID `3`)
-4. Create loans, savings accounts, and transactions for testing
+**Required Variables:**
+- `MIFOS_ADMIN_USER`: Your Fineract admin username (default: `mifos`)
+- `MIFOS_ADMIN_PASS`: Your Fineract admin password (default: `password`)
+- `MIFOS_CLIENT_ID`: The client ID you want to use for the portal (default: `3`)
 
-#### Step 4: Update Client ID
+**Auto-configured:**
+- `MIFOS_BASE_URL`: Automatically points to your Fineract service
+- `FRONTEND_URL`: Automatically set from frontend service
+- `CORS_ALLOWED_ORIGINS`: Automatically set from frontend service
 
-1. In Render dashboard, go to **client-portal-backend** service
-2. Go to "Environment" tab
-3. Update `MIFOS_CLIENT_ID` to match your test client ID
-4. Save and redeploy
+#### For client-portal-frontend Service:
 
-### Testing the Deployment
+All variables are auto-configured from other services.
+
+### Step 4: Deploy
+
+1. Click "Apply" to deploy all services
+2. **Deployment Order:**
+   - Database deploys first
+   - Fineract deploys second (waits for database)
+   - Django backend deploys third
+   - Angular frontend deploys last
+
+3. **Wait Times:**
+   - Database: ~2 minutes
+   - Fineract: ~5-10 minutes (first deployment takes longer)
+   - Django: ~3-5 minutes
+   - Angular: ~5-8 minutes
+
+### Step 5: Initialize Fineract
+
+After Fineract is deployed:
+
+1. **Wait for Fineract to be healthy:**
+   - Check Fineract service logs in Render
+   - Look for: "Started FineractApplication" or similar
+   - Health check: `https://your-fineract-service.onrender.com/fineract-provider/actuator/health`
+
+2. **Access Fineract UI:**
+   - URL: `https://your-fineract-service.onrender.com`
+   - Accept the self-signed SSL certificate warning
+   - Login with:
+     - Username: `mifos` (or your admin user)
+     - Password: `password` (or your admin password)
+     - Tenant: `default`
+
+3. **Create Initial Data:**
+   - Create a tenant (if not exists)
+   - Create users
+   - Create a client (note the Client ID)
+   - Create loan products
+   - Create savings products
+   - Create test loans and savings accounts
+
+4. **Update Client ID:**
+   - In Render dashboard, go to **client-portal-backend** service
+   - Go to "Environment" tab
+   - Update `MIFOS_CLIENT_ID` to match your created client
+   - Save and redeploy backend
+
+### Step 6: Test the Deployment
 
 1. **Frontend URL**: `https://your-frontend-service.onrender.com`
 2. **Backend URL**: `https://your-backend-service.onrender.com`
-3. **Test Login**:
+3. **Fineract URL**: `https://your-fineract-service.onrender.com`
+
+4. **Test Login:**
    - Go to frontend URL
    - Click "Client Portal Login"
    - Username: `client`
    - Password: `password`
 
-## Option 2: Deploy Your Own Fineract Instance
-
-If you want to deploy Fineract on Render (requires paid plan for Docker support):
-
-### Prerequisites
-
-- Render **Starter Plan** or higher (for Docker support)
-- Understanding of Fineract configuration
-
-### Steps
-
-1. **Uncomment Fineract Service** in `render.yaml`:
-   ```yaml
-   - type: web
-     name: fineract-backend
-     plan: starter
-     # ... Fineract configuration
-   ```
-
-2. **Update Environment Variables**:
-   - Set `MIFOS_BASE_URL` in backend to point to your Fineract service
-   - Configure Fineract database connection
-
-3. **Deploy**:
-   - Render will build and deploy Fineract Docker container
-   - Wait for Fineract to be healthy (may take 5-10 minutes)
-
-4. **Initialize Fineract**:
-   - Access Fineract UI
-   - Create tenant, users, and test data
-
 ## Manual Service Creation (Alternative)
 
-If you prefer to create services manually instead of using Blueprint:
+If you prefer to create services manually:
 
-### 1. Create Django Backend Service
+### 1. Create PostgreSQL Database
+
+1. Go to Render Dashboard → "New +" → "PostgreSQL"
+2. Configure:
+   - **Name**: `fineract-database`
+   - **Database**: `fineract_tenants`
+   - **User**: `fineract_user`
+   - **Plan**: Free
+3. Note the connection details
+
+### 2. Create Fineract Service
+
+1. Go to Render Dashboard → "New +" → "Web Service"
+2. Connect your repository
+3. Configure:
+   - **Name**: `fineract-backend`
+   - **Environment**: `Docker`
+   - **Dockerfile Path**: `./fineract/Dockerfile`
+   - **Docker Context**: `./fineract`
+   - **Plan**: Starter ($7/month) - Required for Docker
+4. Add environment variables (see Step 3 above)
+5. Deploy
+
+### 3. Create Django Backend Service
 
 1. Go to Render Dashboard → "New +" → "Web Service"
 2. Connect your repository
@@ -127,10 +159,10 @@ If you prefer to create services manually instead of using Blueprint:
      ```bash
      cd portal_backend && gunicorn portal_backend.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
      ```
-4. Add environment variables (see Step 2 above)
+4. Add environment variables (see Step 3 above)
 5. Deploy
 
-### 2. Create Angular Frontend Service
+### 4. Create Angular Frontend Service
 
 1. Go to Render Dashboard → "New +" → "Web Service"
 2. Connect your repository
@@ -145,96 +177,119 @@ If you prefer to create services manually instead of using Blueprint:
      ```bash
      npx serve -s dist/web-app/browser -l $PORT
      ```
-4. Add environment variables:
-   - `DJANGO_API_URL`: Your backend service URL
-   - `FINERACT_API_URL`: Fineract URL
-   - `NODE_VERSION`: `20.x`
+4. Add environment variables (see Step 3 above)
 5. Deploy
 
 ## Environment Variables Reference
+
+### Fineract Service Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `DATABASE_HOST` | PostgreSQL host | Auto-set from database |
+| `DATABASE_PORT` | PostgreSQL port | Auto-set from database |
+| `DATABASE_NAME` | Database name | `fineract_tenants` |
+| `DATABASE_USER` | Database user | Auto-set from database |
+| `DATABASE_PASSWORD` | Database password | Auto-set from database |
+| `FINERACT_HIKARI_JDBC_URL` | JDBC connection URL | Auto-configured |
+| `FINERACT_DEFAULT_TENANTDB_NAME` | Default tenant DB | `fineract_default` |
 
 ### Backend (Django) Variables
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `MIFOS_BASE_URL` | Fineract API base URL | `https://sandbox.mifos.community/fineract-provider/api/v1` |
-| `MIFOS_TENANT_ID` | Fineract tenant identifier | `default` |
+| `MIFOS_BASE_URL` | Fineract API URL | Auto-set from Fineract service |
+| `MIFOS_TENANT_ID` | Fineract tenant | `default` |
 | `MIFOS_ADMIN_USER` | Fineract admin username | `mifos` |
 | `MIFOS_ADMIN_PASS` | Fineract admin password | `password` |
 | `MIFOS_CLIENT_ID` | Client ID for portal | `3` |
-| `MIFOS_VERIFY_SSL` | Verify SSL certificates | `true` or `false` |
-| `FRONTEND_URL` | Frontend service URL (auto-set) | Auto-populated |
-| `DJANGO_SECRET_KEY` | Django secret key | Auto-generated |
+| `MIFOS_VERIFY_SSL` | Verify SSL | `false` (for self-signed certs) |
+| `FRONTEND_URL` | Frontend URL | Auto-set from frontend service |
 
 ### Frontend (Angular) Variables
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `DJANGO_API_URL` | Django backend URL | Auto-populated from backend service |
-| `FINERACT_API_URL` | Fineract base URL | `https://sandbox.mifos.community` |
+| `DJANGO_API_URL` | Django backend URL | Auto-set from backend service |
+| `FINERACT_API_URL` | Fineract URL | Auto-set from Fineract service |
 | `FINERACT_PLATFORM_TENANT_IDENTIFIER` | Tenant ID | `default` |
-| `NODE_VERSION` | Node.js version | `20.x` |
 
 ## Troubleshooting
 
+### Fineract Issues
+
+**Fineract won't start:**
+- Check database connection in Fineract logs
+- Verify database credentials are correct
+- Ensure database is accessible from Fineract service
+- Check if database has been initialized
+
+**Fineract health check fails:**
+- Wait 5-10 minutes for Fineract to fully start
+- Check logs for Java errors
+- Verify port 8443 is exposed correctly
+- Check if SSL certificate is being generated
+
+**Database connection errors:**
+- Verify `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME` are correct
+- Check database user has proper permissions
+- Ensure database service is running
+
 ### Backend Issues
 
-**503 Upstream Unavailable**
-- Check `MIFOS_BASE_URL` is correct
-- Verify Fineract is accessible
-- Check `MIFOS_ADMIN_USER` and `MIFOS_ADMIN_PASS` are correct
+**503 Upstream Unavailable:**
+- Check `MIFOS_BASE_URL` points to correct Fineract service
+- Verify Fineract is running and healthy
+- Check `MIFOS_VERIFY_SSL` is set to `false` for self-signed certs
+- Test Fineract connection manually
 
-**CORS Errors**
+**CORS Errors:**
 - Ensure `FRONTEND_URL` is set correctly
 - Check `CORS_ALLOWED_ORIGINS` includes frontend URL
-
-**Database Errors**
-- If using PostgreSQL, check `DATABASE_URL` is set
-- For SQLite (default), no database setup needed
+- Verify CORS middleware is enabled
 
 ### Frontend Issues
 
-**Build Failures**
+**Build Failures:**
 - Check Node.js version (should be 20.x)
 - Verify `build-frontend.sh` has execute permissions
 - Check for npm dependency issues
 
-**API Connection Errors**
+**API Connection Errors:**
 - Verify `DJANGO_API_URL` is set correctly
 - Check backend service is running
 - Verify CORS is configured on backend
 
-### Fineract Issues
+## Important Notes
 
-**Sandbox Access**
-- Sandbox resets every 6 hours
-- Create test data after each reset
-- Use demo.mifos.community for more stable testing
-
-**Custom Fineract Instance**
-- Check Docker logs in Render
-- Verify database connection
-- Wait for Fineract to fully start (5-10 minutes)
+1. **Starter Plan Required**: Fineract Docker deployment requires Render's Starter plan ($7/month)
+2. **SSL Certificates**: Fineract uses self-signed certificates - set `MIFOS_VERIFY_SSL=false` in backend
+3. **First Deployment**: Fineract takes 5-10 minutes to start on first deployment
+4. **Database Initialization**: Fineract will create necessary tables on first start
+5. **Free Tier Limitations**: Free tier services spin down after 15 minutes of inactivity
+6. **Port Configuration**: Render uses `$PORT` environment variable - Fineract Dockerfile handles this
 
 ## Post-Deployment Checklist
 
-- [ ] Backend service is running and healthy
-- [ ] Frontend service is running and accessible
+- [ ] All services are running and healthy
+- [ ] Fineract database is initialized
+- [ ] Fineract UI is accessible
+- [ ] Fineract admin user can login
+- [ ] Test client created in Fineract
+- [ ] Client ID updated in backend config
 - [ ] Backend can connect to Fineract (check logs)
 - [ ] Frontend can connect to backend (test login)
 - [ ] CORS is configured correctly
-- [ ] Environment variables are set correctly
-- [ ] Test client exists in Fineract
-- [ ] Client ID matches in backend config
+- [ ] All environment variables are set correctly
 
-## Cost Estimation (Free Tier)
+## Cost Estimation
 
+- **PostgreSQL Database**: Free (with limitations)
+- **Fineract (Docker)**: Starter plan - $7/month (required)
 - **Django Backend**: Free (with limitations)
 - **Angular Frontend**: Free (with limitations)
-- **PostgreSQL Database**: Free (with limitations)
-- **Fineract (Docker)**: Requires Starter plan ($7/month)
 
-**Note**: Free tier services spin down after 15 minutes of inactivity. First request may take 30-60 seconds to wake up.
+**Total**: ~$7/month (for Fineract Docker support)
 
 ## Support
 
@@ -243,6 +298,7 @@ For issues:
 2. Check browser console for frontend errors
 3. Verify all environment variables are set
 4. Test Fineract connection independently
+5. Check Fineract health endpoint: `/fineract-provider/actuator/health`
 
 ## Next Steps
 
@@ -250,6 +306,6 @@ After successful deployment:
 1. Set up custom domain (optional)
 2. Configure SSL certificates (auto-handled by Render)
 3. Set up monitoring and alerts
-4. Configure backups for database
+4. Configure database backups
 5. Set up CI/CD for automatic deployments
-
+6. Create production Fineract data (tenants, users, products, clients)
