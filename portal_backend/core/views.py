@@ -19,6 +19,15 @@ def new_correlation_id() -> str:
     return str(uuid.uuid4())
 
 
+def add_cors_headers(response: JsonResponse, request: HttpRequest) -> JsonResponse:
+    """Helper function to add CORS headers to response."""
+    origin = request.headers.get("Origin")
+    if origin:
+        response["Access-Control-Allow-Origin"] = origin
+        response["Access-Control-Allow-Credentials"] = "true"
+    return response
+
+
 @csrf_exempt
 def login_view(request: HttpRequest):
     # Handle OPTIONS preflight request
