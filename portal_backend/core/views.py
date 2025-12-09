@@ -101,9 +101,21 @@ def me_view(request: HttpRequest):
     if not user:
         correlation_id = new_correlation_id()
         logger.info("Unauthenticated /auth/me call", extra={"correlation_id": correlation_id})
-        return JsonResponse({"error": "unauthorized", "correlation_id": correlation_id}, status=401)
+        response = JsonResponse({"error": "unauthorized", "correlation_id": correlation_id}, status=401)
+        # Add CORS headers
+        origin = request.headers.get("Origin")
+        if origin:
+            response["Access-Control-Allow-Origin"] = origin
+            response["Access-Control-Allow-Credentials"] = "true"
+        return response
 
-    return JsonResponse(user, status=200)
+    response = JsonResponse(user, status=200)
+    # Add CORS headers
+    origin = request.headers.get("Origin")
+    if origin:
+        response["Access-Control-Allow-Origin"] = origin
+        response["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 
 def dashboard_view(request: HttpRequest):
@@ -111,9 +123,10 @@ def dashboard_view(request: HttpRequest):
     if not user:
         correlation_id = new_correlation_id()
         logger.info("Unauthorized dashboard access", extra={"correlation_id": correlation_id})
-        return JsonResponse({"error": "unauthorized", "correlation_id": correlation_id}, status=401)
+        response = JsonResponse({"error": "unauthorized", "correlation_id": correlation_id}, status=401)
+        return add_cors_headers(response, request)
 
-    return JsonResponse(
+    response = JsonResponse(
         {
             "authenticated": True,
             "user": user,
@@ -147,7 +160,8 @@ def client_view(request: HttpRequest):
     except (MifosAuthError, MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
         logger.exception("Failed to fetch client bundle", extra={"correlation_id": correlation_id})
-        return JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        return add_cors_headers(response, request)
 
     profile = {
         "id": bundle.get("id"),
