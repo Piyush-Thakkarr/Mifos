@@ -651,5 +651,395 @@ INFO 2025-12-09 10:30:45,456 core Login request received
 
 ---
 
-**Next Section**: MifosClient - Fineract Communication (coming next...)
+## 4. MifosClient - Fineract Communication (`mifos_client/client.py`)
+
+This file contains the `MifosClient` class that handles all communication with the Fineract core banking API.
+
+### **4.1 Class Overview**
+
+**Purpose**: Acts as a wrapper around Fineract API calls, handling authentication, error handling, and data fetching.
+
+**Key Responsibilities**:
+1. Authenticate with Fineract using admin credentials
+2. Fetch client data (profile, loans, savings, transactions)
+3. Handle errors gracefully (404, 401, 503)
+4. Manage authentication tokens/sessions
+
+---
+
+### **4.2 Custom Exceptions (Lines 1-20)**
+
+```python
+class MifosAuthError(Exception):
+    """Raised when Fineract authentication fails."""
+    pass
+
+class MifosUpstreamError(Exception):
+    """Raised when Fineract is unavailable or returns an error."""
+    pass
+
+class MifosNotFoundError(Exception):
+    """Raised when a resource is not found (404)."""
+    pass
+```
+
+**What**: Custom exception classes for different error types
+
+**Why**: 
+- **MifosAuthError**: Admin credentials wrong or expired
+- **MifosUpstreamError**: Fineract server down or network error
+- **MifosNotFoundError**: Client/loan/savings not found (404)
+
+**Usage**: Views catch these exceptions and return appropriate HTTP status codes
+
+---
+
+### **4.3 Class Initialization (Lines 22-50)**
+
+```python
+class MifosClient:
+    def __init__(self, client_id: int | None = None):
+        self.base_url = settings.MIFOS_BASE_URL
+        self.tenant_id = settings.MIFOS_TENANT_ID
+        self.admin_user = settings.MIFOS_ADMIN_USER
+        self.admin_pass = settings.MIFOS_ADMIN_PASS
+        self.verify_ssl = settings.MIFOS_VERIFY_SSL
+        self.client_id = client_id or settings.MIFOS_CLIENT_ID
+        self._auth_token: str | None = None
+```
+
+**What**: Initializes client with configuration from Django settings
+
+**Parameters**:
+- `client_id`: Optional client ID (defaults to `MIFOS_CLIENT_ID` from settings)
+
+**Instance Variables**:
+- `base_url`: Fineract API base URL (e.g., `https://localhost:8443/fineract-provider/api/v1`)
+- `tenant_id`: Fineract tenant identifier (usually `"default"`)
+- `admin_user`: Admin username (e.g., `"mifos"`)
+- `admin_pass`: Admin password (e.g., `"password"`)
+- `verify_ssl`: Whether to verify SSL certificates (False for local dev)
+- `client_id`: Client ID to fetch data for (e.g., `3`)
+- `_auth_token`: Cached authentication token (None initially)
+
+**Why**: Centralizes configuration - all Fineract settings come from Django settings
+
+---
+
+### **4.4 Authentication Method (Lines 52-95)**
+
+```python
+def auth_check(self) -> bool:
+    """Check if admin credentials work with Fineract."""
+    # Try multiple authentication strategies
+    strategies = [
+        # Strategy 1: POST /authentication with JSON body
+        {
+            "url": f"{self.base_url}/authentication",
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json",
+                "Fineract-Platform-TenantId": self.tenant_id,
+            },
+            "data": {"username": self.admin_user, "password": self.admin_pass},
+        },
+        # Strategy 2: POST /self/authentication
+        {
+            "url": f"{self.base_url}/self/authentication",
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json",
+                "Fineract-Platform-TenantId": self.tenant_id,
+            },
+            "data": {"username": self.admin_user, "password": self.admin_pass},
+        },
+    ]
+    
+    for strategy in strategies:
+        try:
+            response = requests.post(
+                strategy["url"],
+                json=strategy["data"],
+                headers=strategy["headers"],
+                verify=self.verify_ssl,
+                timeout=10,
+            )
+            if response.status_code == 200:
+                data = response.json()
+                self._auth_token = data.get("base64EncodedAuthenticationKey")
+                return True
+        except Exception as e:
+            logger.debug(f"Auth strategy failed: {e}")
+            continue
+    
+    return False
+```
+
+**What**: Tests if admin credentials work with Fineract
+
+**How**:
+1. Tries multiple authentication endpoints/strategies
+2. Sends POST request with username/password in JSON body
+3. If successful (200), extracts and caches auth token
+4. Returns `True` if any strategy works, `False` otherwise
+
+**Why Multiple Strategies**: Different Fineract versions/configurations may use different endpoints
+
+**Used By**: `login_view` to verify Fineract is accessible before allowing client login
+
+---
+
+### **4.5 Core Fetch Method (Lines 97-145)**
+
+```python
+def fetch_with_admin(
+    self, path: str, params: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """Fetch data from Fineract using admin credentials."""
+    url = f"{self.base_url}{path}"
+    headers = {
+        "Fineract-Platform-TenantId": self.tenant_id,
+        "Content-Type": "application/json",
+    }
+    
+    # Add auth token if available
+    if self._auth_token:
+        headers["Authorization"] = f"Basic {self._auth_token}"
+    
+    try:
+        response = requests.get(
+            url,
+            params=params,
+            headers=headers,
+            verify=self.verify_ssl,
+            timeout=30,
+        )
+        
+        if response.status_code == 401:
+            # Token expired, re-authenticate
+            if self.auth_check():
+                headers["Authorization"] = f"Basic {self._auth_token}"
+                response = requests.get(url, params=params, headers=headers, ...)
+            else:
+                raise MifosAuthError("Authentication failed")
+        
+        if response.status_code == 404:
+            raise MifosNotFoundError(f"Resource not found: {path}")
+        
+        if response.status_code != 200:
+            raise MifosUpstreamError(f"Fineract error: {response.status_code}")
+        
+        return response.json()
+        
+    except requests.exceptions.RequestException as e:
+        raise MifosUpstreamError(f"Network error: {str(e)}")
+```
+
+**What**: Core method for making GET requests to Fineract
+
+**Parameters**:
+- `path`: API endpoint path (e.g., `"/clients/3"`)
+- `params`: Query parameters (e.g., `{"associations": "all"}`)
+
+**How**:
+1. Builds full URL from base URL + path
+2. Adds required headers (tenant ID, content type)
+3. Adds auth token if available
+4. Makes GET request
+5. Handles errors:
+   - **401**: Re-authenticates and retries
+   - **404**: Raises `MifosNotFoundError`
+   - **Other errors**: Raises `MifosUpstreamError`
+6. Returns JSON response
+
+**Why**: Centralizes all Fineract API calls - handles auth, errors, retries
+
+**Used By**: All data-fetching methods (`fetch_client_bundle`, `fetch_client_loans`, etc.)
+
+---
+
+### **4.6 Client Data Fetching Methods**
+
+#### **4.6.1 Fetch Client Profile (Lines 231-235)**
+
+```python
+def fetch_client_bundle(self) -> Dict[str, Any]:
+    """Fetch client profile with associations for dashboard."""
+    path = f"/clients/{self.client_id}"
+    params = {"associations": "all"}
+    return self.fetch_with_admin(path, params=params)
+```
+
+**What**: Fetches complete client profile with all related data
+
+**Fineract API**: `GET /clients/{client_id}?associations=all`
+
+**Returns**: Client object with profile, office, staff, groups, etc.
+
+**Used By**: `client_view` in `core/views.py`
+
+---
+
+#### **4.6.2 Fetch Client Loans (Lines 237-259)**
+
+```python
+def fetch_client_loans(self) -> List[Dict[str, Any]]:
+    """Fetch all loans for the client with repayment schedule."""
+    path = f"/loans"
+    params = {"clientId": self.client_id}
+    try:
+        data = self.fetch_with_admin(path, params=params)
+        loans = data.get("pageItems", [])
+        
+        # Enrich each loan with repayment schedule
+        enriched_loans = []
+        for loan in loans:
+            loan_id = loan.get("id")
+            if loan_id:
+                try:
+                    loan_detail = self.fetch_with_admin(
+                        f"/loans/{loan_id}",
+                        params={"associations": "repaymentSchedule"}
+                    )
+                    loan.update(loan_detail)  # Merge detail into loan
+                except (MifosAuthError, MifosUpstreamError, MifosNotFoundError):
+                    pass  # Use what we have
+            enriched_loans.append(loan)
+        return enriched_loans
+    except MifosNotFoundError:
+        return []  # No loans found
+```
+
+**What**: Fetches all loans for the client, enriched with repayment schedule
+
+**How**:
+1. Fetches list of loans: `GET /loans?clientId={client_id}`
+2. For each loan, fetches detailed data: `GET /loans/{loan_id}?associations=repaymentSchedule`
+3. Merges repayment schedule into loan object
+4. Returns enriched loans list
+
+**Why Two API Calls**: 
+- List endpoint doesn't include repayment schedule
+- Need detailed endpoint with `associations=repaymentSchedule` to get EMI schedule
+
+**Used By**: `loans_view` in `core/views.py`
+
+---
+
+#### **4.6.3 Fetch Client Savings (Lines 261-283)**
+
+```python
+def fetch_client_savings(self) -> List[Dict[str, Any]]:
+    """Fetch all savings accounts for the client with summary."""
+    path = f"/savingsaccounts"
+    params = {"clientId": self.client_id}
+    try:
+        data = self.fetch_with_admin(path, params=params)
+        accounts = data.get("pageItems", [])
+        
+        # Enrich each account with summary (balance info)
+        enriched_accounts = []
+        for account in accounts:
+            account_id = account.get("id")
+            if account_id:
+                try:
+                    account_detail = self.fetch_with_admin(
+                        f"/savingsaccounts/{account_id}",
+                        params={"associations": "summary"}
+                    )
+                    account.update(account_detail)  # Merge summary
+                except (MifosAuthError, MifosUpstreamError, MifosNotFoundError):
+                    pass
+            enriched_accounts.append(account)
+        return enriched_accounts
+    except MifosNotFoundError:
+        return []
+```
+
+**What**: Fetches all savings accounts with balance information
+
+**How**: Similar to loans - fetches list, then enriches each with summary
+
+**Why**: Summary contains `accountBalance` and `availableBalance` not in list endpoint
+
+**Used By**: `savings_view` in `core/views.py`
+
+---
+
+#### **4.6.4 Fetch Savings Transactions (Lines 285-293)**
+
+```python
+def fetch_savings_transactions(self, savings_account_id: int, limit: int = 10) -> List[Dict[str, Any]]:
+    """Fetch recent transactions for a savings account."""
+    path = f"/savingsaccounts/{savings_account_id}/transactions"
+    params = {"limit": limit, "offset": 0}
+    try:
+        data = self.fetch_with_admin(path, params=params)
+        return data.get("pageItems", [])
+    except MifosNotFoundError:
+        return []
+```
+
+**What**: Fetches transactions for a specific savings account
+
+**Fineract API**: `GET /savingsaccounts/{id}/transactions?limit=10&offset=0`
+
+**Used By**: `transactions_view` in `core/views.py`
+
+---
+
+#### **4.6.5 Fetch Loan Transactions (Lines 295-304)**
+
+```python
+def fetch_loan_transactions(self, loan_id: int) -> List[Dict[str, Any]]:
+    """Fetch transactions for a loan account."""
+    path = f"/loans/{loan_id}"
+    params = {"associations": "all"}
+    try:
+        data = self.fetch_with_admin(path, params=params)
+        # Transactions can be in 'transactions' or 'transactionHistory' key
+        return data.get("transactions", []) or data.get("transactionHistory", [])
+    except MifosNotFoundError:
+        return []
+```
+
+**What**: Fetches transactions for a specific loan
+
+**Fineract API**: `GET /loans/{loan_id}?associations=all`
+
+**Note**: Fineract may return transactions in different keys, so we check both
+
+**Used By**: `transactions_view` in `core/views.py`
+
+---
+
+#### **4.6.6 Fetch Loan Details (Lines 306-310)**
+
+```python
+def fetch_loan_details(self, loan_id: int) -> Dict[str, Any]:
+    """Fetch detailed loan information with repayment schedule."""
+    path = f"/loans/{loan_id}"
+    params = {"associations": "repaymentSchedule,transactions"}
+    return self.fetch_with_admin(path, params=params)
+```
+
+**What**: Fetches complete loan details with repayment schedule and transactions
+
+**Fineract API**: `GET /loans/{loan_id}?associations=repaymentSchedule,transactions`
+
+**Used By**: `loan_details_view` in `core/views.py`
+
+---
+
+### **4.7 Key Design Patterns**
+
+1. **Error Handling**: Custom exceptions allow views to handle errors appropriately
+2. **Token Caching**: Auth token cached in `_auth_token` to avoid re-authenticating on every request
+3. **Retry Logic**: If token expires (401), automatically re-authenticates and retries
+4. **Data Enrichment**: List endpoints don't have all data, so we fetch details for each item
+5. **Graceful Degradation**: If detail fetch fails, uses data from list endpoint
+
+---
+
+**Next Section**: Views - API Endpoints Logic (coming next...)
 
