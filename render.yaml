@@ -1,4 +1,11 @@
 services:
+  # PostgreSQL Database for Fineract (if deploying Fineract on Render)
+  - type: pspg
+    name: fineract-database
+    plan: free
+    databaseName: fineract_default
+    user: fineract_user
+
   # Django Backend Service
   - type: web
     name: client-portal-backend
@@ -18,18 +25,24 @@ services:
         generateValue: true
       - key: DEBUG
         value: false
+      # Fineract Configuration
+      # Option 1: Use public Fineract sandbox (recommended for testing)
       - key: MIFOS_BASE_URL
-        sync: false
+        value: https://sandbox.mifos.community/fineract-provider/api/v1
+      # Option 2: Use your own Fineract instance (uncomment and set your URL)
+      # - key: MIFOS_BASE_URL
+      #   sync: false
       - key: MIFOS_TENANT_ID
         value: default
       - key: MIFOS_ADMIN_USER
-        sync: false
+        value: mifos
       - key: MIFOS_ADMIN_PASS
-        sync: false
+        value: password
       - key: MIFOS_VERIFY_SSL
         value: true
       - key: MIFOS_CLIENT_ID
         value: 3
+      # Frontend URL for CORS
       - key: FRONTEND_URL
         fromService:
           type: web
@@ -40,28 +53,54 @@ services:
           type: web
           name: client-portal-frontend
           property: host
+      # Database (optional - uses SQLite if not set)
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fineract-database
+          property: connectionString
 
   # Angular Frontend Service
   - type: web
     name: client-portal-frontend
     env: node
     plan: free
-    autoDeploy: false
     buildCommand: |
       chmod +x build-frontend.sh &&
       ./build-frontend.sh
     startCommand: npx serve -s dist/web-app/browser -l $PORT
-    skipCache: false
     envVars:
       - key: NODE_VERSION
         value: 20.x
+      # Django Backend URL
       - key: DJANGO_API_URL
         fromService:
           type: web
           name: client-portal-backend
           property: host
+      # Fineract API URL (for main Mifos app, not client portal)
       - key: FINERACT_API_URL
-        sync: false
+        value: https://sandbox.mifos.community
       - key: FINERACT_PLATFORM_TENANT_IDENTIFIER
         value: default
 
+  # Fineract Service (Optional - Docker deployment)
+  # Uncomment this section if you want to deploy Fineract on Render
+  # Note: This requires Render's paid plan for Docker support
+  # - type: web
+  #   name: fineract-backend
+  #   plan: starter
+  #   dockerfilePath: ./fineract/Dockerfile
+  #   dockerContext: ./fineract
+  #   dockerCommand: |
+  #     docker run -d \
+  #       -p $PORT:8443 \
+  #       -e FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME=org.mariadb.jdbc.Driver \
+  #       -e FINERACT_HIKARI_JDBC_URL=jdbc:mariadb://fineract-database:5432/fineract_default \
+  #       -e FINERACT_HIKARI_USERNAME=fineract_user \
+  #       -e FINERACT_HIKARI_PASSWORD=${DATABASE_PASSWORD} \
+  #       apache/fineract:latest
+  #   envVars:
+  #     - key: DATABASE_URL
+  #       fromDatabase:
+  #         name: fineract-database
+  #         property: connectionString
