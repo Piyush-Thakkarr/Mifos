@@ -121,6 +121,52 @@ cd /path/to/mifos-main/Mifos
 
 ## Troubleshooting
 
+### "upstream_unavailable" Error on Login
+
+This error means the Django backend can't connect to Fineract. This happens when Fineract is running on a different machine.
+
+**Solution 1: If Fineract is running on your teammate's machine (same network)**
+
+1. **Find your teammate's local IP address:**
+   - On Mac/Linux: `ifconfig | grep "inet " | grep -v 127.0.0.1`
+   - On Windows: `ipconfig` (look for IPv4 Address)
+   - Example: `192.168.1.100`
+
+2. **Update `.env` file on your machine:**
+   ```bash
+   nano portal_backend/.env
+   ```
+   Change:
+   ```
+   MIFOS_BASE_URL=https://YOUR_TEAMMATE_IP:8443/fineract-provider/api/v1
+   ```
+   Replace `YOUR_TEAMMATE_IP` with the actual IP (e.g., `192.168.1.100`)
+
+3. **Restart the Django server:**
+   ```bash
+   # Stop the server (Ctrl+C), then restart
+   python manage.py runserver 8000
+   ```
+
+**Solution 2: If Fineract is running in Docker on your teammate's machine**
+
+1. Make sure Docker exposes port 8443 to the network (not just localhost)
+2. Use your teammate's IP address as in Solution 1
+
+**Solution 3: Run Fineract on your own machine**
+
+If you need Fineract running locally:
+- Follow the Fineract setup instructions
+- Or use Docker: `docker compose -f docker-compose-development.yml up -d`
+- Keep `MIFOS_BASE_URL=https://localhost:8443/fineract-provider/api/v1` in `.env`
+
+**Solution 4: Use a remote Fineract instance**
+
+If you have access to a remote Fineract server:
+```
+MIFOS_BASE_URL=https://your-fineract-server.com/fineract-provider/api/v1
+```
+
 ### Backend won't start
 
 **Error: `ModuleNotFoundError: No module named 'rest_framework'`**
