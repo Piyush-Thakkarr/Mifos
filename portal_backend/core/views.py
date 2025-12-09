@@ -126,12 +126,7 @@ def me_view(request: HttpRequest):
         return response
 
     response = JsonResponse(user, status=200)
-    # Add CORS headers
-    origin = request.headers.get("Origin")
-    if origin:
-        response["Access-Control-Allow-Origin"] = origin
-        response["Access-Control-Allow-Credentials"] = "true"
-    return response
+    return add_cors_headers(response, request)
 
 
 def dashboard_view(request: HttpRequest):
