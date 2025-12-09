@@ -694,167 +694,191 @@ class MifosNotFoundError(Exception):
 
 ---
 
-### **4.3 Class Initialization (Lines 22-50)**
+### **4.3 Class Initialization (Lines 26-33)**
 
 ```python
+@dataclass
 class MifosClient:
-    def __init__(self, client_id: int | None = None):
-        self.base_url = settings.MIFOS_BASE_URL
-        self.tenant_id = settings.MIFOS_TENANT_ID
-        self.admin_user = settings.MIFOS_ADMIN_USER
-        self.admin_pass = settings.MIFOS_ADMIN_PASS
-        self.verify_ssl = settings.MIFOS_VERIFY_SSL
-        self.client_id = client_id or settings.MIFOS_CLIENT_ID
-        self._auth_token: str | None = None
+    base_url: str = settings.MIFOS_BASE_URL
+    tenant_id: str = settings.MIFOS_TENANT_ID
+    admin_user: str = settings.MIFOS_ADMIN_USER
+    admin_pass: str = settings.MIFOS_ADMIN_PASS
+    verify_ssl: bool = settings.MIFOS_VERIFY_SSL
+    client_id: str = settings.MIFOS_CLIENT_ID
 ```
 
-**What**: Initializes client with configuration from Django settings
+**What**: Dataclass that initializes with configuration from Django settings
 
-**Parameters**:
-- `client_id`: Optional client ID (defaults to `MIFOS_CLIENT_ID` from settings)
+**Dataclass**: Python decorator that auto-generates `__init__`, `__repr__`, etc.
 
-**Instance Variables**:
+**Instance Variables** (default values from Django settings):
 - `base_url`: Fineract API base URL (e.g., `https://localhost:8443/fineract-provider/api/v1`)
 - `tenant_id`: Fineract tenant identifier (usually `"default"`)
 - `admin_user`: Admin username (e.g., `"mifos"`)
 - `admin_pass`: Admin password (e.g., `"password"`)
 - `verify_ssl`: Whether to verify SSL certificates (False for local dev)
-- `client_id`: Client ID to fetch data for (e.g., `3`)
-- `_auth_token`: Cached authentication token (None initially)
+- `client_id`: Client ID to fetch data for (e.g., `"3"`)
 
-**Why**: Centralizes configuration - all Fineract settings come from Django settings
+**Why**: Centralizes configuration - all Fineract settings come from Django settings. Dataclass makes it cleaner.
 
 ---
 
-### **4.4 Authentication Method (Lines 52-95)**
+### **4.4 Authentication Method (Lines 75-184)**
 
 ```python
-def auth_check(self) -> bool:
-    """Check if admin credentials work with Fineract."""
-    # Try multiple authentication strategies
-    strategies = [
-        # Strategy 1: POST /authentication with JSON body
-        {
-            "url": f"{self.base_url}/authentication",
-            "method": "POST",
-            "headers": {
-                "Content-Type": "application/json",
-                "Fineract-Platform-TenantId": self.tenant_id,
-            },
-            "data": {"username": self.admin_user, "password": self.admin_pass},
-        },
-        # Strategy 2: POST /self/authentication
-        {
-            "url": f"{self.base_url}/self/authentication",
-            "method": "POST",
-            "headers": {
-                "Content-Type": "application/json",
-                "Fineract-Platform-TenantId": self.tenant_id,
-            },
-            "data": {"username": self.admin_user, "password": self.admin_pass},
-        },
+def auth_check(self) -> None:
+    """Check Fineract availability using admin credentials only.
+    
+    Tries POST /authentication with JSON body (preferred), then falls back
+    to Basic Auth variants. The first 200/204 wins.
+    """
+    tenant_header = {"Fineract-Platform-TenantId": self.tenant_id}
+    content_header = {"Content-Type": "application/json"}
+    json_body = {"username": self.admin_user, "password": self.admin_pass}
+    
+    attempts = [
+        # Preferred: POST with JSON body (confirmed working format)
+        {"method": "POST", "path": "/authentication", "tenant_strategy": "both", "auth_type": "json_body"},
+        # Fallback: Basic Auth variants
+        {"method": "POST", "path": "/authentication", "tenant_strategy": "both", "auth_type": "basic"},
+        {"method": "POST", "path": "/self/authentication", "tenant_strategy": "both", "auth_type": "basic"},
+        {"method": "GET", "path": "/authentication", "tenant_strategy": "both", "auth_type": "basic"},
     ]
     
-    for strategy in strategies:
+    for attempt in attempts:
+        # Build headers, params, auth based on attempt config
+        headers = dict(content_header)
+        params = {}
+        auth_tuple = None
+        json_data = None
+        
+        # Add tenant ID to header and/or query params
+        if attempt["tenant_strategy"] in ("both", "header_only"):
+            headers.update(tenant_header)
+        if attempt["tenant_strategy"] in ("both", "query_only"):
+            params["tenantIdentifier"] = self.tenant_id
+        
+        # Choose auth method
+        if attempt["auth_type"] == "json_body":
+            json_data = json_body
+        else:
+            auth_tuple = (self.admin_user, self.admin_pass)  # Basic Auth
+        
+        url = f"{self.base_url.rstrip('/')}{attempt['path']}"
+        
         try:
-            response = requests.post(
-                strategy["url"],
-                json=strategy["data"],
-                headers=strategy["headers"],
-                verify=self.verify_ssl,
+            resp = requests.request(
+                attempt["method"],
+                url,
+                params=params,
+                headers=headers,
+                json=json_data,
+                auth=auth_tuple,
                 timeout=10,
+                verify=self.verify_ssl,
             )
-            if response.status_code == 200:
-                data = response.json()
-                self._auth_token = data.get("base64EncodedAuthenticationKey")
-                return True
-        except Exception as e:
-            logger.debug(f"Auth strategy failed: {e}")
-            continue
+            
+            if resp.status_code in (200, 204):
+                logger.info("Mifos admin auth_check succeeded")
+                return  # Success!
+        except requests.RequestException:
+            continue  # Try next strategy
     
-    return False
+    # All attempts failed
+    raise MifosAuthError("Admin authentication failed against Fineract")
 ```
 
 **What**: Tests if admin credentials work with Fineract
 
 **How**:
-1. Tries multiple authentication endpoints/strategies
-2. Sends POST request with username/password in JSON body
-3. If successful (200), extracts and caches auth token
-4. Returns `True` if any strategy works, `False` otherwise
+1. Tries multiple authentication strategies (JSON body, Basic Auth, different endpoints)
+2. For each attempt, builds appropriate headers, params, and auth
+3. If any attempt succeeds (200/204), returns immediately
+4. If all fail, raises `MifosAuthError`
 
-**Why Multiple Strategies**: Different Fineract versions/configurations may use different endpoints
+**Why Multiple Strategies**: Different Fineract versions/configurations may use different endpoints or auth methods
+
+**Tenant Strategy**: Some Fineract setups require tenant ID in header, query param, or both
 
 **Used By**: `login_view` to verify Fineract is accessible before allowing client login
 
 ---
 
-### **4.5 Core Fetch Method (Lines 97-145)**
+### **4.5 Core Fetch Method (Lines 186-229)**
 
 ```python
 def fetch_with_admin(
-    self, path: str, params: dict[str, Any] | None = None
-) -> dict[str, Any]:
-    """Fetch data from Fineract using admin credentials."""
-    url = f"{self.base_url}{path}"
+    self, 
+    path: str, 
+    method: str = "GET", 
+    params: Optional[Dict[str, Any]] = None, 
+    json: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """Fetch data from Fineract using admin credentials (Basic Auth)."""
+    url = f"{self.base_url.rstrip('/')}/{path.lstrip('/')}"
     headers = {
         "Fineract-Platform-TenantId": self.tenant_id,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
     }
-    
-    # Add auth token if available
-    if self._auth_token:
-        headers["Authorization"] = f"Basic {self._auth_token}"
+    params = params or {}
+    params.setdefault("tenantIdentifier", self.tenant_id)  # Add tenant to query params
     
     try:
-        response = requests.get(
+        resp = requests.request(
+            method,
             url,
             params=params,
             headers=headers,
+            auth=(self.admin_user, self.admin_pass),  # Basic Auth
+            json=json,
+            timeout=15,
             verify=self.verify_ssl,
-            timeout=30,
         )
-        
-        if response.status_code == 401:
-            # Token expired, re-authenticate
-            if self.auth_check():
-                headers["Authorization"] = f"Basic {self._auth_token}"
-                response = requests.get(url, params=params, headers=headers, ...)
-            else:
-                raise MifosAuthError("Authentication failed")
-        
-        if response.status_code == 404:
-            raise MifosNotFoundError(f"Resource not found: {path}")
-        
-        if response.status_code != 200:
-            raise MifosUpstreamError(f"Fineract error: {response.status_code}")
-        
-        return response.json()
-        
-    except requests.exceptions.RequestException as e:
-        raise MifosUpstreamError(f"Network error: {str(e)}")
+    except requests.RequestException as exc:
+        raise MifosUpstreamError(str(exc)) from exc
+    
+    # Success responses
+    if resp.status_code in (200, 201, 204):
+        try:
+            return resp.json()
+        except ValueError:
+            return {}  # Empty response body
+    
+    # Error handling
+    if resp.status_code == 404:
+        raise MifosNotFoundError(f"{method} {url} returned 404 (resource not found)")
+    
+    if resp.status_code in (401, 403):
+        raise MifosAuthError(f"Admin authentication failed for {url}")
+    
+    raise MifosUpstreamError(f"{method} {url} returned {resp.status_code}")
 ```
 
-**What**: Core method for making GET requests to Fineract
+**What**: Core method for making requests to Fineract using Basic Auth
 
 **Parameters**:
-- `path`: API endpoint path (e.g., `"/clients/3"`)
+- `path`: API endpoint path (e.g., `"clients/3"` or `"/clients/3"`)
+- `method`: HTTP method (default: `"GET"`)
 - `params`: Query parameters (e.g., `{"associations": "all"}`)
+- `json`: JSON body for POST/PUT requests
 
 **How**:
-1. Builds full URL from base URL + path
+1. Builds full URL (handles leading/trailing slashes)
 2. Adds required headers (tenant ID, content type)
-3. Adds auth token if available
-4. Makes GET request
-5. Handles errors:
-   - **401**: Re-authenticates and retries
+3. Adds tenant ID to query params as fallback
+4. Uses Basic Auth with admin credentials
+5. Makes HTTP request
+6. Handles responses:
+   - **200/201/204**: Returns JSON (or empty dict if no body)
    - **404**: Raises `MifosNotFoundError`
-   - **Other errors**: Raises `MifosUpstreamError`
-6. Returns JSON response
+   - **401/403**: Raises `MifosAuthError`
+   - **Other**: Raises `MifosUpstreamError`
 
-**Why**: Centralizes all Fineract API calls - handles auth, errors, retries
+**Why**: Centralizes all Fineract API calls - handles auth, errors, URL building
 
 **Used By**: All data-fetching methods (`fetch_client_bundle`, `fetch_client_loans`, etc.)
+
+**Note**: Uses Basic Auth (username/password) instead of token-based auth
 
 ---
 
@@ -1041,5 +1065,303 @@ def fetch_loan_details(self, loan_id: int) -> Dict[str, Any]:
 
 ---
 
-**Next Section**: Views - API Endpoints Logic (coming next...)
+## 5. Views - API Endpoints Logic (`core/views.py`)
+
+This file contains all Django view functions that handle HTTP requests and return JSON responses.
+
+### **5.1 Helper Functions**
+
+#### **Correlation ID Generator (Lines 18-19)**
+
+```python
+def new_correlation_id() -> str:
+    return str(uuid.uuid4())
+```
+
+**What**: Generates unique ID for tracking requests
+
+**Why**: Helps debug issues by correlating logs with specific requests
+
+**Used By**: All error responses
+
+---
+
+#### **Session Check Helper (Lines 102-109)**
+
+```python
+def _require_session(request: HttpRequest) -> tuple[dict | None, JsonResponse | None]:
+    """Check if user is authenticated. Returns (user, None) if OK, (None, error_response) if not."""
+    user = request.session.get("cp_user")
+    if not user:
+        correlation_id = new_correlation_id()
+        logger.info("Unauthenticated request", extra={"correlation_id": correlation_id})
+        return None, JsonResponse({"error": "unauthorized", "correlation_id": correlation_id}, status=401)
+    return user, None
+```
+
+**What**: Checks if user has valid session
+
+**Returns**: 
+- `(user_dict, None)` if authenticated
+- `(None, error_response)` if not authenticated
+
+**Why**: DRY principle - avoid repeating session check in every view
+
+**Used By**: All protected endpoints
+
+---
+
+### **5.2 Authentication Views**
+
+#### **Login View (Lines 22-81)**
+
+```python
+@csrf_exempt
+def login_view(request: HttpRequest):
+    # Handle OPTIONS preflight (CORS)
+    if request.method == "OPTIONS":
+        response = JsonResponse({})
+        response["Access-Control-Allow-Origin"] = request.headers.get("Origin", "*")
+        response["Access-Control-Allow-Credentials"] = "true"
+        return response
+    
+    if request.method != "POST":
+        return JsonResponse({"error": "method_not_allowed"}, status=405)
+    
+    # Parse JSON body
+    try:
+        body = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "invalid_json"}, status=400)
+    
+    username = body.get("username")
+    password = body.get("password")
+    
+    # Validate credentials (hardcoded for client portal)
+    if username != "client" or password != "password":
+        return JsonResponse({"error": "invalid_credentials"}, status=401)
+    
+    # Check Fineract availability
+    client = MifosClient()
+    try:
+        client.auth_check()  # Uses admin credentials
+    except (MifosAuthError, MifosUpstreamError):
+        return JsonResponse({"error": "upstream_unavailable"}, status=503)
+    
+    # Create session
+    request.session["cp_user"] = {
+        "username": "client",
+        "displayName": "client",
+    }
+    request.session.save()
+    
+    # Return success with CORS headers
+    response = JsonResponse({"username": "client", "display_name": "client"}, status=200)
+    origin = request.headers.get("Origin")
+    if origin:
+        response["Access-Control-Allow-Origin"] = origin
+        response["Access-Control-Allow-Credentials"] = "true"
+    return response
+```
+
+**What**: Handles client portal login
+
+**Flow**:
+1. Handle CORS preflight (OPTIONS request)
+2. Validate HTTP method (must be POST)
+3. Parse JSON body
+4. Validate credentials (hardcoded: `client`/`password`)
+5. Check Fineract availability using admin credentials
+6. Create Django session with user data
+7. Return success with CORS headers
+
+**Key Points**:
+- `@csrf_exempt`: Disables CSRF protection (API endpoint)
+- **Local validation**: Credentials validated in Django, NOT in Fineract
+- **Admin check**: Uses admin credentials to verify Fineract is up
+- **Session**: Stores user data in Django session (cookie: `cp_session`)
+
+**Error Responses**:
+- `405`: Wrong HTTP method
+- `400`: Invalid JSON
+- `401`: Invalid credentials
+- `503`: Fineract unavailable
+
+---
+
+#### **Me View (Lines 84-91)**
+
+```python
+def me_view(request: HttpRequest):
+    user = request.session.get("cp_user")
+    if not user:
+        return JsonResponse({"error": "unauthorized"}, status=401)
+    return JsonResponse(user, status=200)
+```
+
+**What**: Returns current logged-in user info
+
+**Used By**: Frontend to check if user is still authenticated
+
+---
+
+#### **Dashboard View (Lines 94-100)**
+
+```python
+def dashboard_view(request: HttpRequest):
+    user, error_response = _require_session(request)
+    if error_response:
+        return error_response
+    return JsonResponse({
+        "authenticated": True,
+        "user": user,
+        "message": "Dashboard API functional"
+    }, status=200)
+```
+
+**What**: Simple health check endpoint for dashboard
+
+**Why**: Frontend can call this to verify authentication
+
+---
+
+### **5.3 Client Data Views**
+
+#### **Client Profile View (Lines 103-130)**
+
+```python
+def client_view(request: HttpRequest):
+    user, error_response = _require_session(request)
+    if error_response:
+        return error_response
+    
+    client = MifosClient()
+    try:
+        client_data = client.fetch_client_bundle()
+    except (MifosAuthError, MifosUpstreamError) as exc:
+        correlation_id = new_correlation_id()
+        logger.exception("Failed to fetch client data", extra={"correlation_id": correlation_id})
+        return JsonResponse({"error": "upstream_unavailable", "correlation_id": correlation_id}, status=503)
+    except MifosNotFoundError:
+        # Client not found - return empty profile
+        return JsonResponse({"profile": {}}, status=200)
+    
+    # Normalize Fineract response to frontend-friendly format
+    profile = {
+        "id": client_data.get("id"),
+        "accountNo": client_data.get("accountNo"),
+        "displayName": client_data.get("displayName"),
+        "status": client_data.get("status", {}),
+        "officeName": client_data.get("office", {}).get("name"),
+    }
+    
+    return JsonResponse({"profile": profile}, status=200)
+```
+
+**What**: Fetches and returns client profile
+
+**Flow**:
+1. Check authentication
+2. Fetch client data from Fineract
+3. Handle errors (503 for upstream, empty profile for 404)
+4. Normalize data (extract only needed fields)
+5. Return JSON
+
+**Data Normalization**: Fineract returns nested objects, we flatten to simple structure
+
+---
+
+#### **Loans View (Lines 147-233)**
+
+```python
+def loans_view(request: HttpRequest):
+    user, error_response = _require_session(request)
+    if error_response:
+        return error_response
+    
+    client = MifosClient()
+    try:
+        loan_accounts = client.fetch_client_loans()
+    except (MifosAuthError, MifosUpstreamError) as exc:
+        return JsonResponse({"error": "upstream_unavailable"}, status=503)
+    
+    loans = []
+    for item in loan_accounts:
+        # Extract status
+        status_obj = item.get("status", {})
+        status_value = status_obj.get("value") if isinstance(status_obj, dict) else status_obj
+        
+        # Extract repayment schedule data
+        outstanding = item.get("totalOutstanding")
+        next_repayment = None
+        emi_amount = None
+        paid_emis = 0
+        total_emis = 0
+        
+        repayment_schedule = item.get("repaymentSchedule", {})
+        if repayment_schedule:
+            periods = repayment_schedule.get("periods", [])
+            total_emis = len(periods)
+            paid_emis = len([p for p in periods if p.get("complete")])
+            
+            # Find first incomplete period for next repayment
+            for period in periods:
+                if period.get("complete") is False:
+                    if outstanding is None:
+                        outstanding = period.get("principalLoanBalanceOutstanding")
+                    due_date = period.get("dueDate")
+                    if isinstance(due_date, list) and len(due_date) == 3:
+                        next_repayment = f"{due_date[0]}-{due_date[1]:02d}-{due_date[2]:02d}"
+                    emi_amount = period.get("totalDueForPeriod")
+                    break
+        
+        # Calculate annualized interest rate
+        interest_rate = item.get("interestRatePerPeriod")
+        repayment_frequency = item.get("repaymentFrequencyType", {})
+        if isinstance(repayment_frequency, dict):
+            freq_value = repayment_frequency.get("value", "")
+        else:
+            freq_value = str(repayment_frequency) if repayment_frequency else ""
+        
+        if interest_rate and "month" in freq_value.lower():
+            interest_rate_annual = interest_rate * 12
+        else:
+            interest_rate_annual = interest_rate
+        
+        # Build loan object
+        loans.append({
+            "id": item.get("id"),
+            "accountNo": item.get("accountNo"),
+            "productName": item.get("loanProductName"),
+            "status": status_value,
+            "principal": item.get("principal"),
+            "outstanding": outstanding,
+            "nextRepaymentDate": next_repayment,
+            "interestRate": round(interest_rate_annual, 2) if interest_rate_annual else None,
+            "tenure": item.get("numberOfRepayments") or total_emis,
+            "emiAmount": emi_amount,
+            "paidEMIs": paid_emis,
+            "remainingEMIs": total_emis - paid_emis if total_emis > 0 else 0,
+            "progressPercentage": int((paid_emis / total_emis) * 100) if total_emis > 0 else 0,
+        })
+    
+    return JsonResponse({"loans": loans}, status=200)
+```
+
+**What**: Fetches all loans and calculates derived fields
+
+**Key Calculations**:
+- **Progress Percentage**: `(paid_emis / total_emis) * 100`
+- **Annualized Interest Rate**: If monthly, multiply by 12
+- **Next Repayment Date**: First incomplete period's due date
+- **Outstanding Balance**: From first incomplete period or top-level
+
+**Data Transformation**:
+- Date format: `[2024, 10, 15]` → `"2024-10-15"`
+- Status: Extract `value` from nested object
+- EMI schedule: Count complete/incomplete periods
+
+---
+
+**Next Section**: More Views (Transactions, Downloads, Notifications) - coming next...
 
