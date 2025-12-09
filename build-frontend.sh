@@ -4,7 +4,7 @@
 set -e
 
 echo "Installing dependencies..."
-npm ci
+npm ci --legacy-peer-deps
 
 echo "Generating environment file..."
 # Create env.js from template with Render environment variables

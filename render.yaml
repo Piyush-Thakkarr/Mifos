@@ -46,6 +46,7 @@ services:
     name: client-portal-frontend
     env: node
     plan: free
+    dockerfilePath: ""
     buildCommand: |
       chmod +x build-frontend.sh &&
       ./build-frontend.sh
