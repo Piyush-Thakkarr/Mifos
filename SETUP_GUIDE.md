@@ -76,11 +76,13 @@ cd /path/to/mifos-main/Mifos
    ```
    Or create a `.env` file manually in the `portal_backend` directory.
 
-6. **Create `.env` file (use the same values as the team):**
+6. **Create `.env` file:**
    ```bash
    nano .env
    ```
-   Or use any text editor. Add these variables (same as team setup):
+   Or use any text editor. 
+   
+   **If Fineract is on YOUR machine (localhost):**
    ```
    MIFOS_BASE_URL=https://localhost:8443/fineract-provider/api/v1
    MIFOS_TENANT_ID=default
@@ -92,7 +94,20 @@ cd /path/to/mifos-main/Mifos
    DEBUG=true
    ```
    
-   **Note:** These values match the team's Fineract instance configuration.
+   **If Fineract is on your TEAMMATE's machine (same network):**
+   ```
+   MIFOS_BASE_URL=https://TEAMMATE_IP:8443/fineract-provider/api/v1
+   MIFOS_TENANT_ID=default
+   MIFOS_ADMIN_USER=mifos
+   MIFOS_ADMIN_PASS=password
+   MIFOS_VERIFY_SSL=false
+   MIFOS_CLIENT_ID=3
+   DJANGO_SECRET_KEY=dev-secret-key-change-me
+   DEBUG=true
+   ```
+   Replace `TEAMMATE_IP` with your teammate's IP address (e.g., `10.20.16.106`)
+   
+   **Important:** Always set `MIFOS_VERIFY_SSL=false` for local development with self-signed certificates.
 
 7. **Run database migrations (if needed):**
    ```bash
@@ -136,17 +151,23 @@ This error means the Django backend can't connect to Fineract. This happens when
    ```bash
    nano portal_backend/.env
    ```
-   Change:
+   Change these lines:
    ```
    MIFOS_BASE_URL=https://YOUR_TEAMMATE_IP:8443/fineract-provider/api/v1
+   MIFOS_VERIFY_SSL=false
    ```
    Replace `YOUR_TEAMMATE_IP` with the actual IP (e.g., `192.168.1.100`)
+   
+   **Important:** Set `MIFOS_VERIFY_SSL=false` because Fineract uses self-signed SSL certificates.
 
-3. **Restart the Django server:**
+3. **Restart the Django server (IMPORTANT - must restart after .env changes):**
    ```bash
    # Stop the server (Ctrl+C), then restart
    python manage.py runserver 8000
    ```
+
+4. **Verify the connection:**
+   Check the Django server logs when you try to login. You should see connection attempts to Fineract.
 
 **Solution 2: If Fineract is running in Docker on your teammate's machine**
 
