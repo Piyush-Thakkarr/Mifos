@@ -21,6 +21,14 @@
           {{ loading ? 'Signing in...' : 'Sign in' }}
         </button>
       </form>
+
+      <div class="back-to-main-login">
+        <div class="divider-line"></div>
+        <button mat-stroked-button class="back-button" (click)="navigateToMainLogin()">
+          <span>← Back to Admin Login</span>
+        </button>
+        <p class="back-description">Are you an administrator? Login here</p>
+      </div>
     </mat-card-content>
   </mat-card>
 </div>

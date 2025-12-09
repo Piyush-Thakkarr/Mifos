@@ -59,4 +59,8 @@ export class ClientportalLoginComponent {
       }
     });
   }
+
+  navigateToMainLogin(): void {
+    this.router.navigate(['/login']);
+  }
 }
