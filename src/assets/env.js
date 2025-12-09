@@ -1,57 +1,20 @@
-(function(window) {
-  window["env"] = window["env"] || {};
+(function (window) {
+  window['env'] = window['env'] || {};
 
-  // BackEnd Environment variables
-  window["env"]["fineractApiUrls"] = '';
-  window["env"]["fineractApiUrl"]  = '';
+  // For local development: Use empty string to make URLs relative
+  // The Angular proxy will intercept /fineract-provider/* and forward to Fineract
+  // This bypasses SSL certificate errors
+  // NOTE: Empty string is falsy, so environment.ts will use fallback, but we can work around this
+  // by setting it to a special value that environment.ts will use
+  window['env']['fineractApiUrl'] = ''; // Empty = relative URLs = proxy works
+  window['env']['fineractApiUrls'] = '';
 
-  window["env"]["apiProvider"] = '';
-  window["env"]["apiVersion"]  = '';
+  window['env']['apiProvider'] = '/fineract-provider/api';
+  window['env']['apiVersion'] = '/v1';
 
-  window["env"]["fineractPlatformTenantId"]  = '';
-  window["env"]["fineractPlatformTenantIds"]  = '';
+  window['env']['fineractPlatformTenantId'] = 'default';
+  window['env']['fineractPlatformTenantIds'] = 'default';
 
-  // Language Environment variables
-  window["env"]["defaultLanguage"] = '';
-  window["env"]["supportedLanguages"] = '';
-
-  window['env']['preloadClients'] = '';
-
-  // Char delimiter to Export CSV options: ',' ';' '|' ' '
-  window['env']['defaultCharDelimiter'] = '';
-
-  // Display or not the Server Selector
-  window['env']['allowServerSwitch'] = '';
-  
-  // Display or not the BackEnd Info
-  window['env']['displayBackEndInfo'] = '';
-
-  // Display or not the Tenant Selector
-  window['env']['displayTenantSelector'] = '';
-
-  // Time in seconds for Notifications, default 60 seconds
-  window['env']['waitTimeForNotifications'] = '';
-
-  // Time in seconds for COB Catch-Up, default 30 seconds
-  window['env']['waitTimeForCOBCatchUp'] = '';
-
-  // Time in milliseconds for Session idle timeout, default 300000 seconds
-  window['env']['sessionIdleTimeout'] = '0';
-
-  // OAuth Server Enabled
-  window['env']['oauthServerEnabled'] = false;
-
-  // OAuth Server URL
-  window['env']['oauthServerUrl'] = '';
-
-  // OAuth Client Id
-  window['env']['oauthAppId'] = '';
-
-  // OIDC Plugin Environment variables
-  window['env']['oidcServerEnabled'] = false;
-  window['env']['oidcBaseUrl']       = '';
-  window['env']['oidcClientId']      = '';
-  window['env']['oidcApiUrl']        = '';
-  window['env']['oidcFrontUrl']      = '';
-
+  // Client Portal Django API URL
+  window['env']['djangoApiUrl'] = 'http://localhost:8000';
 })(this);

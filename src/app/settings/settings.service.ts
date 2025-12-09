@@ -157,7 +157,9 @@ export class SettingsService {
     if (localStorage.getItem('mifosXServerURL')) {
       return localStorage.getItem('mifosXServerURL');
     }
-    if (environment.baseApiUrl && environment.baseApiUrl !== '') {
+    // LOCAL DEV: Check for empty string explicitly to allow relative URLs for proxy
+    // For PR: Revert to: if (environment.baseApiUrl && environment.baseApiUrl !== '')
+    if (environment.baseApiUrl !== undefined && environment.baseApiUrl !== null) {
       return environment.baseApiUrl;
     } else {
       return this.servers()[0];

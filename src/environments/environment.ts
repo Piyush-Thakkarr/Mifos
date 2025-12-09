@@ -16,11 +16,20 @@ export const environment = {
   // For connecting to server running elsewhere update the tenant identifier
   fineractPlatformTenantId: loadedEnv.fineractPlatformTenantId || 'default',
   fineractPlatformTenantIds: loadedEnv.fineractPlatformTenantIds || 'default',
-  baseApiUrls: 'https://localhost:8443',
-  baseApiUrl: 'https://localhost:8443',
+  // LOCAL DEV: Check loadedEnv first to allow env.js to override (for proxy SSL bypass)
+  // For PR: Revert to hardcoded 'https://localhost:8443' if needed
+  baseApiUrls:
+    loadedEnv.fineractApiUrls !== undefined && loadedEnv.fineractApiUrls !== null
+      ? loadedEnv.fineractApiUrls
+      : 'https://localhost:8443',
+  baseApiUrl:
+    loadedEnv.fineractApiUrl !== undefined && loadedEnv.fineractApiUrl !== null
+      ? loadedEnv.fineractApiUrl
+      : 'https://localhost:8443',
   allowServerSwitch: loadedEnv.allowServerSwitch || 'true',
   apiProvider: loadedEnv.apiProvider || '/fineract-provider/api',
   apiVersion: loadedEnv.apiVersion || '/v1',
+  apiActuator: loadedEnv.apiActuator || '/fineract-provider',
   serverUrl: '',
   /** Feature flag for Remember Me functionality */
   enableRememberMe: false,
@@ -61,6 +70,7 @@ export const environment = {
   interbankTransfers: window.env?.interbankTransfers || false,
 
   minPasswordLength: loadedEnv.minPasswordLength || 12,
+  // Client Portal Django API URL (added for client portal feature)
   djangoApiUrl: loadedEnv.djangoApiUrl || window.env?.djangoApiUrl || 'http://localhost:8000',
 
   OIDC: {

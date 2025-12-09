@@ -10,13 +10,14 @@ const { HttpsProxyAgent } = require('https-proxy-agent');
  */
 const proxyConfig = [
   {
+    // Proxy all Fineract API requests
     context: ['/fineract-provider'],
     target: 'https://localhost:8443',
     secure: false, // Bypass SSL certificate verification for self-signed certs
     changeOrigin: true,
     logLevel: 'debug',
     headers: {
-      'Connection': 'keep-alive'
+      Connection: 'keep-alive'
     }
   }
 ];
