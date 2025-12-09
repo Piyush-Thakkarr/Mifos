@@ -55,30 +55,45 @@ def login_view(request: HttpRequest):
     try:
         # Verify upstream Fineract availability using admin credentials only.
         client.auth_check()
-    except (MifosAuthError, MifosUpstreamError):
+    except (MifosAuthError, MifosUpstreamError) as e:
         correlation_id = new_correlation_id()
-        logger.exception("Upstream Fineract error during admin auth_check", extra={"correlation_id": correlation_id})
-        return JsonResponse({"error": "upstream_unavailable", "correlation_id": correlation_id}, status=503)
+        logger.exception("Upstream Fineract error during admin auth_check", extra={"correlation_id": correlation_id, "error": str(e)})
+        return JsonResponse({"error": "upstream_unavailable", "correlation_id": correlation_id, "message": str(e)}, status=503)
+    except Exception as e:
+        # Catch any other unexpected errors
+        correlation_id = new_correlation_id()
+        logger.exception("Unexpected error during login", extra={"correlation_id": correlation_id, "error": str(e)})
+        return JsonResponse({"error": "internal_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
 
-    request.session["cp_user"] = {
-        "username": "client",
-        "displayName": "client",
-    }
-    request.session.save()
-
-    response = JsonResponse(
-        {
+    try:
+        request.session["cp_user"] = {
             "username": "client",
-            "display_name": "client",
-        },
-        status=200,
-    )
-    # Add CORS headers explicitly
-    origin = request.headers.get("Origin")
-    if origin:
-        response["Access-Control-Allow-Origin"] = origin
-        response["Access-Control-Allow-Credentials"] = "true"
-    return response
+            "displayName": "client",
+        }
+        request.session.save()
+    except Exception as e:
+        correlation_id = new_correlation_id()
+        logger.exception("Failed to save session", extra={"correlation_id": correlation_id, "error": str(e)})
+        return JsonResponse({"error": "session_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
+
+    try:
+        response = JsonResponse(
+            {
+                "username": "client",
+                "display_name": "client",
+            },
+            status=200,
+        )
+        # Add CORS headers explicitly
+        origin = request.headers.get("Origin")
+        if origin:
+            response["Access-Control-Allow-Origin"] = origin
+            response["Access-Control-Allow-Credentials"] = "true"
+        return response
+    except Exception as e:
+        correlation_id = new_correlation_id()
+        logger.exception("Failed to create response", extra={"correlation_id": correlation_id, "error": str(e)})
+        return JsonResponse({"error": "response_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
 
 
 def me_view(request: HttpRequest):
