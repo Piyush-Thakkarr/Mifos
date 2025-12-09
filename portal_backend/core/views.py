@@ -60,25 +60,25 @@ def login_view(request: HttpRequest):
         logger.exception("Upstream Fineract error during admin auth_check", extra={"correlation_id": correlation_id})
         return JsonResponse({"error": "upstream_unavailable", "correlation_id": correlation_id}, status=503)
 
-           request.session["cp_user"] = {
-               "username": "client",
-               "displayName": "client",
-           }
-           request.session.save()
+    request.session["cp_user"] = {
+        "username": "client",
+        "displayName": "client",
+    }
+    request.session.save()
 
-           response = JsonResponse(
-               {
-                   "username": "client",
-                   "display_name": "client",
-               },
-               status=200,
-           )
-           # Add CORS headers explicitly
-           origin = request.headers.get("Origin")
-           if origin:
-               response["Access-Control-Allow-Origin"] = origin
-               response["Access-Control-Allow-Credentials"] = "true"
-           return response
+    response = JsonResponse(
+        {
+            "username": "client",
+            "display_name": "client",
+        },
+        status=200,
+    )
+    # Add CORS headers explicitly
+    origin = request.headers.get("Origin")
+    if origin:
+        response["Access-Control-Allow-Origin"] = origin
+        response["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 
 def me_view(request: HttpRequest):
