@@ -2,10 +2,11 @@
 # Uses the official Apache Fineract Docker image
 FROM apache/fineract:latest
 
-# Expose the port that Fineract runs on
+# Expose port (Render uses $PORT environment variable)
+# Fineract will bind to the port specified in FINERACT_SERVER_PORT
 EXPOSE 8443
 
 # The official image already has the entrypoint configured
-# We just need to ensure environment variables are passed through
-# Render will handle the port mapping via $PORT
+# Environment variables are passed through from Render
+# FINERACT_SERVER_PORT will be set to $PORT by Render
 

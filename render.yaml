@@ -12,20 +12,8 @@ services:
     plan: starter
     dockerfilePath: ./fineract/Dockerfile
     dockerContext: ./fineract
-    dockerCommand: |
-      docker run -d \
-        -p $PORT:8443 \
-        -e FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME=org.postgresql.Driver \
-        -e FINERACT_HIKARI_JDBC_URL=jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME} \
-        -e FINERACT_HIKARI_USERNAME=${DATABASE_USER} \
-        -e FINERACT_HIKARI_PASSWORD=${DATABASE_PASSWORD} \
-        -e FINERACT_DEFAULT_TENANTDB_HOST=${DATABASE_HOST} \
-        -e FINERACT_DEFAULT_TENANTDB_PORT=${DATABASE_PORT} \
-        -e FINERACT_DEFAULT_TENANTDB_UID=${DATABASE_USER} \
-        -e FINERACT_DEFAULT_TENANTDB_PWD=${DATABASE_PASSWORD} \
-        -e FINERACT_DEFAULT_TENANTDB_NAME=fineract_default \
-        apache/fineract:latest
     envVars:
+      # Database connection from Render PostgreSQL
       - key: DATABASE_HOST
         fromDatabase:
           name: fineract-database
@@ -46,6 +34,35 @@ services:
         fromDatabase:
           name: fineract-database
           property: password
+      # Fineract PostgreSQL Configuration
+      - key: FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME
+        value: org.postgresql.Driver
+      - key: FINERACT_HIKARI_JDBC_URL
+        value: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
+      - key: FINERACT_HIKARI_USERNAME
+        value: ${DATABASE_USER}
+      - key: FINERACT_HIKARI_PASSWORD
+        value: ${DATABASE_PASSWORD}
+      # Default tenant database configuration
+      - key: FINERACT_DEFAULT_TENANTDB_HOST
+        value: ${DATABASE_HOST}
+      - key: FINERACT_DEFAULT_TENANTDB_PORT
+        value: ${DATABASE_PORT}
+      - key: FINERACT_DEFAULT_TENANTDB_UID
+        value: ${DATABASE_USER}
+      - key: FINERACT_DEFAULT_TENANTDB_PWD
+        value: ${DATABASE_PASSWORD}
+      - key: FINERACT_DEFAULT_TENANTDB_NAME
+        value: fineract_default
+      - key: FINERACT_DEFAULT_TENANTDB_IDENTIFIER
+        value: default
+      # Server configuration
+      - key: FINERACT_SERVER_PORT
+        value: ${PORT}
+      - key: FINERACT_SERVER_SSL_ENABLED
+        value: false
+      - key: FINERACT_INSECURE_HTTP_CLIENT
+        value: true
 
   # Django Backend Service
   - type: web
@@ -68,11 +85,7 @@ services:
         value: false
       # Fineract Configuration - points to deployed Fineract service
       - key: MIFOS_BASE_URL
-        fromService:
-          type: web
-          name: fineract-backend
-          property: host
-        value: https://fineract-backend.onrender.com/fineract-provider/api/v1
+        value: http://fineract-backend.onrender.com/fineract-provider/api/v1
       - key: MIFOS_TENANT_ID
         value: default
       - key: MIFOS_ADMIN_USER
