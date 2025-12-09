@@ -76,11 +76,11 @@ cd /path/to/mifos-main/Mifos
    ```
    Or create a `.env` file manually in the `portal_backend` directory.
 
-6. **Edit `.env` file with your Fineract settings:**
+6. **Create `.env` file (use the same values as the team):**
    ```bash
    nano .env
    ```
-   Or use any text editor. Add these variables:
+   Or use any text editor. Add these variables (same as team setup):
    ```
    MIFOS_BASE_URL=https://localhost:8443/fineract-provider/api/v1
    MIFOS_TENANT_ID=default
@@ -91,12 +91,8 @@ cd /path/to/mifos-main/Mifos
    DJANGO_SECRET_KEY=dev-secret-key-change-me
    DEBUG=true
    ```
-
-   **Important:** Update these values to match your Fineract instance:
-   - `MIFOS_BASE_URL`: Your Fineract API URL
-   - `MIFOS_ADMIN_USER`: Your Fineract admin username
-   - `MIFOS_ADMIN_PASS`: Your Fineract admin password
-   - `MIFOS_CLIENT_ID`: The client ID you want to use for the portal
+   
+   **Note:** These values match the team's Fineract instance configuration.
 
 7. **Run database migrations (if needed):**
    ```bash
@@ -161,7 +157,7 @@ cd /path/to/mifos-main/Mifos/portal_backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-# Edit .env file with your settings
+# Create .env file with team's Fineract settings (see step 6 above)
 python manage.py runserver 8000
 ```
 
