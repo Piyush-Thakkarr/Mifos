@@ -175,8 +175,9 @@ CORS_PREFLIGHT_MAX_AGE = 86400
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 SESSION_COOKIE_NAME = "cp_session"
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = "Lax"
-SESSION_COOKIE_SECURE = not DEBUG
+# Use None for cross-origin requests (frontend and backend on different domains)
+SESSION_COOKIE_SAMESITE = "None" if not DEBUG else "Lax"
+SESSION_COOKIE_SECURE = True  # Always True when SameSite=None (required by browsers)
 SESSION_COOKIE_AGE = 86400  # 24 hours
 
 MIFOS_BASE_URL = os.getenv("MIFOS_BASE_URL", "https://localhost:8443/fineract-provider/api/v1")
