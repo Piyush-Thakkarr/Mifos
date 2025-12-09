@@ -145,6 +145,7 @@ def dashboard_view(request: HttpRequest):
         },
         status=200,
     )
+    return add_cors_headers(response, request)
 
 
 def _require_session(request: HttpRequest):
