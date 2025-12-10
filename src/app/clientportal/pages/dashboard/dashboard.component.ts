@@ -49,14 +49,14 @@ export class ClientportalDashboardComponent {
       savings: this.authService.savings().pipe(
         timeout(30000),
         catchError((err) => {
-          console.error('Savings error:', err);
+          // Silently handle errors - return empty savings if API fails
           return of({ savings: [] });
         })
       ),
       transactions: this.authService.transactions().pipe(
         timeout(30000),
         catchError((err) => {
-          console.error('Transactions error:', err);
+          // Silently handle errors - return empty transactions if API fails
           return of({ transactions: [] });
         })
       )
