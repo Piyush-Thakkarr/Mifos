@@ -112,7 +112,27 @@ export class ClientportalDashboardComponent {
 
   getTotalSavings(savings: any[]): number {
     if (!savings || savings.length === 0) return 0;
-    return savings.reduce((sum, acc) => sum + (acc.balance || 0), 0);
+
+    // Safely parse and sum balances, ensuring they're reasonable numbers
+    const total = savings.reduce((sum, acc) => {
+      let balance = acc.balance || acc.availableBalance || 0;
+
+      // Convert to number if it's a string
+      if (typeof balance === 'string') {
+        // Remove commas and parse
+        balance = parseFloat(balance.replace(/,/g, '')) || 0;
+      }
+
+      // Ensure it's a valid number and not absurdly large (cap at 1 billion)
+      if (isNaN(balance) || balance < 0 || balance > 1000000000) {
+        console.warn('Invalid savings balance detected:', balance, acc);
+        return sum; // Skip invalid balances
+      }
+
+      return sum + balance;
+    }, 0);
+
+    return total;
   }
 
   getLastLoginDate(): string {

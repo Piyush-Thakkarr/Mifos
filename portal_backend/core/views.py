@@ -305,6 +305,30 @@ def savings_view(request: HttpRequest):
         balance = summary.get("accountBalance") if summary else item.get("accountBalance")
         available_balance = summary.get("availableBalance") if summary else item.get("availableBalance")
         
+        # Ensure balance is a number and reasonable (not absurdly large)
+        try:
+            if balance is not None:
+                balance = float(balance)
+                # Cap at 1 billion to prevent absurdly large numbers
+                if balance > 1000000000:
+                    logger.warning(f"Savings balance too large for account {item.get('id')}: {balance}, capping at 0")
+                    balance = 0
+            else:
+                balance = 0
+        except (ValueError, TypeError):
+            logger.warning(f"Invalid balance value for savings account {item.get('id')}: {balance}")
+            balance = 0
+        
+        try:
+            if available_balance is not None:
+                available_balance = float(available_balance)
+                if available_balance > 1000000000:
+                    available_balance = 0
+            else:
+                available_balance = balance  # Fallback to account balance
+        except (ValueError, TypeError):
+            available_balance = balance  # Fallback to account balance
+        
         savings.append(
             {
                 "id": item.get("id"),
