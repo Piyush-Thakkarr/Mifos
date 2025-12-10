@@ -160,39 +160,33 @@ def _require_session(request: HttpRequest):
 
 
 def client_view(request: HttpRequest):
+    user, error_response = _require_session(request)
+    if error_response:
+        return error_response
+
+    client = MifosClient()
     try:
-        user, error_response = _require_session(request)
-        if error_response:
-            return error_response
-
-        client = MifosClient()
-        try:
-            bundle = client.fetch_client_bundle()
-        except MifosNotFoundError:
-            # Client doesn't exist in Fineract - return empty profile
-            logger.info("Client not found in Fineract, returning empty profile")
-            response = JsonResponse({"profile": {}}, status=200)
-            return add_cors_headers(response, request)
-        except (MifosAuthError, MifosUpstreamError) as exc:
-            correlation_id = new_correlation_id()
-            logger.exception("Failed to fetch client bundle", extra={"correlation_id": correlation_id})
-            response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
-            return add_cors_headers(response, request)
-
-        profile = {
-            "id": bundle.get("id"),
-            "accountNo": bundle.get("accountNo"),
-            "displayName": bundle.get("displayName"),
-            "status": bundle.get("status"),
-            "officeName": bundle.get("officeName"),
-        }
-        response = JsonResponse({"profile": profile}, status=200)
+        bundle = client.fetch_client_bundle()
+    except MifosNotFoundError:
+        # Client doesn't exist in Fineract - return empty profile
+        logger.info("Client not found in Fineract, returning empty profile")
+        response = JsonResponse({"profile": {}}, status=200)
         return add_cors_headers(response, request)
-    except Exception as e:
+    except (MifosAuthError, MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
-        logger.exception("Unexpected error in client_view", extra={"correlation_id": correlation_id, "error": str(e)})
-        response = JsonResponse({"error": "internal_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
+        logger.exception("Failed to fetch client bundle", extra={"correlation_id": correlation_id})
+        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
         return add_cors_headers(response, request)
+
+    profile = {
+        "id": bundle.get("id"),
+        "accountNo": bundle.get("accountNo"),
+        "displayName": bundle.get("displayName"),
+        "status": bundle.get("status"),
+        "officeName": bundle.get("officeName"),
+    }
+    response = JsonResponse({"profile": profile}, status=200)
+    return add_cors_headers(response, request)
 
 
 def loans_view(request: HttpRequest):
@@ -287,68 +281,61 @@ def loans_view(request: HttpRequest):
 
 
 def savings_view(request: HttpRequest):
+    user, error_response = _require_session(request)
+    if error_response:
+        return error_response
+
+    client = MifosClient()
     try:
-        user, error_response = _require_session(request)
-        if error_response:
-            return error_response
-
-        client = MifosClient()
-        try:
-            savings_accounts = client.fetch_client_savings()
-        except (MifosAuthError, MifosUpstreamError) as exc:
-            correlation_id = new_correlation_id()
-            logger.exception("Failed to fetch savings data", extra={"correlation_id": correlation_id})
-            response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
-            return add_cors_headers(response, request)
-
-        savings = []
-        for item in savings_accounts:
-            status_obj = item.get("status", {})
-            status_value = status_obj.get("value") if isinstance(status_obj, dict) else status_obj
-            
-            # Get balance from summary if available
-            summary = item.get("summary", {})
-            balance = summary.get("accountBalance") if summary else item.get("accountBalance")
-            available_balance = summary.get("availableBalance") if summary else item.get("availableBalance")
-            
-            savings.append(
-                {
-                    "id": item.get("id"),
-                    "accountNo": item.get("accountNo"),
-                    "productName": item.get("savingsProductName") or item.get("productName"),
-                    "status": status_value,
-                    "balance": balance,
-                    "availableBalance": available_balance,
-                }
-            )
-
-        response = JsonResponse({"savings": savings}, status=200)
-        return add_cors_headers(response, request)
-    except Exception as e:
+        savings_accounts = client.fetch_client_savings()
+    except (MifosAuthError, MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
-        logger.exception("Unexpected error in savings_view", extra={"correlation_id": correlation_id, "error": str(e)})
-        response = JsonResponse({"error": "internal_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
+        logger.exception("Failed to fetch savings data", extra={"correlation_id": correlation_id})
+        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
         return add_cors_headers(response, request)
+
+    savings = []
+    for item in savings_accounts:
+        status_obj = item.get("status", {})
+        status_value = status_obj.get("value") if isinstance(status_obj, dict) else status_obj
+        
+        # Get balance from summary if available
+        summary = item.get("summary", {})
+        balance = summary.get("accountBalance") if summary else item.get("accountBalance")
+        available_balance = summary.get("availableBalance") if summary else item.get("availableBalance")
+        
+        savings.append(
+            {
+                "id": item.get("id"),
+                "accountNo": item.get("accountNo"),
+                "productName": item.get("savingsProductName") or item.get("productName"),
+                "status": status_value,
+                "balance": balance,
+                "availableBalance": available_balance,
+            }
+        )
+
+    response = JsonResponse({"savings": savings}, status=200)
+    return add_cors_headers(response, request)
 
 
 def transactions_view(request: HttpRequest):
+    user, error_response = _require_session(request)
+    if error_response:
+        return error_response
+
+    client = MifosClient()
+    all_transactions = []
+
     try:
-        user, error_response = _require_session(request)
-        if error_response:
-            return error_response
-
-        client = MifosClient()
-        all_transactions = []
-
-        try:
-            # Fetch savings and loans separately
-            savings_accounts = client.fetch_client_savings()
-            loan_accounts = client.fetch_client_loans()
-        except (MifosAuthError, MifosUpstreamError) as exc:
-            correlation_id = new_correlation_id()
-            logger.exception("Failed to fetch transactions data", extra={"correlation_id": correlation_id})
-            response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
-            return add_cors_headers(response, request)
+        # Fetch savings and loans separately
+        savings_accounts = client.fetch_client_savings()
+        loan_accounts = client.fetch_client_loans()
+    except (MifosAuthError, MifosUpstreamError) as exc:
+        correlation_id = new_correlation_id()
+        logger.exception("Failed to fetch transactions data", extra={"correlation_id": correlation_id})
+        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        return add_cors_headers(response, request)
 
     # Fetch savings account transactions
     for savings_account in savings_accounts:
@@ -444,18 +431,13 @@ def transactions_view(request: HttpRequest):
                 # Skip if we can't fetch transactions for this loan
                 continue
 
-        # Sort by date (most recent first)
-        all_transactions.sort(key=lambda x: str(x.get("date", "")), reverse=True)
-        # Remove limit to show all transactions
-        # all_transactions = all_transactions[:10]
+    # Sort by date (most recent first)
+    all_transactions.sort(key=lambda x: str(x.get("date", "")), reverse=True)
+    # Remove limit to show all transactions
+    # all_transactions = all_transactions[:10]
 
-        response = JsonResponse({"transactions": all_transactions}, status=200)
-        return add_cors_headers(response, request)
-    except Exception as e:
-        correlation_id = new_correlation_id()
-        logger.exception("Unexpected error in transactions_view", extra={"correlation_id": correlation_id, "error": str(e)})
-        response = JsonResponse({"error": "internal_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
-        return add_cors_headers(response, request)
+    response = JsonResponse({"transactions": all_transactions}, status=200)
+    return add_cors_headers(response, request)
 
 
 def _fetch_all_transactions(client: MifosClient) -> list:
