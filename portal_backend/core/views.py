@@ -309,10 +309,16 @@ def savings_view(request: HttpRequest):
         try:
             if balance is not None:
                 balance = float(balance)
-                # Cap at 1 billion to prevent absurdly large numbers
+                # If balance is absurdly large (> 1 billion), it might be in a smaller unit (like paise)
+                # Check if dividing by 100 makes it reasonable
                 if balance > 1000000000:
-                    logger.warning(f"Savings balance too large for account {item.get('id')}: {balance}, capping at 0")
-                    balance = 0
+                    balance_divided = balance / 100
+                    if balance_divided < 1000000000:  # If divided value is reasonable, use it
+                        logger.info(f"Savings balance for account {item.get('id')} appears to be in smaller unit, converting: {balance} -> {balance_divided}")
+                        balance = balance_divided
+                    else:
+                        logger.warning(f"Savings balance too large for account {item.get('id')}: {balance}, setting to 0")
+                        balance = 0
             else:
                 balance = 0
         except (ValueError, TypeError):
@@ -322,8 +328,13 @@ def savings_view(request: HttpRequest):
         try:
             if available_balance is not None:
                 available_balance = float(available_balance)
+                # Same check for available balance
                 if available_balance > 1000000000:
-                    available_balance = 0
+                    available_balance_divided = available_balance / 100
+                    if available_balance_divided < 1000000000:
+                        available_balance = available_balance_divided
+                    else:
+                        available_balance = 0
             else:
                 available_balance = balance  # Fallback to account balance
         except (ValueError, TypeError):
