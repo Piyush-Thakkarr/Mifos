@@ -1493,27 +1493,55 @@ def support_view(request: HttpRequest):
             }
 
         # Extract staff/loan officer information
+        # First try to get from client's staff assignment
         staff = bundle.get("staff", {})
         staff_id = staff.get("id")
+        loan_officer_name_from_loan = None
         
+        # If no staff on client, try to get from loans (loan officer)
+        if not staff_id:
+            try:
+                loans_data = client.fetch_client_loans()
+                # Find first loan with a loan officer
+                for loan in loans_data:
+                    loan_officer_id = loan.get("loanOfficerId")
+                    loan_officer_name = loan.get("loanOfficerName")
+                    if loan_officer_id:
+                        staff_id = loan_officer_id
+                        loan_officer_name_from_loan = loan_officer_name
+                        break
+            except (MifosAuthError, MifosUpstreamError, MifosNotFoundError):
+                pass
+        
+        # If we found staff_id (from client or loans), fetch details
         loan_officer = {}
         if staff_id:
             try:
                 staff_data = client.fetch_with_admin(f"/staff/{staff_id}")
                 loan_officer = {
-                    "name": staff_data.get("displayName") or (staff_data.get("firstname", "") + " " + staff_data.get("lastname", "")).strip() or "Loan Officer",
+                    "name": staff_data.get("displayName") or (staff_data.get("firstname", "") + " " + staff_data.get("lastname", "")).strip() or loan_officer_name_from_loan or "Loan Officer",
                     "employeeId": staff_data.get("externalId") or f"EMP-{staff_id}",
                     "phone": staff_data.get("mobileNo") or "N/A",
                     "email": staff_data.get("email") or "N/A"
                 }
             except (MifosAuthError, MifosUpstreamError, MifosNotFoundError):
                 # If we can't fetch staff details, use basic info
-                loan_officer = {
-                    "name": (staff.get("displayName") or (staff.get("firstname", "") + " " + staff.get("lastname", "")).strip() or "Loan Officer"),
-                    "employeeId": staff.get("externalId") or (f"EMP-{staff_id}" if staff_id else "N/A"),
-                    "phone": staff.get("mobileNo") or "N/A",
-                    "email": staff.get("email") or "N/A"
-                }
+                if loan_officer_name_from_loan:
+                    # Use loan officer name from loan data
+                    loan_officer = {
+                        "name": loan_officer_name_from_loan,
+                        "employeeId": f"EMP-{staff_id}",
+                        "phone": "Contact branch",
+                        "email": "Contact branch"
+                    }
+                else:
+                    # Use info from client bundle
+                    loan_officer = {
+                        "name": (staff.get("displayName") or (staff.get("firstname", "") + " " + staff.get("lastname", "")).strip() or "Loan Officer"),
+                        "employeeId": staff.get("externalId") or (f"EMP-{staff_id}" if staff_id else "N/A"),
+                        "phone": staff.get("mobileNo") or "N/A",
+                        "email": staff.get("email") or "N/A"
+                    }
         else:
             # No staff assigned - use defaults
             loan_officer = {
