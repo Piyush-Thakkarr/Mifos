@@ -368,68 +368,69 @@ def transactions_view(request: HttpRequest):
             loan_product_name = loan_account.get("loanProductName", "")
             if loan_id:
                 try:
-                loan_txns = client.fetch_loan_transactions(loan_id)
-                for txn in loan_txns:
-                    txn_type = txn.get("type", {})
-                    if isinstance(txn_type, dict):
-                        txn_type_value = txn_type.get("value", "Unknown")
-                    else:
-                        txn_type_value = txn_type or "Unknown"
-                    
-                    # Filter out internal transactions, keep only user-relevant ones
-                    if txn_type_value.lower() in ["accrual", "waive", "writeoff"]:
-                        continue
-                    
-                    # Format date from array [year, month, day] to string
-                    date_value = txn.get("date")
-                    month_year = ""
-                    if isinstance(date_value, list) and len(date_value) == 3:
-                        date_str = f"{date_value[0]}-{date_value[1]:02d}-{date_value[2]:02d}"
-                        # Extract month/year for description - use month names
-                        month_names = ["", "January", "February", "March", "April", "May", "June",
-                                     "July", "August", "September", "October", "November", "December"]
-                        if 1 <= date_value[1] <= 12:
-                            month_year = f"{month_names[date_value[1]]} {date_value[0]}"
-                    else:
-                        date_str = date_value or "—"
-                    
-                    # Generate description based on transaction type
-                    description = ""
-                    if txn_type_value.lower() == "repayment":
-                        description = f"EMI Payment for {month_year}" if month_year else "EMI Payment"
-                    elif txn_type_value.lower() == "disbursement":
-                        description = f"Loan disbursement - {loan_product_name}" if loan_product_name else "Loan disbursement"
-                    elif txn_type_value.lower() in ["processing fee", "processingfee"]:
-                        description = "Loan processing charges"
-                    elif txn_type_value.lower() in ["late fee", "latefee"]:
-                        description = "Late payment charge"
-                    else:
-                        description = txn_type_value
-                    
-                    # Format reference number
-                    txn_id = txn.get("id")
-                    reference = f"TXN-{str(txn_id).zfill(6)}" if txn_id else f"TXN-{str(txn.get('id', '')).zfill(6)}"
-                    
-                    all_transactions.append(
-                        {
-                            "id": txn_id,
-                            "type": txn_type_value,
-                            "amount": txn.get("amount"),
-                            "date": date_str,
-                            "accountType": "Loan",
-                            "accountNo": loan_account_no,
-                            "description": description,
-                            "reference": reference,
-                            "status": "Success",
-                        }
-                    )
-            except (MifosAuthError, MifosUpstreamError, MifosNotFoundError):
-                # Skip if we can't fetch transactions for this loan
-                continue
-            except Exception as e:
-                # Catch any other unexpected errors and continue
-                logger.warning(f"Unexpected error fetching transactions for loan {loan_id}: {e}")
-                continue
+                    loan_txns = client.fetch_loan_transactions(loan_id)
+                    # Limit transactions per loan to prevent huge responses
+                    for txn in loan_txns[:50]:  # Max 50 transactions per loan
+                        txn_type = txn.get("type", {})
+                        if isinstance(txn_type, dict):
+                            txn_type_value = txn_type.get("value", "Unknown")
+                        else:
+                            txn_type_value = txn_type or "Unknown"
+                        
+                        # Filter out internal transactions, keep only user-relevant ones
+                        if txn_type_value.lower() in ["accrual", "waive", "writeoff"]:
+                            continue
+                        
+                        # Format date from array [year, month, day] to string
+                        date_value = txn.get("date")
+                        month_year = ""
+                        if isinstance(date_value, list) and len(date_value) == 3:
+                            date_str = f"{date_value[0]}-{date_value[1]:02d}-{date_value[2]:02d}"
+                            # Extract month/year for description - use month names
+                            month_names = ["", "January", "February", "March", "April", "May", "June",
+                                         "July", "August", "September", "October", "November", "December"]
+                            if 1 <= date_value[1] <= 12:
+                                month_year = f"{month_names[date_value[1]]} {date_value[0]}"
+                        else:
+                            date_str = date_value or "—"
+                        
+                        # Generate description based on transaction type
+                        description = ""
+                        if txn_type_value.lower() == "repayment":
+                            description = f"EMI Payment for {month_year}" if month_year else "EMI Payment"
+                        elif txn_type_value.lower() == "disbursement":
+                            description = f"Loan disbursement - {loan_product_name}" if loan_product_name else "Loan disbursement"
+                        elif txn_type_value.lower() in ["processing fee", "processingfee"]:
+                            description = "Loan processing charges"
+                        elif txn_type_value.lower() in ["late fee", "latefee"]:
+                            description = "Late payment charge"
+                        else:
+                            description = txn_type_value
+                        
+                        # Format reference number
+                        txn_id = txn.get("id")
+                        reference = f"TXN-{str(txn_id).zfill(6)}" if txn_id else f"TXN-{str(txn.get('id', '')).zfill(6)}"
+                        
+                        all_transactions.append(
+                            {
+                                "id": txn_id,
+                                "type": txn_type_value,
+                                "amount": txn.get("amount"),
+                                "date": date_str,
+                                "accountType": "Loan",
+                                "accountNo": loan_account_no,
+                                "description": description,
+                                "reference": reference,
+                                "status": "Success",
+                            }
+                        )
+                except (MifosAuthError, MifosUpstreamError, MifosNotFoundError):
+                    # Skip if we can't fetch transactions for this loan
+                    continue
+                except Exception as e:
+                    # Catch any other unexpected errors and continue
+                    logger.warning(f"Unexpected error fetching transactions for loan {loan_id}: {e}")
+                    continue
 
         # Sort by date (most recent first)
         all_transactions.sort(key=lambda x: str(x.get("date", "")), reverse=True)
