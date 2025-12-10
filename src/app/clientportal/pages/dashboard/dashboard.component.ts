@@ -1,6 +1,6 @@
 /* eslint-disable @angular-eslint/prefer-standalone */
 import { Component } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { forkJoin, timeout, catchError, of } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -23,12 +23,43 @@ export class ClientportalDashboardComponent {
     this.loading = true;
     this.error = null;
 
+    // Add timeout (30 seconds) and error handling to prevent infinite loading
     forkJoin({
-      session: this.authService.dashboard(),
-      client: this.authService.client(),
-      loans: this.authService.loans(),
-      savings: this.authService.savings(),
-      transactions: this.authService.transactions()
+      session: this.authService.dashboard().pipe(
+        timeout(30000),
+        catchError((err) => {
+          console.error('Dashboard session error:', err);
+          return of({ authenticated: false, user: null });
+        })
+      ),
+      client: this.authService.client().pipe(
+        timeout(30000),
+        catchError((err) => {
+          console.error('Client error:', err);
+          return of({ profile: {} });
+        })
+      ),
+      loans: this.authService.loans().pipe(
+        timeout(30000),
+        catchError((err) => {
+          console.error('Loans error:', err);
+          return of({ loans: [] });
+        })
+      ),
+      savings: this.authService.savings().pipe(
+        timeout(30000),
+        catchError((err) => {
+          console.error('Savings error:', err);
+          return of({ savings: [] });
+        })
+      ),
+      transactions: this.authService.transactions().pipe(
+        timeout(30000),
+        catchError((err) => {
+          console.error('Transactions error:', err);
+          return of({ transactions: [] });
+        })
+      )
     }).subscribe({
       next: (result: any) => {
         this.loading = false;
@@ -36,6 +67,7 @@ export class ClientportalDashboardComponent {
       },
       error: (err: any) => {
         this.loading = false;
+        console.error('Dashboard load error:', err);
         if (err?.error?.error) {
           this.error = err.error.error;
         } else {
