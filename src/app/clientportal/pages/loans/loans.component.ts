@@ -1,5 +1,5 @@
 /* eslint-disable @angular-eslint/prefer-standalone */
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
@@ -9,17 +9,32 @@ import { AuthService } from '../../services/auth.service';
   styleUrls: ['./loans.component.scss'],
   standalone: false
 })
-export class ClientportalLoansComponent {
+export class ClientportalLoansComponent implements OnInit {
   loading = false;
   error: string | null = null;
   loans: any[] = [];
   summary: any = null;
+  clientProfile: any = null;
 
   constructor(
     private authService: AuthService,
     private router: Router
-  ) {
+  ) {}
+
+  ngOnInit(): void {
     this.load();
+    this.loadClientProfile();
+  }
+
+  loadClientProfile(): void {
+    this.authService.client().subscribe({
+      next: (result: any) => {
+        this.clientProfile = result.profile || null;
+      },
+      error: () => {
+        // Silently fail - will use default
+      }
+    });
   }
 
   load(): void {
@@ -67,8 +82,11 @@ export class ClientportalLoansComponent {
   }
 
   getUserName(): string {
-    // Get from session or return default
-    return 'Client PortalUser2';
+    return this.clientProfile?.displayName || 'User';
+  }
+
+  navigateToNotifications(): void {
+    this.router.navigate(['/clientportal/notifications']);
   }
 
   viewLoanDetails(loanId: number): void {

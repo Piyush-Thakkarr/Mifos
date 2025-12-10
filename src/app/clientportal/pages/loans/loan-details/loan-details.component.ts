@@ -15,6 +15,7 @@ export class ClientportalLoanDetailsComponent implements OnInit {
   loanId: string | null = null;
   loan: any = null;
   emiSchedule: any[] = [];
+  clientProfile: any = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -23,10 +24,22 @@ export class ClientportalLoanDetailsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadClientProfile();
     this.route.paramMap.subscribe((params) => {
       this.loanId = params.get('id');
       if (this.loanId) {
         this.load();
+      }
+    });
+  }
+
+  loadClientProfile(): void {
+    this.authService.client().subscribe({
+      next: (result: any) => {
+        this.clientProfile = result.profile || null;
+      },
+      error: () => {
+        // Silently fail - will use default
       }
     });
   }
@@ -62,7 +75,11 @@ export class ClientportalLoanDetailsComponent implements OnInit {
   }
 
   getUserName(): string {
-    return 'Client PortalUser2';
+    return this.clientProfile?.displayName || 'User';
+  }
+
+  navigateToNotifications(): void {
+    this.router.navigate(['/clientportal/notifications']);
   }
 
   goBack(): void {

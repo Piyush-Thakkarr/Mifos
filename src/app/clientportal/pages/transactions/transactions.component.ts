@@ -1,5 +1,6 @@
 /* eslint-disable @angular-eslint/prefer-standalone */
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -28,11 +29,27 @@ export class ClientportalTransactionsComponent implements OnInit {
     'Late Fee'
   ];
   loanAccounts: any[] = [];
+  clientProfile: any = null;
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.load();
+    this.loadClientProfile();
+  }
+
+  loadClientProfile(): void {
+    this.authService.client().subscribe({
+      next: (result: any) => {
+        this.clientProfile = result.profile || null;
+      },
+      error: () => {
+        // Silently fail - will use default
+      }
+    });
   }
 
   load(): void {
@@ -169,7 +186,11 @@ export class ClientportalTransactionsComponent implements OnInit {
   }
 
   getUserName(): string {
-    return 'Client PortalUser2';
+    return this.clientProfile?.displayName || 'User';
+  }
+
+  navigateToNotifications(): void {
+    this.router.navigate(['/clientportal/notifications']);
   }
 
   downloadStatement(): void {

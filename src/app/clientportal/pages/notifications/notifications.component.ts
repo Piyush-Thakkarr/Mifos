@@ -1,5 +1,6 @@
 /* eslint-disable @angular-eslint/prefer-standalone */
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -13,11 +14,27 @@ export class ClientportalNotificationsComponent implements OnInit {
   error: string | null = null;
   notifications: any[] = [];
   unreadCount = 0;
+  clientProfile: any = null;
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.load();
+    this.loadClientProfile();
+  }
+
+  loadClientProfile(): void {
+    this.authService.client().subscribe({
+      next: (result: any) => {
+        this.clientProfile = result.profile || null;
+      },
+      error: () => {
+        // Silently fail - will use default
+      }
+    });
   }
 
   load(): void {
@@ -127,6 +144,11 @@ export class ClientportalNotificationsComponent implements OnInit {
   }
 
   getUserName(): string {
-    return 'Client PortalUser2';
+    return this.clientProfile?.displayName || 'User';
+  }
+
+  navigateToNotifications(): void {
+    // Already on notifications page, do nothing or scroll to top
+    window.scrollTo(0, 0);
   }
 }

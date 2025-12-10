@@ -1,5 +1,6 @@
 /* eslint-disable @angular-eslint/prefer-standalone */
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { forkJoin, timeout, catchError, of } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 
@@ -15,7 +16,10 @@ export class ClientportalDashboardComponent {
   dashboard: any = null;
   showComingSoonPopup = false;
 
-  constructor(private authService: AuthService) {
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {
     this.load();
   }
 
@@ -134,5 +138,9 @@ export class ClientportalDashboardComponent {
 
   closeComingSoonPopup(): void {
     this.showComingSoonPopup = false;
+  }
+
+  navigateToNotifications(): void {
+    this.router.navigate(['/clientportal/notifications']);
   }
 }
