@@ -367,7 +367,7 @@ def transactions_view(request: HttpRequest):
             loan_account_no = loan_account.get("accountNo")
             loan_product_name = loan_account.get("loanProductName", "")
             if loan_id:
-            try:
+                try:
                 loan_txns = client.fetch_loan_transactions(loan_id)
                 for txn in loan_txns:
                     txn_type = txn.get("type", {})
