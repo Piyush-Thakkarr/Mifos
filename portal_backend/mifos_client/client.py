@@ -265,9 +265,18 @@ class MifosClient:
         try:
             data = self.fetch_with_admin(path, params=params)
             accounts = data.get("pageItems", [])
+            
+            # Filter accounts to only include those that actually belong to this client
+            # (Fineract API sometimes returns accounts from other clients)
+            client_id_int = int(self.client_id) if self.client_id else None
+            filtered_accounts = [
+                acc for acc in accounts 
+                if acc.get("clientId") == client_id_int
+            ]
+            
             # Fetch individual accounts with summary for balance info
             enriched_accounts = []
-            for account in accounts:
+            for account in filtered_accounts:
                 account_id = account.get("id")
                 if account_id:
                     try:

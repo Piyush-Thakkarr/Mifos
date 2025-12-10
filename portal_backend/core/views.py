@@ -309,16 +309,14 @@ def savings_view(request: HttpRequest):
         try:
             if balance is not None:
                 balance = float(balance)
-                # If balance is absurdly large (> 1 billion), it might be in a smaller unit (like paise)
-                # Check if dividing by 100 makes it reasonable
-                if balance > 1000000000:
-                    balance_divided = balance / 100
-                    if balance_divided < 1000000000:  # If divided value is reasonable, use it
-                        logger.info(f"Savings balance for account {item.get('id')} appears to be in smaller unit, converting: {balance} -> {balance_divided}")
-                        balance = balance_divided
-                    else:
-                        logger.warning(f"Savings balance too large for account {item.get('id')}: {balance}, setting to 0")
-                        balance = 0
+                # Cap at 10 million per account (reasonable maximum for a single savings account)
+                # If balance is absurdly large, log it and set to 0
+                if balance > 10000000:  # 10 million
+                    logger.warning(f"Savings balance too large for account {item.get('id')}: {balance}, setting to 0")
+                    balance = 0
+                elif balance < 0:
+                    # Negative balances are possible (overdraft), but we'll keep them
+                    pass
             else:
                 balance = 0
         except (ValueError, TypeError):
@@ -328,13 +326,10 @@ def savings_view(request: HttpRequest):
         try:
             if available_balance is not None:
                 available_balance = float(available_balance)
-                # Same check for available balance
-                if available_balance > 1000000000:
-                    available_balance_divided = available_balance / 100
-                    if available_balance_divided < 1000000000:
-                        available_balance = available_balance_divided
-                    else:
-                        available_balance = 0
+                # Cap at 10 million per account
+                if available_balance > 10000000:  # 10 million
+                    logger.warning(f"Available balance too large for account {item.get('id')}: {available_balance}, setting to 0")
+                    available_balance = 0
             else:
                 available_balance = balance  # Fallback to account balance
         except (ValueError, TypeError):
