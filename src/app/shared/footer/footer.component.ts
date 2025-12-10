@@ -110,14 +110,25 @@ export class FooterComponent implements OnInit, OnDestroy {
     if (this.authenticationService.isAuthenticated()) {
       this.systemService
         .getConfigurationByName(SettingsService.businessDateConfigName)
-        .subscribe((configurationData: any) => {
-          this.isBusinessDateEnabled = configurationData.enabled;
-          this.settingsService.setBusinessDateConfig(configurationData.enabled);
-          if (this.isBusinessDateEnabled) {
-            this.setBusinessDate();
-            this.timer = setTimeout(() => {
-              this.getConfigurations();
-            }, 60000);
+        .subscribe({
+          next: (configurationData: any) => {
+            this.isBusinessDateEnabled = configurationData.enabled;
+            this.settingsService.setBusinessDateConfig(String(configurationData.enabled));
+            if (this.isBusinessDateEnabled) {
+              this.setBusinessDate();
+              this.timer = setTimeout(() => {
+                this.getConfigurations();
+              }, 60000);
+            }
+          },
+          error: (err: any) => {
+            // Business date configuration not available or server error - gracefully handle
+            // This is OK, just disable business date features
+            this.isBusinessDateEnabled = false;
+            this.isBusinessDateDefined = false;
+            this.settingsService.setBusinessDateConfig('false');
+            // Don't retry on error - stop the timer
+            clearTimeout(this.timer);
           }
         });
     } else {

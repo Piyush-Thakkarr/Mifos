@@ -87,10 +87,16 @@ export class BusinessDateTabComponent implements OnInit {
   getConfigurations(): void {
     this.systemService
       .getConfigurationByName(SettingsService.businessDateConfigName)
-      .subscribe((configurationData: any) => {
-        this.isBusinessDateEnabled = configurationData.enabled;
-        if (this.isBusinessDateEnabled) {
-          this.setBusinessDates();
+      .subscribe({
+        next: (configurationData: any) => {
+          this.isBusinessDateEnabled = configurationData.enabled;
+          if (this.isBusinessDateEnabled) {
+            this.setBusinessDates();
+          }
+        },
+        error: (err: any) => {
+          // Business date configuration not available - gracefully handle
+          this.isBusinessDateEnabled = false;
         }
       });
   }

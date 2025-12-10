@@ -48,8 +48,14 @@ export class ConfigurationsComponent implements OnInit {
   getConfigurations(): void {
     this.systemService
       .getConfigurationByName(SettingsService.businessDateConfigName)
-      .subscribe((configurationData: any) => {
-        this.isBusinessDateEnabled = configurationData.enabled;
+      .subscribe({
+        next: (configurationData: any) => {
+          this.isBusinessDateEnabled = configurationData.enabled;
+        },
+        error: (err: any) => {
+          // Business date configuration not available - gracefully handle
+          this.isBusinessDateEnabled = false;
+        }
       });
   }
 }
