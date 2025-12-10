@@ -1,70 +1,5 @@
 services:
-  # PostgreSQL Database for Fineract
-  - type: pspg
-    name: fineract-database
-    plan: free
-    databaseName: fineract_tenants
-    user: fineract_user
-
-  # Fineract Backend Service (Docker)
-  - type: web
-    name: fineract-backend
-    plan: starter
-    dockerfilePath: ./fineract/Dockerfile
-    dockerContext: ./fineract
-    envVars:
-      # Database connection from Render PostgreSQL
-      - key: DATABASE_HOST
-        fromDatabase:
-          name: fineract-database
-          property: host
-      - key: DATABASE_PORT
-        fromDatabase:
-          name: fineract-database
-          property: port
-      - key: DATABASE_NAME
-        fromDatabase:
-          name: fineract-database
-          property: database
-      - key: DATABASE_USER
-        fromDatabase:
-          name: fineract-database
-          property: user
-      - key: DATABASE_PASSWORD
-        fromDatabase:
-          name: fineract-database
-          property: password
-      # Fineract PostgreSQL Configuration
-      - key: FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME
-        value: org.postgresql.Driver
-      - key: FINERACT_HIKARI_JDBC_URL
-        value: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
-      - key: FINERACT_HIKARI_USERNAME
-        value: ${DATABASE_USER}
-      - key: FINERACT_HIKARI_PASSWORD
-        value: ${DATABASE_PASSWORD}
-      # Default tenant database configuration
-      - key: FINERACT_DEFAULT_TENANTDB_HOST
-        value: ${DATABASE_HOST}
-      - key: FINERACT_DEFAULT_TENANTDB_PORT
-        value: ${DATABASE_PORT}
-      - key: FINERACT_DEFAULT_TENANTDB_UID
-        value: ${DATABASE_USER}
-      - key: FINERACT_DEFAULT_TENANTDB_PWD
-        value: ${DATABASE_PASSWORD}
-      - key: FINERACT_DEFAULT_TENANTDB_NAME
-        value: fineract_default
-      - key: FINERACT_DEFAULT_TENANTDB_IDENTIFIER
-        value: default
-      # Server configuration
-      - key: FINERACT_SERVER_PORT
-        value: ${PORT}
-      - key: FINERACT_SERVER_SSL_ENABLED
-        value: false
-      - key: FINERACT_INSECURE_HTTP_CLIENT
-        value: true
-
-  # Django Backend Service
+  # Django Backend Service (Client Portal API)
   - type: web
     name: client-portal-backend
     env: python
@@ -83,20 +18,20 @@ services:
         generateValue: true
       - key: DEBUG
         value: false
-      # Fineract Configuration - points to deployed Fineract service
+      # Fineract Configuration - Using Public Fineract Server
       - key: MIFOS_BASE_URL
-        value: http://fineract-backend.onrender.com/fineract-provider/api/v1
+        sync: false  # Set manually: https://demo.mifos.io/fineract-provider/api/v1
       - key: MIFOS_TENANT_ID
         value: default
       - key: MIFOS_ADMIN_USER
-        sync: false
+        sync: false  # Set manually: mifos (or your public server username)
       - key: MIFOS_ADMIN_PASS
-        sync: false
+        sync: false  # Set manually: password (or your public server password)
       - key: MIFOS_VERIFY_SSL
-        value: false
+        value: true  # true for public servers (they have valid SSL certificates)
       - key: MIFOS_CLIENT_ID
         value: 3
-      # Frontend URL for CORS
+      # Frontend URL for CORS (will be auto-populated after frontend deploys)
       - key: FRONTEND_URL
         fromService:
           type: web
@@ -107,13 +42,8 @@ services:
           type: web
           name: client-portal-frontend
           property: host
-      # Database (optional - uses SQLite if not set)
-      - key: DATABASE_URL
-        fromDatabase:
-          name: fineract-database
-          property: connectionString
 
-  # Angular Frontend Service
+  # Angular Frontend Service (Static Site)
   - type: web
     name: client-portal-frontend
     env: node
@@ -125,18 +55,16 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 20.x
-      # Django Backend URL
+      # Django Backend URL (auto-populated from backend service)
       - key: DJANGO_API_URL
         fromService:
           type: web
           name: client-portal-backend
           property: host
       # Fineract API URL (for main Mifos app, not client portal)
+      # Using Public Fineract Server
       - key: FINERACT_API_URL
-        fromService:
-          type: web
-          name: fineract-backend
-          property: host
+        sync: false  # Set manually: https://demo.mifos.io (base URL only, no /fineract-provider)
       - key: FINERACT_API_PROVIDER
         value: /fineract-provider/api
       - key: FINERACT_API_VERSION

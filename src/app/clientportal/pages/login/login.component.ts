@@ -2,6 +2,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { timeout, catchError } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -42,22 +43,33 @@ export class ClientportalLoginComponent {
 
     const { username, password } = this.form.value;
 
-    this.authService.login(username, password).subscribe({
-      next: () => {
-        this.loading = false;
-        this.router.navigate(['/clientportal/dashboard']);
-      },
-      error: (err: any) => {
-        this.loading = false;
-        if (err?.error?.error) {
-          this.error = err.error.error;
-        } else if (err?.status === 401) {
-          this.error = 'Invalid credentials';
-        } else {
-          this.error = 'Login failed. Please try again.';
+    this.authService
+      .login(username, password)
+      .pipe(
+        timeout(15000), // 15 second timeout for login
+        catchError((err: any) => {
+          this.loading = false;
+          if (err?.name === 'TimeoutError') {
+            this.error = 'Login request timed out. Please check your connection and try again.';
+          } else if (err?.error?.error) {
+            this.error = err.error.error;
+          } else if (err?.status === 401) {
+            this.error = 'Invalid credentials';
+          } else {
+            this.error = 'Login failed. Please try again.';
+          }
+          throw err; // Re-throw to prevent further processing
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.loading = false;
+          this.router.navigate(['/clientportal/dashboard']);
+        },
+        error: () => {
+          // Error already handled in catchError
         }
-      }
-    });
+      });
   }
 
   navigateToMainLogin(): void {

@@ -84,12 +84,10 @@ class MifosClient:
         json_body = {"username": self.admin_user, "password": self.admin_pass}
 
         attempts: List[Dict[str, Any]] = [
-            # Preferred: POST with JSON body (confirmed working format)
-            {"method": "POST", "path": "/authentication", "tenant_strategy": "both", "auth_type": "json_body"},
-            # Fallback: Basic Auth variants
-            {"method": "POST", "path": "/authentication", "tenant_strategy": "both", "auth_type": "basic"},
-            {"method": "POST", "path": "/self/authentication", "tenant_strategy": "both", "auth_type": "basic"},
-            {"method": "GET", "path": "/authentication", "tenant_strategy": "both", "auth_type": "basic"},
+            # Preferred: POST with JSON body (confirmed working format) - try this first with shorter timeout
+            {"method": "POST", "path": "/authentication", "tenant_strategy": "both", "auth_type": "json_body", "timeout": 3},
+            # Fallback: Basic Auth variant - only try one more
+            {"method": "POST", "path": "/authentication", "tenant_strategy": "both", "auth_type": "basic", "timeout": 3},
         ]
 
         errors: List[str] = []
@@ -128,6 +126,8 @@ class MifosClient:
             )
 
             try:
+                # Use attempt-specific timeout if provided, otherwise default to 5 seconds
+                attempt_timeout = attempt.get("timeout", 5)
                 resp = requests.request(
                     attempt["method"],
                     url,
@@ -135,7 +135,7 @@ class MifosClient:
                     headers=headers,
                     json=json_data,
                     auth=auth_tuple,
-                    timeout=10,
+                    timeout=attempt_timeout,
                     verify=self.verify_ssl,
                 )
             except requests.RequestException as exc:  # type: ignore[no-untyped-def]

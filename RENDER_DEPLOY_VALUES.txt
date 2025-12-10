@@ -1,0 +1,62 @@
+===========================================
+RENDER DEPLOYMENT - COPY/PASTE VALUES
+===========================================
+
+BACKEND SERVICE (Web Service)
+-----------------------------
+Name: client-portal-backend
+Environment: Python 3
+Plan: Free
+
+Build Command:
+cd portal_backend && pip install -r requirements.txt && python manage.py collectstatic --noinput
+
+Start Command:
+cd portal_backend && gunicorn portal_backend.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+
+Environment Variables:
+PYTHON_VERSION=3.11.0
+DEBUG=false
+MIFOS_BASE_URL=https://demo.mifos.io/fineract-provider/api/v1
+MIFOS_TENANT_ID=default
+MIFOS_ADMIN_USER=mifos
+MIFOS_ADMIN_PASS=password
+MIFOS_VERIFY_SSL=true
+MIFOS_CLIENT_ID=3
+
+(After frontend deploys, add these):
+FRONTEND_URL=https://client-portal-frontend-XXXX.onrender.com
+CORS_ALLOWED_ORIGINS=https://client-portal-frontend-XXXX.onrender.com
+
+
+FRONTEND SERVICE (Static Site)
+-------------------------------
+Name: client-portal-frontend
+Plan: Free
+
+Build Command:
+chmod +x build-frontend.sh && ./build-frontend.sh
+
+Publish Directory:
+dist/web-app/browser
+
+Node Version:
+- In Render Dashboard: Look for "Node Version" field (usually near Build Command)
+- OR add as Environment Variable: NODE_VERSION=20.x
+- Set to: 20.x
+
+Environment Variables:
+NODE_VERSION=20.x
+DJANGO_API_URL=https://client-portal-backend-XXXX.onrender.com
+FINERACT_API_URL=https://demo.mifos.io
+FINERACT_API_PROVIDER=/fineract-provider/api
+FINERACT_API_VERSION=/v1
+FINERACT_PLATFORM_TENANT_IDENTIFIER=default
+
+===========================================
+NOTES:
+- Replace XXXX with your actual Render service IDs
+- Backend URL will be shown after backend deploys
+- Update backend CORS after frontend deploys
+===========================================
+
