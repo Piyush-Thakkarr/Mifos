@@ -340,29 +340,29 @@ def transactions_view(request: HttpRequest):
                 try:
                     savings_txns = client.fetch_savings_transactions(savings_id, limit=10)  # Limit transactions per account
                     for txn in savings_txns:
-                    # Format date from array [year, month, day] to string
-                    date_value = txn.get("date")
-                    if isinstance(date_value, list) and len(date_value) == 3:
-                        date_str = f"{date_value[0]}-{date_value[1]:02d}-{date_value[2]:02d}"
-                    else:
-                        date_str = date_value
-                    
-                    all_transactions.append(
-                        {
-                            "id": txn.get("id"),
-                            "type": txn.get("transactionType", {}).get("value", "Unknown") if isinstance(txn.get("transactionType"), dict) else txn.get("transactionType", "Unknown"),
-                            "amount": txn.get("amount"),
-                            "date": date_str,
-                            "accountType": "Savings",
-                            "accountNo": savings_account.get("accountNo"),
-                        }
-                    )
-            except (MifosAuthError, MifosUpstreamError, MifosNotFoundError):
-                # Skip if we can't fetch transactions for this account
-                continue
+                        # Format date from array [year, month, day] to string
+                        date_value = txn.get("date")
+                        if isinstance(date_value, list) and len(date_value) == 3:
+                            date_str = f"{date_value[0]}-{date_value[1]:02d}-{date_value[2]:02d}"
+                        else:
+                            date_str = date_value
+                        
+                        all_transactions.append(
+                            {
+                                "id": txn.get("id"),
+                                "type": txn.get("transactionType", {}).get("value", "Unknown") if isinstance(txn.get("transactionType"), dict) else txn.get("transactionType", "Unknown"),
+                                "amount": txn.get("amount"),
+                                "date": date_str,
+                                "accountType": "Savings",
+                                "accountNo": savings_account.get("accountNo"),
+                            }
+                        )
+                except (MifosAuthError, MifosUpstreamError, MifosNotFoundError):
+                    # Skip if we can't fetch transactions for this account
+                    continue
 
-    # Fetch loan account transactions
-    for loan_account in loan_accounts:
+        # Fetch loan account transactions (limit to prevent timeout)
+        for loan_account in loan_accounts[:10]:  # Limit to first 10 loans
         loan_id = loan_account.get("id")
         loan_account_no = loan_account.get("accountNo")
         loan_product_name = loan_account.get("loanProductName", "")
@@ -422,7 +422,7 @@ def transactions_view(request: HttpRequest):
                             "reference": reference,
                             "status": "Success",
                         }
-                    )
+                        )
                 except (MifosAuthError, MifosUpstreamError, MifosNotFoundError):
                     # Skip if we can't fetch transactions for this loan
                     continue
