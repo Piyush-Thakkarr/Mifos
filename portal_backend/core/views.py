@@ -363,7 +363,7 @@ def transactions_view(request: HttpRequest):
 
         # Fetch loan account transactions (limit to prevent timeout)
         for loan_account in loan_accounts[:10]:  # Limit to first 10 loans
-        loan_id = loan_account.get("id")
+            loan_id = loan_account.get("id")
         loan_account_no = loan_account.get("accountNo")
         loan_product_name = loan_account.get("loanProductName", "")
         if loan_id:
