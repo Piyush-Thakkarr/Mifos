@@ -34,7 +34,7 @@ export const environment = {
   /** Feature flag for Remember Me functionality */
   enableRememberMe: false,
   oauth: {
-    enabled: loadedEnv.oauthServerEnabled === 'true' || loadedEnv.oauthServerEnabled === true, // For connecting to Mifos X using OAuth2 Authentication change the value to true
+    enabled: String(loadedEnv.oauthServerEnabled) === 'true' || loadedEnv.oauthServerEnabled === true, // For connecting to Mifos X using OAuth2 Authentication change the value to true
     serverUrl: loadedEnv.oauthServerUrl || '',
     appId: loadedEnv.oauthAppId || ''
   },

@@ -19,13 +19,13 @@ export const environment = {
   baseApiUrl:
     loadedEnv['fineractApiUrl'] ||
     (loadedEnv['fineractApiUrls']?.length > 0 ? loadedEnv['fineractApiUrls'].split(',')[0] : window.location.origin),
-  oauthServerUrl: loadedEnv['oauthServerUrl'] || loadedEnv['fineractApiUrl'] + loadedEnv['apiProvider'],
+  oauthServerUrl: loadedEnv['oauthServerUrl'] || (loadedEnv['fineractApiUrl'] ? loadedEnv['fineractApiUrl'] + (loadedEnv['apiProvider'] || '/fineract-provider/api') : ''),
   allowServerSwitch: loadedEnv.allowServerSwitch || 'true',
   apiProvider: loadedEnv['apiProvider'] || '/fineract-provider/api',
   apiVersion: loadedEnv['apiVersion'] || '/v1',
   serverUrl: '',
   oauth: {
-    enabled: loadedEnv['oauthServerEnabled'] === 'true' || loadedEnv['oauthServerEnabled'] === true, // For connecting to Mifos X using OAuth2 Authentication change the value to true
+    enabled: String(loadedEnv['oauthServerEnabled']) === 'true' || loadedEnv['oauthServerEnabled'] === true, // For connecting to Mifos X using OAuth2 Authentication change the value to true
     serverUrl: loadedEnv['oauthServerUrl'] || '',
     appId: loadedEnv['oauthAppId'] || ''
   },
