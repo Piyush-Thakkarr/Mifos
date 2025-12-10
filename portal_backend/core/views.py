@@ -99,12 +99,7 @@ def login_view(request: HttpRequest):
             },
             status=200,
         )
-        # Add CORS headers explicitly
-        origin = request.headers.get("Origin")
-        if origin:
-            response["Access-Control-Allow-Origin"] = origin
-            response["Access-Control-Allow-Credentials"] = "true"
-        return response
+        return add_cors_headers(response, request)
     except Exception as e:
         correlation_id = new_correlation_id()
         logger.exception("Failed to create response", extra={"correlation_id": correlation_id, "error": str(e)})
