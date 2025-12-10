@@ -208,7 +208,7 @@ class MifosClient:
                 headers=headers,
                 auth=(self.admin_user, self.admin_pass),
                 json=json,
-                timeout=15,
+                timeout=10,  # Reduced from 15 to 10 seconds to prevent long hangs
                 verify=self.verify_ssl,
             )
         except requests.RequestException as exc:  # type: ignore[no-untyped-def]
@@ -294,8 +294,9 @@ class MifosClient:
 
     def fetch_loan_transactions(self, loan_id: int) -> List[Dict[str, Any]]:
         """Fetch transactions for a loan account."""
+        # Use 'transactions' association instead of 'all' for faster response
         path = f"/loans/{loan_id}"
-        params = {"associations": "all"}
+        params = {"associations": "transactions"}
         try:
             data = self.fetch_with_admin(path, params=params)
             # Transactions can be in 'transactions' or 'transactionHistory' key

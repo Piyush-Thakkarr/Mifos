@@ -315,30 +315,31 @@ def savings_view(request: HttpRequest):
 
 
 def transactions_view(request: HttpRequest):
-    user, error_response = _require_session(request)
-    if error_response:
-        return error_response
-
-    client = MifosClient()
-    all_transactions = []
-
     try:
-        # Fetch savings and loans separately
-        savings_accounts = client.fetch_client_savings()
-        loan_accounts = client.fetch_client_loans()
-    except (MifosAuthError, MifosUpstreamError) as exc:
-        correlation_id = new_correlation_id()
-        logger.exception("Failed to fetch transactions data", extra={"correlation_id": correlation_id})
-        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
-        return add_cors_headers(response, request)
+        user, error_response = _require_session(request)
+        if error_response:
+            return error_response
 
-    # Fetch savings account transactions
-    for savings_account in savings_accounts:
-        savings_id = savings_account.get("id")
-        if savings_id:
-            try:
-                savings_txns = client.fetch_savings_transactions(savings_id, limit=5)
-                for txn in savings_txns:
+        client = MifosClient()
+        all_transactions = []
+
+        try:
+            # Fetch savings and loans separately
+            savings_accounts = client.fetch_client_savings()
+            loan_accounts = client.fetch_client_loans()
+        except (MifosAuthError, MifosUpstreamError) as exc:
+            correlation_id = new_correlation_id()
+            logger.exception("Failed to fetch transactions data", extra={"correlation_id": correlation_id})
+            response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+            return add_cors_headers(response, request)
+
+        # Fetch savings account transactions (limit to prevent timeout)
+        for savings_account in savings_accounts[:5]:  # Limit to first 5 savings accounts
+            savings_id = savings_account.get("id")
+            if savings_id:
+                try:
+                    savings_txns = client.fetch_savings_transactions(savings_id, limit=10)  # Limit transactions per account
+                    for txn in savings_txns:
                     # Format date from array [year, month, day] to string
                     date_value = txn.get("date")
                     if isinstance(date_value, list) and len(date_value) == 3:
@@ -422,17 +423,27 @@ def transactions_view(request: HttpRequest):
                             "status": "Success",
                         }
                     )
-            except (MifosAuthError, MifosUpstreamError, MifosNotFoundError):
-                # Skip if we can't fetch transactions for this loan
-                continue
+                except (MifosAuthError, MifosUpstreamError, MifosNotFoundError):
+                    # Skip if we can't fetch transactions for this loan
+                    continue
+                except Exception as e:
+                    # Catch any other unexpected errors and continue
+                    logger.warning(f"Unexpected error fetching transactions for loan {loan_id}: {e}")
+                    continue
 
-    # Sort by date (most recent first)
-    all_transactions.sort(key=lambda x: str(x.get("date", "")), reverse=True)
-    # Remove limit to show all transactions
-    # all_transactions = all_transactions[:10]
+        # Sort by date (most recent first)
+        all_transactions.sort(key=lambda x: str(x.get("date", "")), reverse=True)
+        # Limit total transactions to prevent huge responses
+        all_transactions = all_transactions[:100]  # Max 100 total transactions
 
-    response = JsonResponse({"transactions": all_transactions}, status=200)
-    return add_cors_headers(response, request)
+        response = JsonResponse({"transactions": all_transactions}, status=200)
+        return add_cors_headers(response, request)
+    except Exception as e:
+        # Catch any unexpected errors and return proper response
+        correlation_id = new_correlation_id()
+        logger.exception("Unexpected error in transactions_view", extra={"correlation_id": correlation_id, "error": str(e)})
+        response = JsonResponse({"error": "internal_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
+        return add_cors_headers(response, request)
 
 
 def _fetch_all_transactions(client: MifosClient) -> list:
