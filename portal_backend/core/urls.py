@@ -16,6 +16,7 @@ from .views import (
     mark_notification_read_view,
     mark_all_notifications_read_view,
     delete_notification_view,
+    support_view,
 )
 
 urlpatterns = [
@@ -34,4 +35,5 @@ urlpatterns = [
     path("clientportal/notifications/<int:notification_id>/read", mark_notification_read_view, name="clientportal-notification-read"),
     path("clientportal/notifications/read-all", mark_all_notifications_read_view, name="clientportal-notifications-read-all"),
     path("clientportal/notifications/<int:notification_id>", delete_notification_view, name="clientportal-notification-delete"),
+    path("clientportal/support", support_view, name="clientportal-support"),
 ]

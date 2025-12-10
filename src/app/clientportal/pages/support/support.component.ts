@@ -9,24 +9,25 @@ import { AuthService } from '../../services/auth.service';
   styleUrls: ['./support.component.scss'],
   standalone: false
 })
-export class ClientportalSupportComponent {
+export class ClientportalSupportComponent implements OnInit {
   issueType: string = '';
   subject: string = '';
   message: string = '';
+  loading = false;
 
-  // Loan Officer Info (would come from backend in real system)
+  // Loan Officer Info (fetched from backend)
   loanOfficer = {
-    name: 'Rajesh Kumar',
-    employeeId: 'EMP-2024-456',
-    phone: '+91 98765 12345',
-    email: 'rajesh.kumar@mfi.com'
+    name: 'Loading...',
+    employeeId: 'N/A',
+    phone: 'N/A',
+    email: 'N/A'
   };
 
-  // Branch Info (would come from backend in real system)
+  // Branch Info (fetched from backend)
   branchInfo = {
-    name: 'MG Road Branch',
-    code: 'MFI-BLR-001',
-    address: '123, MG Road, Near City Center, Bangalore, Karnataka - 560001',
+    name: 'Loading...',
+    code: 'N/A',
+    address: 'Loading...',
     workingHours: 'Mon - Sat: 9:00 AM - 6:00 PM'
   };
 
@@ -55,6 +56,7 @@ export class ClientportalSupportComponent {
 
   ngOnInit(): void {
     this.loadClientProfile();
+    this.loadSupportData();
   }
 
   loadClientProfile(): void {
@@ -64,6 +66,29 @@ export class ClientportalSupportComponent {
       },
       error: () => {
         // Silently fail - will use default
+      }
+    });
+  }
+
+  loadSupportData(): void {
+    this.loading = true;
+    this.authService.support().subscribe({
+      next: (result: any) => {
+        this.loading = false;
+        if (result.loanOfficer) {
+          this.loanOfficer = result.loanOfficer;
+        }
+        if (result.branchInfo) {
+          this.branchInfo = result.branchInfo;
+        }
+        if (result.contactInfo) {
+          this.contactInfo = result.contactInfo;
+        }
+      },
+      error: (err: any) => {
+        this.loading = false;
+        console.error('Failed to load support data:', err);
+        // Keep default values on error
       }
     });
   }

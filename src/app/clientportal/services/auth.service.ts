@@ -122,4 +122,10 @@ export class AuthService {
       withCredentials: true
     });
   }
+
+  support(): Observable<unknown> {
+    return this.http.get<unknown>(`${this.baseUrl}/clientportal/support`, {
+      withCredentials: true
+    });
+  }
 }

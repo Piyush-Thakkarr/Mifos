@@ -173,12 +173,18 @@ def client_view(request: HttpRequest):
         response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
         return add_cors_headers(response, request)
 
+    # Extract office and staff information
+    office = bundle.get("office", {})
+    staff = bundle.get("staff", {})
+    
     profile = {
         "id": bundle.get("id"),
         "accountNo": bundle.get("accountNo"),
         "displayName": bundle.get("displayName"),
         "status": bundle.get("status"),
-        "officeName": bundle.get("officeName"),
+        "officeName": bundle.get("officeName") or office.get("name"),
+        "office": office,
+        "staff": staff,
     }
     response = JsonResponse({"profile": profile}, status=200)
     return add_cors_headers(response, request)
