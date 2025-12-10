@@ -1398,3 +1398,116 @@ def delete_notification_view(request: HttpRequest, notification_id: int):
     # For now, just return success
     response = JsonResponse({"success": True}, status=200)
     return add_cors_headers(response, request)
+
+
+def support_view(request: HttpRequest):
+    """Fetch support information including loan officer and branch details."""
+    try:
+        user, error_response = _require_session(request)
+        if error_response:
+            return error_response
+
+        client = MifosClient()
+        
+        try:
+            # Fetch client bundle to get office and staff information
+            bundle = client.fetch_client_bundle()
+        except MifosNotFoundError:
+            # Client doesn't exist - return empty support info
+            response = JsonResponse({
+                "loanOfficer": {},
+                "branchInfo": {},
+                "contactInfo": {
+                    "tollFree": "1800-XXX-XXXX",
+                    "email": "support@mfi.com",
+                    "responseTime": "Within 24 hours"
+                }
+            }, status=200)
+            return add_cors_headers(response, request)
+        except (MifosAuthError, MifosUpstreamError) as exc:
+            correlation_id = new_correlation_id()
+            logger.exception("Failed to fetch support data", extra={"correlation_id": correlation_id})
+            response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+            return add_cors_headers(response, request)
+
+        # Extract office information
+        office = bundle.get("office", {})
+        office_name = office.get("name") or bundle.get("officeName") or "Branch Office"
+        office_id = office.get("id")
+        
+        # Try to get office details if we have office ID
+        office_details = {}
+        if office_id:
+            try:
+                office_data = client.fetch_with_admin(f"/offices/{office_id}")
+                office_details = {
+                    "name": office_data.get("name") or office_name,
+                    "code": office_data.get("externalId") or f"OFFICE-{office_id}",
+                    "address": office_data.get("openingDate") or "",  # Fineract doesn't store address in office, use opening date as placeholder
+                    "workingHours": "Mon - Sat: 9:00 AM - 6:00 PM"  # Default as Fineract doesn't store this
+                }
+            except (MifosAuthError, MifosUpstreamError, MifosNotFoundError):
+                # If we can't fetch office details, use basic info
+                office_details = {
+                    "name": office_name,
+                    "code": f"OFFICE-{office_id}" if office_id else "N/A",
+                    "address": "Contact branch for address",
+                    "workingHours": "Mon - Sat: 9:00 AM - 6:00 PM"
+                }
+        else:
+            office_details = {
+                "name": office_name,
+                "code": "N/A",
+                "address": "Contact branch for address",
+                "workingHours": "Mon - Sat: 9:00 AM - 6:00 PM"
+            }
+
+        # Extract staff/loan officer information
+        staff = bundle.get("staff", {})
+        staff_id = staff.get("id")
+        
+        loan_officer = {}
+        if staff_id:
+            try:
+                staff_data = client.fetch_with_admin(f"/staff/{staff_id}")
+                loan_officer = {
+                    "name": staff_data.get("displayName") or (staff_data.get("firstname", "") + " " + staff_data.get("lastname", "")).strip() or "Loan Officer",
+                    "employeeId": staff_data.get("externalId") or f"EMP-{staff_id}",
+                    "phone": staff_data.get("mobileNo") or "N/A",
+                    "email": staff_data.get("email") or "N/A"
+                }
+            except (MifosAuthError, MifosUpstreamError, MifosNotFoundError):
+                # If we can't fetch staff details, use basic info
+                loan_officer = {
+                    "name": (staff.get("displayName") or (staff.get("firstname", "") + " " + staff.get("lastname", "")).strip() or "Loan Officer"),
+                    "employeeId": staff.get("externalId") or (f"EMP-{staff_id}" if staff_id else "N/A"),
+                    "phone": staff.get("mobileNo") or "N/A",
+                    "email": staff.get("email") or "N/A"
+                }
+        else:
+            # No staff assigned - use defaults
+            loan_officer = {
+                "name": "Not Assigned",
+                "employeeId": "N/A",
+                "phone": "Contact branch",
+                "email": "Contact branch"
+            }
+
+        # Contact info (could be from config or defaults)
+        contact_info = {
+            "tollFree": "1800-XXX-XXXX",
+            "email": "support@mfi.com",
+            "responseTime": "Within 24 hours"
+        }
+
+        response = JsonResponse({
+            "loanOfficer": loan_officer,
+            "branchInfo": office_details,
+            "contactInfo": contact_info
+        }, status=200)
+        return add_cors_headers(response, request)
+    except Exception as e:
+        correlation_id = new_correlation_id()
+        logger.exception("Unexpected error in support_view", extra={"correlation_id": correlation_id, "error": str(e)})
+        response = JsonResponse({"error": "internal_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
+        return add_cors_headers(response, request)
