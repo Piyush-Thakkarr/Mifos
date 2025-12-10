@@ -422,14 +422,14 @@ def transactions_view(request: HttpRequest):
                             "reference": reference,
                             "status": "Success",
                         }
-                        )
-                except (MifosAuthError, MifosUpstreamError, MifosNotFoundError):
-                    # Skip if we can't fetch transactions for this loan
-                    continue
-                except Exception as e:
-                    # Catch any other unexpected errors and continue
-                    logger.warning(f"Unexpected error fetching transactions for loan {loan_id}: {e}")
-                    continue
+                    )
+            except (MifosAuthError, MifosUpstreamError, MifosNotFoundError):
+                # Skip if we can't fetch transactions for this loan
+                continue
+            except Exception as e:
+                # Catch any other unexpected errors and continue
+                logger.warning(f"Unexpected error fetching transactions for loan {loan_id}: {e}")
+                continue
 
         # Sort by date (most recent first)
         all_transactions.sort(key=lambda x: str(x.get("date", "")), reverse=True)
