@@ -25,7 +25,7 @@ export const environment = {
   apiVersion: loadedEnv['apiVersion'] || '/v1',
   serverUrl: '',
   oauth: {
-    enabled: loadedEnv['oauthServerEnabled'] || false, // For connecting to Mifos X using OAuth2 Authentication change the value to true
+    enabled: loadedEnv['oauthServerEnabled'] === 'true' || loadedEnv['oauthServerEnabled'] === true, // For connecting to Mifos X using OAuth2 Authentication change the value to true
     serverUrl: loadedEnv['oauthServerUrl'] || '',
     appId: loadedEnv['oauthAppId'] || ''
   },
