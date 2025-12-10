@@ -1200,18 +1200,25 @@ def download_repayment_schedule(request: HttpRequest, loan_id: int):
 
 def notifications_view(request: HttpRequest):
     """Fetch notifications for the client based on their loans and transactions."""
-    user, error_response = _require_session(request)
-    if error_response:
-        return error_response
-
-    client = MifosClient()
-    notifications = []
-
     try:
-        # Fetch loans to generate EMI due reminders
-        loan_accounts = client.fetch_client_loans()
+        user, error_response = _require_session(request)
+        if error_response:
+            return error_response
+
+        client = MifosClient()
+        notifications = []
+
+        try:
+            # Fetch loans to generate EMI due reminders
+            loan_accounts = client.fetch_client_loans()
+        except (MifosAuthError, MifosUpstreamError) as exc:
+            correlation_id = new_correlation_id()
+            logger.exception("Failed to fetch loans for notifications", extra={"correlation_id": correlation_id})
+            response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+            return add_cors_headers(response, request)
         
-        for loan in loan_accounts:
+        # Limit to first 10 loans to prevent timeout
+        for loan in loan_accounts[:10]:
             loan_account_no = loan.get("accountNo")
             loan_id = loan.get("id")
             repayment_schedule = loan.get("repaymentSchedule", {})
@@ -1246,28 +1253,64 @@ def notifications_view(request: HttpRequest):
                     break
         
         # Fetch transactions to generate payment received notifications
-        all_transactions = _fetch_all_transactions(client)
-        recent_payments = [txn for txn in all_transactions if txn.get("type", "").lower() == "repayment"][:5]
+        # Use a simpler approach - just get recent transactions from loans directly
+        recent_payments = []
+        try:
+            # Get transactions from first few loans only to prevent timeout
+            for loan in loan_accounts[:5]:
+                loan_id = loan.get("id")
+                if loan_id:
+                    try:
+                        loan_txns = client.fetch_loan_transactions(loan_id)
+                        # Filter for repayments and limit
+                        repayments = [txn for txn in loan_txns[:20] if txn.get("type", {}).get("value", "").lower() == "repayment" or (isinstance(txn.get("type"), str) and txn.get("type", "").lower() == "repayment")]
+                        recent_payments.extend(repayments[:5])
+                        if len(recent_payments) >= 5:
+                            break
+                    except (MifosAuthError, MifosUpstreamError, MifosNotFoundError):
+                        continue
+                    except Exception as e:
+                        logger.warning(f"Error fetching transactions for loan {loan_id} in notifications: {e}")
+                        continue
+        except Exception as e:
+            logger.warning(f"Error fetching transactions for notifications: {e}")
+            # Continue without transaction-based notifications
         
-        for idx, txn in enumerate(recent_payments):
-            txn_date = txn.get('date', date.today())
-            if isinstance(txn_date, str):
-                try:
-                    txn_date_obj = date.fromisoformat(txn_date.split()[0])
-                except:
+        for idx, txn in enumerate(recent_payments[:5]):  # Limit to 5 payment notifications
+            try:
+                txn_date = txn.get('date', date.today())
+                if isinstance(txn_date, str):
+                    try:
+                        txn_date_obj = date.fromisoformat(txn_date.split()[0])
+                    except:
+                        txn_date_obj = date.today() - timedelta(days=idx+5)
+                elif isinstance(txn_date, list) and len(txn_date) == 3:
+                    txn_date_obj = date(txn_date[0], txn_date[1], txn_date[2])
+                else:
                     txn_date_obj = date.today() - timedelta(days=idx+5)
-            else:
-                txn_date_obj = date.today() - timedelta(days=idx+5)
-            
-            time_str = "02:30 PM" if idx == 0 else "11:15 AM" if idx == 1 else "02:30 PM"
-            notifications.append({
-                "id": len(notifications) + 1,
-                "type": "Payment Received",
-                "title": "Payment Received",
-                "description": f"Your payment of ₹{abs(txn.get('amount', 0)):,.0f} for loan {txn.get('accountNo', 'N/A')} has been successfully received",
-                "timestamp": f"{txn_date_obj.strftime('%Y-%m-%d')} {time_str}",
-                "read": True,
-            })
+                
+                # Get account number from loan if available
+                account_no = txn.get('accountNo', 'N/A')
+                if not account_no or account_no == 'N/A':
+                    # Try to find account number from loan_accounts
+                    for loan in loan_accounts:
+                        if loan.get('id') == txn.get('loanId'):
+                            account_no = loan.get('accountNo', 'N/A')
+                            break
+                
+                time_str = "02:30 PM" if idx == 0 else "11:15 AM" if idx == 1 else "02:30 PM"
+                amount = abs(txn.get('amount', 0))
+                notifications.append({
+                    "id": len(notifications) + 1,
+                    "type": "Payment Received",
+                    "title": "Payment Received",
+                    "description": f"Your payment of ₹{amount:,.0f} for loan {account_no} has been successfully received",
+                    "timestamp": f"{txn_date_obj.strftime('%Y-%m-%d')} {time_str}",
+                    "read": True,
+                })
+            except Exception as e:
+                logger.warning(f"Error processing payment notification {idx}: {e}")
+                continue
         
         # Add some sample notifications
         if loan_accounts:
@@ -1302,14 +1345,14 @@ def notifications_view(request: HttpRequest):
         # Sort by timestamp (most recent first)
         notifications.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
         
-    except (MifosAuthError, MifosUpstreamError) as exc:
-        correlation_id = new_correlation_id()
-        logger.exception("Failed to fetch notifications data", extra={"correlation_id": correlation_id})
-        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        response = JsonResponse({"notifications": notifications}, status=200)
         return add_cors_headers(response, request)
-
-    response = JsonResponse({"notifications": notifications}, status=200)
-    return add_cors_headers(response, request)
+    except Exception as e:
+        # Catch any unexpected errors and return proper response
+        correlation_id = new_correlation_id()
+        logger.exception("Unexpected error in notifications_view", extra={"correlation_id": correlation_id, "error": str(e)})
+        response = JsonResponse({"error": "internal_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
+        return add_cors_headers(response, request)
 
 
 @csrf_exempt
