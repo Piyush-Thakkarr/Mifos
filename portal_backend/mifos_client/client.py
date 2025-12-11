@@ -45,7 +45,7 @@ class MifosClient:
             params=params,
             headers=headers,
             auth=(username, password),
-            timeout=10,
+            timeout=30,
             verify=self.verify_ssl,
         )
 
