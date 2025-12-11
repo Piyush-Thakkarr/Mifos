@@ -55,33 +55,39 @@ Let's break down what each part means:
 - **What it is**: Tells Railway how to prepare your application for deployment
 - **When it runs**: Every time Railway builds your app (before deploying)
 
-##### `builder: "NIXPACKS"` or `"Dockerfile"`
+##### `builder: "RAILPACK"` or `"Dockerfile"`
 - **What it is**: The build system Railway uses
-- **Railway has 3 builder options**:
-  1. **NIXPACKS** (Recommended for our setup)
+- **Railway has builder options**:
+  1. **RAILPACK** (Recommended - Railway's new builder!)
+     - Railway's modern build system (replaced deprecated NIXPACKS)
      - Automatically detects your project type (Node.js, Python, etc.)
      - Installs the right runtime (Node.js 20, Python 3.11, etc.)
-     - Sets up the environment automatically
-     - **Best for**: Simple deployments, when you don't have a Dockerfile
-  2. **Dockerfile** (What Railway might auto-detect)
+     - **Benefits**: Smaller builds (38% smaller for Node.js, 77% for Python), faster deployments, better caching
+     - **Best for**: Most deployments, when you don't need Docker
+  2. **NIXPACKS** (Deprecated - Don't use!)
+     - Old build system, being phased out
+     - Still works but not recommended
+  3. **Dockerfile** (What Railway might auto-detect)
      - Uses a Dockerfile in your repository
      - More control, but more complex
      - **Best for**: Complex deployments, when you already have a Dockerfile
-  3. **Docker Compose** (Not used here)
+  4. **Docker Compose** (Not used here)
      - For multi-container setups
 
 - **What you might see in Railway**:
   - If Railway finds a `Dockerfile` in your repo, it will show: **"Dockerfile Automatically Detected"**
-  - If no Dockerfile, it will use: **"NIXPACKS"**
+  - Railway may default to **"RAILPACK"** (the new builder)
+  - You might see **"NIXPACKS"** marked as deprecated
 
 - **For our setup**:
-  - **Backend**: Should use **NIXPACKS** (we don't have a Dockerfile for backend)
-  - **Frontend**: Can use either **NIXPACKS** or **Dockerfile** (you have a Dockerfile, but NIXPACKS is simpler)
+  - **Backend**: Should use **RAILPACK** (we don't have a Dockerfile for backend)
+  - **Frontend**: Should use **RAILPACK** (simpler than Dockerfile, and works with our start command)
 
 - **How to change the builder**:
   - Go to Service → Settings → Build section
   - Click on "Builder" dropdown
-  - Select "NIXPACKS" or "Dockerfile" as needed
+  - Select **"RAILPACK"** (not NIXPACKS - that's deprecated!)
+  - If you don't see RAILPACK, it might be called "Railpack" or "Railway Pack"
 
 ##### `buildCommand`
 - **What it is**: The exact command Railway runs to build your app
@@ -284,11 +290,13 @@ The root directory tells Railway where your backend code is located:
    - OR it might say **"NIXPACKS"**
    - OR it might be empty
 
-4. **Change the Builder to NIXPACKS** (Important for backend!):
+4. **Change the Builder to RAILPACK** (Important for backend!):
    - **Click on the "Builder" dropdown**
-   - **Select "NIXPACKS"** from the list
-   - **Why**: The backend doesn't have a Dockerfile in `portal_backend/`, so we need NIXPACKS
-   - **What this does**: Uses Railway's smart auto-detection for Python/Django
+   - **Select "RAILPACK"** from the list (NOT NIXPACKS - that's deprecated!)
+   - **If you don't see RAILPACK**: Look for "Railpack" or "Railway Pack" in the dropdown
+   - **Why**: The backend doesn't have a Dockerfile in `portal_backend/`, so we need RAILPACK
+   - **What this does**: Uses Railway's modern build system with smart auto-detection for Python/Django
+   - **Note**: If Railway keeps switching back to Dockerfile, make sure you're in the right service (backend, not frontend)
 
 5. **For "Build Command"** (recommended):
    - **Click in the "Build Command" field** (or "Custom Build Command")
@@ -500,11 +508,13 @@ Now let's trigger the first deployment:
    - It might say **"Dockerfile Automatically Detected"** (Railway found your root Dockerfile)
    - OR it might say **"NIXPACKS"**
    
-4. **IMPORTANT: Change to NIXPACKS** (Required!):
+4. **IMPORTANT: Change to RAILPACK** (Required!):
    - **Click on the "Builder" dropdown**
-   - **Select "NIXPACKS"** (NOT Dockerfile!)
+   - **Select "RAILPACK"** (NOT Dockerfile, NOT NIXPACKS!)
+   - **If you don't see RAILPACK**: Look for "Railpack" or "Railway Pack" in the dropdown
    - **Why**: Your Dockerfile uses nginx, but Railway's start command uses `npx serve`. They conflict!
-   - **NIXPACKS** will use the start command from `railway.json` which works correctly
+   - **RAILPACK** will use the start command from `railway.json` which works correctly
+   - **Note**: If Railway keeps switching back to Dockerfile on rebuild, make sure you save the settings and the builder is set to RAILPACK before deploying
    
 5. **For "Build Command"**:
    - **Click in the "Build Command" field** (or "Custom Build Command")
