@@ -28,12 +28,11 @@ export class ClientportalLoanApplicationComponent implements OnInit {
   totalInterest: number = 0;
   totalAmount: number = 0;
 
-  // Options
+  // Options - Microfinance typically uses Days and Weeks
   termFrequencyTypes: any[] = [
     { id: 0, value: 'Days' },
-    { id: 1, value: 'Weeks' },
-    { id: 2, value: 'Months' },
-    { id: 3, value: 'Years' }
+    { id: 1, value: 'Weeks' }
+    // Removed Months and Years as they're not typical for microfinance
   ];
 
   interestTypes: any[] = [
@@ -113,7 +112,7 @@ export class ClientportalLoanApplicationComponent implements OnInit {
         Validators.required
       ],
       interestRatePerPeriod: [{ value: '', disabled: true }], // READ-ONLY
-      interestRateFrequencyType: [''],
+      interestRateFrequencyType: [{ value: '', disabled: true }], // READ-ONLY - set by bank/MFI
       interestType: [
         '',
         Validators.required
@@ -327,6 +326,7 @@ export class ClientportalLoanApplicationComponent implements OnInit {
 
           // Apply restrictions from product
           this.step2Form.get('interestRatePerPeriod')?.disable(); // Always read-only
+          this.step2Form.get('interestRateFrequencyType')?.disable(); // Also set by bank/MFI
 
           // Check if product has allowAttributeOverrides (if available in product list)
           if (product.allowAttributeOverrides) {

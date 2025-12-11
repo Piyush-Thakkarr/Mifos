@@ -389,12 +389,18 @@
 
               <div class="form-group">
                 <label for="interestRateFrequencyType">Interest Rate Frequency</label>
-                <select id="interestRateFrequencyType" formControlName="interestRateFrequencyType" class="form-control">
+                <select
+                  id="interestRateFrequencyType"
+                  formControlName="interestRateFrequencyType"
+                  class="form-control"
+                  disabled
+                >
                   <option value="">Select</option>
                   <option *ngFor="let type of termFrequencyTypes" [value]="type.id">
                     {{ type.value }}
                   </option>
                 </select>
+                <div class="helper-text">Set by bank/MFI (cannot be edited)</div>
               </div>
             </div>
 
