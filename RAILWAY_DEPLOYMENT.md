@@ -55,14 +55,33 @@ Let's break down what each part means:
 - **What it is**: Tells Railway how to prepare your application for deployment
 - **When it runs**: Every time Railway builds your app (before deploying)
 
-##### `builder: "NIXPACKS"`
+##### `builder: "NIXPACKS"` or `"Dockerfile"`
 - **What it is**: The build system Railway uses
-- **What NIXPACKS does**: 
-  - Automatically detects your project type (Node.js, Python, etc.)
-  - Installs the right runtime (Node.js 20, Python 3.11, etc.)
-  - Sets up the environment
-- **Why we use it**: It's Railway's smart auto-detection system
-- **Alternative**: You could use Docker, but NIXPACKS is easier
+- **Railway has 3 builder options**:
+  1. **NIXPACKS** (Recommended for our setup)
+     - Automatically detects your project type (Node.js, Python, etc.)
+     - Installs the right runtime (Node.js 20, Python 3.11, etc.)
+     - Sets up the environment automatically
+     - **Best for**: Simple deployments, when you don't have a Dockerfile
+  2. **Dockerfile** (What Railway might auto-detect)
+     - Uses a Dockerfile in your repository
+     - More control, but more complex
+     - **Best for**: Complex deployments, when you already have a Dockerfile
+  3. **Docker Compose** (Not used here)
+     - For multi-container setups
+
+- **What you might see in Railway**:
+  - If Railway finds a `Dockerfile` in your repo, it will show: **"Dockerfile Automatically Detected"**
+  - If no Dockerfile, it will use: **"NIXPACKS"**
+
+- **For our setup**:
+  - **Backend**: Should use **NIXPACKS** (we don't have a Dockerfile for backend)
+  - **Frontend**: Can use either **NIXPACKS** or **Dockerfile** (you have a Dockerfile, but NIXPACKS is simpler)
+
+- **How to change the builder**:
+  - Go to Service → Settings → Build section
+  - Click on "Builder" dropdown
+  - Select "NIXPACKS" or "Dockerfile" as needed
 
 ##### `buildCommand`
 - **What it is**: The exact command Railway runs to build your app
@@ -162,25 +181,58 @@ After logging in, you'll see the Railway dashboard:
    - You'll see a loading screen
    - Railway is setting up the project
 
-### 1.3 Understanding the Railway Dashboard
+### 1.3 Railway Auto-Detection (What Just Happened!)
+
+**IMPORTANT**: Railway is smart! When you connect a repository, it can automatically:
+
+1. **Detect multiple services** in your repo (if you have `railway.json` files or a monorepo structure)
+2. **Auto-create services** for each detected service
+3. **Auto-detect the builder** (Dockerfile, NIXPACKS, etc.)
+
+**What you might see**:
+- Railway automatically created **2 services**:
+  - `client-portal-backend` (for Django)
+  - `client-portal-frontend` (for Angular)
+- Both services are already building!
+
+**This is normal and good!** Railway detected your `railway.json` files and created the services automatically.
+
+**However**, you still need to:
+1. Configure each service (Root Directory, Builder, Start Command)
+2. Set environment variables
+3. Generate domains
+
+**If Railway didn't auto-create services**, don't worry - we'll show you how to create them manually in Step 2.
+
+### 1.4 Understanding the Railway Dashboard
 
 After the project is created, you'll see:
 
 - **Project Name**: At the top (you can rename it)
-- **Services**: List of services (empty for now)
+- **Services**: List of services (might already have 2 services if auto-detected!)
 - **Settings**: Project settings
 - **Variables**: Environment variables (project-wide)
 - **Deployments**: History of deployments
 
-**Important**: A Railway "Project" can contain multiple "Services". We'll create 2 services:
-1. Backend service (Django)
-2. Frontend service (Angular)
+**Important**: A Railway "Project" can contain multiple "Services". We need 2 services:
+1. Backend service (Django) - should be named `client-portal-backend`
+2. Frontend service (Angular) - should be named `client-portal-frontend`
+
+**If services are already created**: Great! Skip to Step 2.2 to configure them.
+**If services are NOT created**: Follow Step 2.1 to create them manually.
 
 ---
 
 ## Step 2: Deploy Django Backend (Detailed)
 
-### 2.1 Create the Backend Service
+### 2.1 Create the Backend Service (If Not Auto-Created)
+
+**Check first**: Look at your Railway dashboard. Do you already see a service called `client-portal-backend`?
+
+- **If YES**: Great! Railway auto-created it. Skip to **Step 2.2** to configure it.
+- **If NO**: Follow the steps below to create it manually.
+
+**To create manually**:
 
 1. **In your Railway project dashboard**, look for:
    - A button that says **"+ New"** (usually top right)
@@ -226,18 +278,29 @@ The root directory tells Railway where your backend code is located:
 #### 2.2.3 Configure Build Settings
 
 1. **Still in the "Settings" tab**
-2. **Look for "Build" section** or "Build Command"
-3. **You'll see options**:
-   - "Build Command" (text field)
-   - "Builder" (dropdown, might say "NIXPACKS")
-4. **For "Builder"**:
-   - Make sure it says **"NIXPACKS"**
-   - If not, select "NIXPACKS" from the dropdown
-   - **What this does**: Uses Railway's auto-detection system
-5. **For "Build Command"**:
-   - You can leave it empty (Railway will auto-detect)
-   - OR explicitly set: `pip install -r requirements.txt`
-   - **What this does**: Installs all Python packages your backend needs
+2. **Scroll down to find "Build" section**
+3. **You'll see the "Builder" field**:
+   - It might say **"Dockerfile Automatically Detected"** (if Railway found a Dockerfile)
+   - OR it might say **"NIXPACKS"**
+   - OR it might be empty
+
+4. **Change the Builder to NIXPACKS** (Important for backend!):
+   - **Click on the "Builder" dropdown**
+   - **Select "NIXPACKS"** from the list
+   - **Why**: The backend doesn't have a Dockerfile in `portal_backend/`, so we need NIXPACKS
+   - **What this does**: Uses Railway's smart auto-detection for Python/Django
+
+5. **For "Build Command"** (optional, but recommended):
+   - **Click in the "Build Command" field** (or "Custom Build Command")
+   - **Type**: `pip install -r requirements.txt`
+   - **What this does**: Explicitly tells Railway to install Python dependencies
+   - **Note**: If you leave this empty, NIXPACKS will auto-detect and run this anyway, but being explicit is better
+
+6. **For "Dockerfile Path"** (if shown):
+   - **Leave this empty** or ignore it (we're using NIXPACKS, not Dockerfile)
+   - If you see this field, it's because Railway detected a Dockerfile in the root, but we don't want to use it for the backend
+
+7. **Click "Save"** or changes auto-save
 
 #### 2.2.4 Configure Start Command
 
@@ -391,7 +454,14 @@ Now let's trigger the first deployment:
 
 ## Step 3: Deploy Angular Frontend (Detailed)
 
-### 3.1 Create the Frontend Service
+### 3.1 Create the Frontend Service (If Not Auto-Created)
+
+**Check first**: Look at your Railway dashboard. Do you already see a service called `client-portal-frontend`?
+
+- **If YES**: Great! Railway auto-created it. Skip to **Step 3.2** to configure it.
+- **If NO**: Follow the steps below to create it manually.
+
+**To create manually**:
 
 1. **Go back to your Railway project dashboard** (click project name in sidebar)
 2. **Click "+ New"** again
@@ -419,12 +489,20 @@ Now let's trigger the first deployment:
 #### 3.2.3 Configure Build Settings
 
 1. **Still in "Settings" tab**
-2. **Find "Build" section**
-3. **For "Builder"**:
-   - Make sure it says **"NIXPACKS"**
-   - Railway should auto-detect Node.js
-4. **For "Build Command"**:
-   - Type: `chmod +x build-frontend.sh && ./build-frontend.sh`
+2. **Scroll down to find "Build" section**
+3. **You'll see the "Builder" field**:
+   - It might say **"Dockerfile Automatically Detected"** (Railway found your root Dockerfile)
+   - OR it might say **"NIXPACKS"**
+   
+4. **Choose your builder** (both work, but NIXPACKS is simpler):
+   
+   **Option A: Use NIXPACKS** (Recommended - simpler):
+   - **Click on the "Builder" dropdown**
+   - **Select "NIXPACKS"**
+   - **For "Build Command"**, type:
+     ```
+     chmod +x build-frontend.sh && ./build-frontend.sh
+     ```
    - **Breakdown**:
      - `chmod +x build-frontend.sh` - Makes the build script executable
      - `&&` - Runs the next command only if the first succeeds
@@ -433,7 +511,16 @@ Now let's trigger the first deployment:
      ```
      npm install --legacy-peer-deps && npm run build
      ```
-5. **Click "Save"**
+   
+   **Option B: Use Dockerfile** (If you prefer):
+   - **Keep "Dockerfile Automatically Detected"** (or select "Dockerfile")
+   - **For "Dockerfile Path"**, type: `/Dockerfile` (or leave as default)
+   - **Note**: Your Dockerfile is already configured, so this should work too
+   - **But**: You'll need to make sure environment variables are passed correctly to the Docker container
+
+5. **Recommendation**: Use **NIXPACKS** for simplicity, unless you specifically want to use Docker
+
+6. **Click "Save"** or changes auto-save
 
 #### 3.2.4 Configure Start Command
 
