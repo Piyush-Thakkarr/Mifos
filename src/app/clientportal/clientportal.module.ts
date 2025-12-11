@@ -11,6 +11,7 @@ import { ClientportalLoanDetailsComponent } from './pages/loans/loan-details/loa
 import { ClientportalTransactionsComponent } from './pages/transactions/transactions.component';
 import { ClientportalNotificationsComponent } from './pages/notifications/notifications.component';
 import { ClientportalSupportComponent } from './pages/support/support.component';
+import { ClientportalLoanApplicationComponent } from './pages/loan-application/loan-application.component';
 import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
@@ -21,7 +22,8 @@ import { SharedModule } from '../shared/shared.module';
     ClientportalLoanDetailsComponent,
     ClientportalTransactionsComponent,
     ClientportalNotificationsComponent,
-    ClientportalSupportComponent
+    ClientportalSupportComponent,
+    ClientportalLoanApplicationComponent
   ],
   imports: [
     CommonModule,

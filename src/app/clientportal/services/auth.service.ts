@@ -128,4 +128,28 @@ export class AuthService {
       withCredentials: true
     });
   }
+
+  loanProducts(): Observable<unknown> {
+    return this.http.get<unknown>(`${this.baseUrl}/clientportal/loan-products`, {
+      withCredentials: true
+    });
+  }
+
+  loanProductTemplate(productId: number): Observable<unknown> {
+    return this.http.get<unknown>(`${this.baseUrl}/clientportal/loan-products/${productId}/template`, {
+      withCredentials: true
+    });
+  }
+
+  calculateLoanSchedule(formData: any): Observable<unknown> {
+    return this.http.post<unknown>(`${this.baseUrl}/clientportal/loans/calculate-schedule`, formData, {
+      withCredentials: true
+    });
+  }
+
+  submitLoanApplication(formData: any): Observable<unknown> {
+    return this.http.post<unknown>(`${this.baseUrl}/clientportal/loans/apply`, formData, {
+      withCredentials: true
+    });
+  }
 }

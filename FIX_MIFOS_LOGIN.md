@@ -1,9 +1,11 @@
 # Fix: Main Mifos Login 401 Error
 
 ## Problem
+
 The main Mifos login page shows a 401 (Unauthorized) error when trying to login with `mifos` / `password` credentials.
 
 ## Root Cause
+
 The `FINERACT_API_URL` environment variable is not set in Render for the frontend service, causing it to default to `https://localhost:8443` which doesn't exist on Render.
 
 ## Solution
@@ -14,9 +16,11 @@ The `FINERACT_API_URL` environment variable is not set in Render for the fronten
 2. **Navigate to your frontend service**: `client-portal-frontend`
 3. **Click on "Environment" tab**
 4. **Add/Update this environment variable:**
+
    ```
    FINERACT_API_URL=https://demo.mifos.io
    ```
+
    ⚠️ **Important**: Use `https://demo.mifos.io` (without `/fineract-provider/api/v1`)
 
 5. **Click "Save Changes"**
@@ -36,6 +40,7 @@ DJANGO_API_URL=https://your-backend-url.onrender.com
 ### Step 3: Test Login
 
 After redeployment, try logging in with:
+
 - **Username**: `mifos`
 - **Password**: `password`
 - **Tenant**: `default`
@@ -43,6 +48,7 @@ After redeployment, try logging in with:
 ## Why This Happens
 
 The `render.yaml` file marks `FINERACT_API_URL` as `sync: false`, which means it must be set manually in Render's dashboard. This is intentional because:
+
 - Different deployments might use different Fineract servers
 - The URL might change between environments
 - It prevents accidentally overwriting custom configurations
@@ -50,6 +56,7 @@ The `render.yaml` file marks `FINERACT_API_URL` as `sync: false`, which means it
 ## Verification
 
 After setting the environment variable and redeploying, check the browser console:
+
 - The error should be gone
 - Login should work with `mifos` / `password`
 - The app should connect to `https://demo.mifos.io/fineract-provider/api/v1`
@@ -60,7 +67,7 @@ If you want to set it in `render.yaml` instead, change:
 
 ```yaml
 - key: FINERACT_API_URL
-  sync: false  # Set manually: https://demo.mifos.io
+  sync: false # Set manually: https://demo.mifos.io
 ```
 
 To:
@@ -71,4 +78,3 @@ To:
 ```
 
 But this is less flexible for different environments.
-

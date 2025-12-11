@@ -17,6 +17,10 @@ from .views import (
     mark_all_notifications_read_view,
     delete_notification_view,
     support_view,
+    loan_products_view,
+    loan_product_template_view,
+    calculate_loan_schedule_view,
+    submit_loan_application_view,
 )
 
 urlpatterns = [
@@ -36,4 +40,8 @@ urlpatterns = [
     path("clientportal/notifications/read-all", mark_all_notifications_read_view, name="clientportal-notifications-read-all"),
     path("clientportal/notifications/<int:notification_id>", delete_notification_view, name="clientportal-notification-delete"),
     path("clientportal/support", support_view, name="clientportal-support"),
+    path("clientportal/loan-products", loan_products_view, name="clientportal-loan-products"),
+    path("clientportal/loan-products/<int:product_id>/template", loan_product_template_view, name="clientportal-loan-product-template"),
+    path("clientportal/loans/calculate-schedule", calculate_loan_schedule_view, name="clientportal-calculate-loan-schedule"),
+    path("clientportal/loans/apply", submit_loan_application_view, name="clientportal-submit-loan-application"),
 ]

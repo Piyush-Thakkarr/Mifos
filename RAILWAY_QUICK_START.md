@@ -3,6 +3,7 @@
 ## 🚀 Quick Setup Steps
 
 ### 1. Sign Up & Create Project
+
 1. Go to https://railway.app
 2. Sign up with GitHub
 3. Click **"New Project"** → **"Deploy from GitHub repo"**
@@ -18,6 +19,7 @@
    - **Start Command**: `gunicorn portal_backend.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120`
 
 3. **Variables** (Settings → Variables):
+
    ```
    PYTHON_VERSION=3.11.0
    DJANGO_SECRET_KEY=<generate-random-string>
@@ -44,6 +46,7 @@
    - **Start Command**: `npx serve -s dist/web-app/browser -l $PORT`
 
 3. **Variables** (Settings → Variables):
+
    ```
    NODE_VERSION=20
    DJANGO_API_URL=<backend-railway-url-from-step-2>
@@ -75,6 +78,7 @@
 ## 🔑 Generate Secret Key
 
 Run this to generate `DJANGO_SECRET_KEY`:
+
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(50))"
 ```
@@ -95,21 +99,22 @@ Or use any random long string.
 ## 🆘 Troubleshooting
 
 **Backend won't start?**
+
 - Check logs in Railway dashboard
 - Make sure `$PORT` is used in start command
 - Verify all environment variables are set
 
 **Frontend build fails?**
+
 - Check Node version (should be 20)
 - Make sure `build-frontend.sh` is executable
 - Check logs for specific error
 
 **CORS errors?**
+
 - Make sure `CORS_ALLOWED_ORIGINS` in backend matches frontend URL exactly
 - Include `https://` in the URL
 
 ---
 
 That's it! Your app should be live on Railway! 🎉
-
-

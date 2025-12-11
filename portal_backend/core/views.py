@@ -1569,3 +1569,206 @@ def support_view(request: HttpRequest):
         logger.exception("Unexpected error in support_view", extra={"correlation_id": correlation_id, "error": str(e)})
         response = JsonResponse({"error": "internal_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
         return add_cors_headers(response, request)
+
+
+@csrf_exempt
+def loan_products_view(request: HttpRequest):
+    """Fetch available loan products for loan application."""
+    user, error_response = _require_session(request)
+    if error_response:
+        return error_response
+
+    client = MifosClient()
+    try:
+        products = client.fetch_loan_products()
+        response = JsonResponse({"products": products}, status=200)
+        return add_cors_headers(response, request)
+    except (MifosAuthError, MifosUpstreamError) as exc:
+        correlation_id = new_correlation_id()
+        logger.exception("Failed to fetch loan products", extra={"correlation_id": correlation_id})
+        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        return add_cors_headers(response, request)
+    except Exception as e:
+        correlation_id = new_correlation_id()
+        logger.exception("Unexpected error in loan_products_view", extra={"correlation_id": correlation_id, "error": str(e)})
+        response = JsonResponse({"error": "internal_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
+        return add_cors_headers(response, request)
+
+
+@csrf_exempt
+def loan_product_template_view(request: HttpRequest, product_id: int):
+    """Fetch loan product template for creating a loan application."""
+    user, error_response = _require_session(request)
+    if error_response:
+        return error_response
+
+    client = MifosClient()
+    try:
+        template = client.fetch_loan_product_template(product_id)
+        response = JsonResponse(template, status=200)
+        return add_cors_headers(response, request)
+    except (MifosAuthError, MifosUpstreamError) as exc:
+        correlation_id = new_correlation_id()
+        logger.exception("Failed to fetch loan product template", extra={"correlation_id": correlation_id, "product_id": product_id})
+        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        return add_cors_headers(response, request)
+    except Exception as e:
+        correlation_id = new_correlation_id()
+        logger.exception("Unexpected error in loan_product_template_view", extra={"correlation_id": correlation_id, "error": str(e)})
+        response = JsonResponse({"error": "internal_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
+        return add_cors_headers(response, request)
+
+
+@csrf_exempt
+def calculate_loan_schedule_view(request: HttpRequest):
+    """Calculate loan repayment schedule."""
+    if request.method == "OPTIONS":
+        response = JsonResponse({})
+        response["Access-Control-Allow-Origin"] = request.headers.get("Origin", "*")
+        response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
+        response["Access-Control-Allow-Credentials"] = "true"
+        response["Access-Control-Max-Age"] = "86400"
+        return response
+
+    if request.method != "POST":
+        response = JsonResponse({"error": "method_not_allowed"}, status=405)
+        return add_cors_headers(response, request)
+
+    user, error_response = _require_session(request)
+    if error_response:
+        return error_response
+
+    try:
+        body = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        response = JsonResponse({"error": "invalid_json"}, status=400)
+        return add_cors_headers(response, request)
+
+    client = MifosClient()
+    try:
+        # Format dates properly
+        from datetime import datetime
+        date_format = body.get("dateFormat", "yyyy-MM-dd")
+        locale = body.get("locale", "en")
+        
+        # Convert dates to Fineract format if needed
+        for date_field in ["submittedOnDate", "expectedDisbursementDate", "repaymentsStartingFromDate", "interestChargedFromDate"]:
+            if date_field in body and body[date_field]:
+                if isinstance(body[date_field], str):
+                    # Try to parse and format
+                    try:
+                        dt = datetime.fromisoformat(body[date_field].replace("Z", "+00:00"))
+                        body[date_field] = dt.strftime("%Y-%m-%d")
+                    except:
+                        pass
+        
+        body["dateFormat"] = date_format
+        body["locale"] = locale
+        
+        schedule = client.calculate_loan_schedule(body)
+        response = JsonResponse(schedule, status=200)
+        return add_cors_headers(response, request)
+    except (MifosAuthError, MifosUpstreamError) as exc:
+        correlation_id = new_correlation_id()
+        logger.exception("Failed to calculate loan schedule", extra={"correlation_id": correlation_id})
+        error_msg = str(exc)
+        # Extract user-friendly error message if available
+        if hasattr(exc, 'response') and hasattr(exc.response, 'text'):
+            try:
+                error_data = json.loads(exc.response.text)
+                error_msg = error_data.get("defaultUserMessage", error_data.get("developerMessage", str(exc)))
+            except:
+                pass
+        response = JsonResponse({"error": "calculation_failed", "details": error_msg, "correlation_id": correlation_id}, status=400)
+        return add_cors_headers(response, request)
+    except Exception as e:
+        correlation_id = new_correlation_id()
+        logger.exception("Unexpected error in calculate_loan_schedule_view", extra={"correlation_id": correlation_id, "error": str(e)})
+        response = JsonResponse({"error": "internal_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
+        return add_cors_headers(response, request)
+
+
+@csrf_exempt
+def submit_loan_application_view(request: HttpRequest):
+    """Submit a new loan application."""
+    if request.method == "OPTIONS":
+        response = JsonResponse({})
+        response["Access-Control-Allow-Origin"] = request.headers.get("Origin", "*")
+        response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
+        response["Access-Control-Allow-Credentials"] = "true"
+        response["Access-Control-Max-Age"] = "86400"
+        return response
+
+    if request.method != "POST":
+        response = JsonResponse({"error": "method_not_allowed"}, status=405)
+        return add_cors_headers(response, request)
+
+    user, error_response = _require_session(request)
+    if error_response:
+        return error_response
+
+    try:
+        body = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        response = JsonResponse({"error": "invalid_json"}, status=400)
+        return add_cors_headers(response, request)
+
+    client = MifosClient()
+    try:
+        # Format dates properly
+        from datetime import datetime
+        date_format = body.get("dateFormat", "yyyy-MM-dd")
+        locale = body.get("locale", "en")
+        
+        # Convert dates to Fineract format if needed
+        for date_field in ["submittedOnDate", "expectedDisbursementDate", "repaymentsStartingFromDate", "interestChargedFromDate"]:
+            if date_field in body and body[date_field]:
+                if isinstance(body[date_field], str):
+                    try:
+                        dt = datetime.fromisoformat(body[date_field].replace("Z", "+00:00"))
+                        body[date_field] = dt.strftime("%Y-%m-%d")
+                    except:
+                        pass
+        
+        body["dateFormat"] = date_format
+        body["locale"] = locale
+        
+        # Convert principalAmount to principal
+        if "principalAmount" in body:
+            body["principal"] = body.pop("principalAmount")
+        
+        # Convert loanTermFrequency if it's not set (calculate from numberOfRepayments * repaymentEvery)
+        if "loanTermFrequency" not in body or not body["loanTermFrequency"]:
+            numberOfRepayments = body.get("numberOfRepayments", 0)
+            repaymentEvery = body.get("repaymentEvery", 0)
+            if numberOfRepayments and repaymentEvery:
+                body["loanTermFrequency"] = numberOfRepayments * repaymentEvery
+        
+        result = client.submit_loan_application(body)
+        response = JsonResponse(result, status=200)
+        return add_cors_headers(response, request)
+    except MifosAuthError as exc:
+        correlation_id = new_correlation_id()
+        logger.warning("Client ID mismatch in loan application", extra={"correlation_id": correlation_id, "error": str(exc)})
+        response = JsonResponse({"error": "unauthorized", "details": str(exc), "correlation_id": correlation_id}, status=403)
+        return add_cors_headers(response, request)
+    except (MifosUpstreamError) as exc:
+        correlation_id = new_correlation_id()
+        logger.exception("Failed to submit loan application", extra={"correlation_id": correlation_id})
+        error_msg = str(exc)
+        # Try to extract user-friendly error message
+        if hasattr(exc, 'response') and hasattr(exc.response, 'text'):
+            try:
+                error_data = json.loads(exc.response.text)
+                error_msg = error_data.get("defaultUserMessage", error_data.get("developerMessage", str(exc)))
+            except:
+                pass
+        response = JsonResponse({"error": "submission_failed", "details": error_msg, "correlation_id": correlation_id}, status=400)
+        return add_cors_headers(response, request)
+    except Exception as e:
+        correlation_id = new_correlation_id()
+        logger.exception("Unexpected error in submit_loan_application_view", extra={"correlation_id": correlation_id, "error": str(e)})
+        response = JsonResponse({"error": "internal_error", "correlation_id": correlation_id, "message": str(e)}, status=500)
+        return add_cors_headers(response, request)

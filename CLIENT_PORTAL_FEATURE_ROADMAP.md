@@ -96,16 +96,19 @@
 ## 🔗 Fineract API Endpoints Reference
 
 ### Loan Management:
+
 - `GET /loanproducts` - Fetch available loan products
 - `POST /loans` - Create loan application
 - `GET /loans/{id}` - Get loan details
 - `GET /loans/{id}?associations=repaymentSchedule` - Get repayment schedule
 
 ### Loan Status Tracking:
+
 - `GET /loans/{id}` - Get loan status and details
 - `GET /loans/{id}?associations=repaymentSchedule` - Get repayment schedule
 
 ### Product Information:
+
 - `GET /loanproducts` - Fetch loan products for calculators
 - `GET /savingsproducts` - Fetch savings products for calculators
 

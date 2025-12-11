@@ -5,6 +5,7 @@ This is a **comprehensive, detailed guide** that explains every single step, cli
 ---
 
 ## Table of Contents
+
 1. [Understanding Railway Configuration Files](#understanding-railway-configuration-files)
 2. [Prerequisites](#prerequisites)
 3. [Step 1: Create Railway Account and Project](#step-1-create-railway-account-and-project)
@@ -47,15 +48,18 @@ Let's break down what each part means:
 ```
 
 #### `$schema`
+
 - **What it is**: A reference to Railway's configuration schema
 - **What it does**: Helps your editor provide autocomplete and validation
 - **You don't need to change this**: It's just metadata
 
 #### `build` Section
+
 - **What it is**: Tells Railway how to prepare your application for deployment
 - **When it runs**: Every time Railway builds your app (before deploying)
 
 ##### `builder: "RAILPACK"` or `"Dockerfile"`
+
 - **What it is**: The build system Railway uses
 - **Railway has builder options**:
   1. **RAILPACK** (Recommended - Railway's new builder!)
@@ -90,6 +94,7 @@ Let's break down what each part means:
   - If you don't see RAILPACK, it might be called "Railpack" or "Railway Pack"
 
 ##### `buildCommand`
+
 - **What it is**: The exact command Railway runs to build your app
 - **When it runs**: During the build phase, after RAILPACK sets up the environment
 - **For Frontend**: `chmod +x build-frontend.sh && ./build-frontend.sh`
@@ -99,10 +104,12 @@ Let's break down what each part means:
   - Installs all Python dependencies from `requirements.txt`
 
 #### `deploy` Section
+
 - **What it is**: Tells Railway how to run your application
 - **When it runs**: After a successful build, to start your app
 
 ##### `startCommand`
+
 - **What it is**: The command that starts your application
 - **What `$PORT` means**: Railway automatically provides a port number via the `$PORT` environment variable
 - **For Frontend**: `npx serve -s dist/web-app/browser -l $PORT`
@@ -118,11 +125,13 @@ Let's break down what each part means:
   - `--timeout 120` - Request timeout of 120 seconds
 
 ##### `restartPolicyType: "ON_FAILURE"`
+
 - **What it is**: When Railway should restart your app
 - **What it means**: Only restart if the app crashes/fails
 - **Alternative**: `"ALWAYS"` (restart always) or `"NEVER"` (never restart)
 
 ##### `restartPolicyMaxRetries: 10`
+
 - **What it is**: Maximum number of restart attempts
 - **What it means**: If your app keeps failing, Railway will try to restart it up to 10 times
 - **After 10 failures**: Railway will stop trying and mark the deployment as failed
@@ -196,6 +205,7 @@ After logging in, you'll see the Railway dashboard:
 3. **Auto-detect the builder** (Dockerfile, RAILPACK, etc.)
 
 **What you might see**:
+
 - Railway automatically created **2 services**:
   - `client-portal-backend` (for Django)
   - `client-portal-frontend` (for Angular)
@@ -204,6 +214,7 @@ After logging in, you'll see the Railway dashboard:
 **This is normal and good!** Railway detected your `railway.json` files and created the services automatically.
 
 **However**, you still need to:
+
 1. Configure each service (Root Directory, Builder, Start Command)
 2. Set environment variables
 3. Generate domains
@@ -221,6 +232,7 @@ After the project is created, you'll see:
 - **Deployments**: History of deployments
 
 **Important**: A Railway "Project" can contain multiple "Services". We need 2 services:
+
 1. Backend service (Django) - should be named `client-portal-backend`
 2. Frontend service (Angular) - should be named `client-portal-frontend`
 
@@ -301,7 +313,7 @@ The root directory tells Railway where your backend code is located:
 5. **For "Build Command"** (recommended):
    - **Click in the "Build Command" field** (or "Custom Build Command")
    - **Type**: `pip install -r requirements.txt && python manage.py collectstatic --noinput`
-   - **What this does**: 
+   - **What this does**:
      - Installs Python dependencies
      - Collects Django static files for WhiteNoise to serve (required for production)
    - **Breakdown**:
@@ -356,11 +368,13 @@ Now add each variable one by one. For each variable:
 #### Variables to Add (Backend):
 
 **1. PYTHON_VERSION**
+
 - **Key**: `PYTHON_VERSION`
 - **Value**: `3.11.0`
 - **What it does**: Tells Railway which Python version to use
 
 **2. DJANGO_SECRET_KEY**
+
 - **Key**: `DJANGO_SECRET_KEY`
 - **Value**: Generate a random string (see below)
 - **What it does**: Django uses this to encrypt sessions and cookies
@@ -372,46 +386,55 @@ Now add each variable one by one. For each variable:
   - **OR** use any long random string (at least 50 characters)
 
 **3. DEBUG**
+
 - **Key**: `DEBUG`
 - **Value**: `false`
 - **What it does**: Disables Django's debug mode (important for production)
 
 **4. MIFOS_BASE_URL**
+
 - **Key**: `MIFOS_BASE_URL`
 - **Value**: `https://demo.mifos.io/fineract-provider/api/v1`
 - **What it does**: The Fineract API endpoint your backend connects to
 
 **5. MIFOS_TENANT_ID**
+
 - **Key**: `MIFOS_TENANT_ID`
 - **Value**: `default`
 - **What it does**: The tenant identifier for Fineract
 
 **6. MIFOS_ADMIN_USER**
+
 - **Key**: `MIFOS_ADMIN_USER`
 - **Value**: `mifos`
 - **What it does**: Username for Fineract API authentication
 
 **7. MIFOS_ADMIN_PASS**
+
 - **Key**: `MIFOS_ADMIN_PASS`
 - **Value**: `password`
 - **What it does**: Password for Fineract API authentication
 
 **8. MIFOS_VERIFY_SSL**
+
 - **Key**: `MIFOS_VERIFY_SSL`
 - **Value**: `true`
 - **What it does**: Verify SSL certificates when connecting to Fineract
 
 **9. MIFOS_CLIENT_ID**
+
 - **Key**: `MIFOS_CLIENT_ID`
 - **Value**: `3`
 - **What it does**: The client ID for the client portal (which client to show data for)
 
 **10. FRONTEND_URL** (Set this later!)
+
 - **Key**: `FRONTEND_URL`
 - **Value**: `https://your-frontend-url.up.railway.app` (we'll set this after frontend deploys)
 - **What it does**: Tells backend where the frontend is hosted (for CORS)
 
 **11. CORS_ALLOWED_ORIGINS** (Set this later!)
+
 - **Key**: `CORS_ALLOWED_ORIGINS`
 - **Value**: `https://your-frontend-url.up.railway.app` (same as FRONTEND_URL)
 - **What it does**: Allows the frontend to make requests to the backend
@@ -507,20 +530,19 @@ Now let's trigger the first deployment:
 3. **You'll see the "Builder" field**:
    - It might say **"Dockerfile Automatically Detected"** (Railway found your root Dockerfile)
    - OR it might say **"RAILPACK"** or **"NIXPACKS"** (deprecated)
-   
 4. **IMPORTANT: Change to RAILPACK** (Required!):
    - **Click on the "Builder" dropdown**
    - **Select "RAILPACK"** (NOT Dockerfile, NOT NIXPACKS!)
    - **If you don't see RAILPACK**: Look for "Railpack" or "Railway Pack" in the dropdown
    - **Why**: Your Dockerfile uses nginx, but Railway's start command uses `npx serve`. They conflict!
    - **RAILPACK** will use the start command from `railway.json` which works correctly
-   
+
    **If Railway keeps switching back to Dockerfile**:
    - The `Dockerfile` in the root has been renamed to `Dockerfile.backup` to prevent auto-detection
    - After pushing this change, Railway should stop auto-detecting Dockerfile
    - Make sure you've pushed the latest code (with `Dockerfile.backup` instead of `Dockerfile`)
    - Then set builder to RAILPACK and save before deploying
-   
+
 5. **For "Build Command"**:
    - **Click in the "Build Command" field** (or "Custom Build Command")
    - **Type**:
@@ -535,7 +557,6 @@ Now let's trigger the first deployment:
      ```
      npm install --legacy-peer-deps && npm run build
      ```
-   
 6. **Click "Save"** or changes auto-save
 
 **Note**: If you see "Container failed to start - The executable `npx` could not be found", it means Railway is still using the Dockerfile. Make sure you selected "RAILPACK" as the builder (not NIXPACKS - that's deprecated)!
@@ -563,48 +584,57 @@ Now let's trigger the first deployment:
 #### Variables to Add (Frontend):
 
 **1. NODE_VERSION** (REQUIRED - Fix Node version error!)
+
 - **Key**: `NODE_VERSION`
 - **Value**: `20`
 - **What it does**: Tells Railway to use Node.js version 20
 - **IMPORTANT**: If build fails with "Angular CLI requires a minimum Node.js version of v18.19", this fixes it
 
 **2. DJANGO_API_URL**
+
 - **Key**: `DJANGO_API_URL`
 - **Value**: `https://your-backend-url.up.railway.app` (use the backend URL from Step 2.4!)
 - **What it does**: Tells frontend where the backend API is
 - **Important**: Replace `your-backend-url` with the actual backend URL you copied!
 
 **3. FINERACT_API_URL**
+
 - **Key**: `FINERACT_API_URL`
 - **Value**: `https://demo.mifos.io`
 - **What it does**: Base URL for Fineract API (for main Mifos app, not client portal)
 
 **4. FINERACT_API_PROVIDER**
+
 - **Key**: `FINERACT_API_PROVIDER`
 - **Value**: `/fineract-provider/api`
 - **What it does**: API path for Fineract
 
 **5. FINERACT_API_VERSION**
+
 - **Key**: `FINERACT_API_VERSION`
 - **Value**: `/v1`
 - **What it does**: API version for Fineract
 
 **6. FINERACT_PLATFORM_TENANT_IDENTIFIER**
+
 - **Key**: `FINERACT_PLATFORM_TENANT_IDENTIFIER`
 - **Value**: `default`
 - **What it does**: Tenant identifier for Fineract
 
 **7. MIFOS_OAUTH_SERVER_ENABLED**
+
 - **Key**: `MIFOS_OAUTH_SERVER_ENABLED`
 - **Value**: `false`
 - **What it does**: Disables OAuth (we're using basic auth)
 
 **8. MIFOS_OAUTH_SERVER_URL** (Optional)
+
 - **Key**: `MIFOS_OAUTH_SERVER_URL`
 - **Value**: (leave empty or don't add this variable)
 - **What it does**: OAuth server URL (not needed since OAuth is disabled)
 
 **9. MIFOS_OAUTH_CLIENT_ID** (Optional)
+
 - **Key**: `MIFOS_OAUTH_CLIENT_ID`
 - **Value**: (leave empty or don't add this variable)
 - **What it does**: OAuth client ID (not needed)
@@ -704,6 +734,7 @@ Now we need to tell the backend where the frontend is (for CORS):
 **Problem**: Backend deployment fails or shows errors
 
 **Solutions**:
+
 1. **Check logs**:
    - Go to service → Deployments → Click on deployment → View logs
    - Look for red error messages
@@ -718,6 +749,7 @@ Now we need to tell the backend where the frontend is (for CORS):
 **Problem**: Frontend deployment fails during build
 
 **Solutions**:
+
 1. **Check build logs** for specific errors
 2. **Common issues**:
    - **"Angular CLI requires a minimum Node.js version of v18.19"**:
@@ -743,6 +775,7 @@ Now we need to tell the backend where the frontend is (for CORS):
 **Problem**: Browser console shows CORS errors
 
 **Solutions**:
+
 1. **Check backend variables**:
    - `FRONTEND_URL` should match frontend Railway URL exactly
    - `CORS_ALLOWED_ORIGINS` should match frontend Railway URL exactly
@@ -755,6 +788,7 @@ Now we need to tell the backend where the frontend is (for CORS):
 **Problem**: Frontend shows "Cannot connect" or 404 errors
 
 **Solutions**:
+
 1. **Check `DJANGO_API_URL`** in frontend variables:
    - Should be the backend Railway URL
    - Should include `https://`
@@ -771,6 +805,7 @@ Now we need to tell the backend where the frontend is (for CORS):
 **Problem**: Client portal login shows "Login failed. Please try again." with 400 error in console
 
 **Solutions**:
+
 1. **Check backend logs**:
    - Go to Railway dashboard
    - Click `client-portal-backend` service
@@ -808,6 +843,7 @@ Now we need to tell the backend where the frontend is (for CORS):
 **Problem**: App behaves as if variables aren't set
 
 **Solutions**:
+
 1. **Check variable names**: Must match exactly (case-sensitive)
 2. **Redeploy after changing variables**: Railway auto-redeploys, but you can manually redeploy
 3. **Check for typos**: `DJANGO_API_URL` not `DJANGO_API_URl`
@@ -817,6 +853,7 @@ Now we need to tell the backend where the frontend is (for CORS):
 **Problem**: Build is taking forever
 
 **Solutions**:
+
 1. **This is normal**: Angular builds can take 5-10 minutes
 2. **Check logs**: Make sure it's actually building (you'll see progress)
 3. **If stuck**: Cancel and redeploy
@@ -841,6 +878,7 @@ Now we need to tell the backend where the frontend is (for CORS):
 ## Quick Reference: All Environment Variables
 
 ### Backend Variables:
+
 ```
 PYTHON_VERSION=3.11.0
 DJANGO_SECRET_KEY=<generate-random-string>
@@ -856,6 +894,7 @@ CORS_ALLOWED_ORIGINS=https://your-frontend-url.up.railway.app
 ```
 
 ### Frontend Variables:
+
 ```
 NODE_VERSION=20
 DJANGO_API_URL=https://your-backend-url.up.railway.app
@@ -871,6 +910,7 @@ MIFOS_OAUTH_SERVER_ENABLED=false
 ## Summary
 
 You've now:
+
 1. ✅ Created a Railway account and project
 2. ✅ Deployed the Django backend
 3. ✅ Deployed the Angular frontend
@@ -880,6 +920,7 @@ You've now:
 Your app should now be live on Railway! 🎉
 
 **Next Steps**:
+
 - Monitor your Railway dashboard for usage
 - Check logs if you encounter issues
 - Railway auto-deploys on every GitHub push

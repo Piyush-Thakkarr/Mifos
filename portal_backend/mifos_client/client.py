@@ -318,3 +318,77 @@ class MifosClient:
         path = f"/loans/{loan_id}"
         params = {"associations": "repaymentSchedule,transactions"}
         return self.fetch_with_admin(path, params=params)
+
+    def fetch_loan_products(self) -> List[Dict[str, Any]]:
+        """Fetch all available loan products."""
+        path = "/loanproducts"
+        try:
+            data = self.fetch_with_admin(path)
+            # Filter to only active products
+            products = data if isinstance(data, list) else data.get("pageItems", [])
+            active_products = []
+            for p in products:
+                status = p.get("status")
+                if isinstance(status, dict):
+                    if status.get("value") == "Active":
+                        active_products.append(p)
+                elif status == "Active":
+                    active_products.append(p)
+            return active_products
+        except MifosNotFoundError:
+            return []
+
+    def fetch_loan_product_template(self, product_id: int) -> Dict[str, Any]:
+        """Fetch loan product template for creating a loan application."""
+        # Use regular template endpoint: GET /loans/template?clientId={id}&productId={id}
+        path = "/loans/template"
+        params = {"clientId": self.client_id, "productId": product_id}
+        try:
+            return self.fetch_with_admin(path, params=params)
+        except MifosNotFoundError:
+            # Fallback: fetch product and construct basic template
+            product_path = f"/loanproducts/{product_id}"
+            product_data = self.fetch_with_admin(product_path)
+            return {
+                "product": product_data,
+                "principal": product_data.get("principal", 0),
+                "numberOfRepayments": product_data.get("numberOfRepayments", 0),
+                "repaymentEvery": product_data.get("repaymentEvery", 1),
+                "repaymentFrequencyType": product_data.get("repaymentFrequencyType"),
+                "termPeriodFrequencyType": product_data.get("termPeriodFrequencyType"),
+                "interestRatePerPeriod": product_data.get("interestRatePerPeriod", 0),
+                "interestRateFrequencyType": product_data.get("interestRateFrequencyType"),
+                "interestType": product_data.get("interestType"),
+                "amortizationType": product_data.get("amortizationType"),
+                "interestCalculationPeriodType": product_data.get("interestCalculationPeriodType"),
+                "transactionProcessingStrategyCode": product_data.get("transactionProcessingStrategyCode", ""),
+                "allowAttributeOverrides": product_data.get("allowAttributeOverrides", {}),
+            }
+
+    def calculate_loan_schedule(self, loan_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate loan repayment schedule."""
+        # POST /loans?command=calculateLoanSchedule
+        path = "/loans"
+        params = {"command": "calculateLoanSchedule"}
+        # Ensure clientId is set
+        if "clientId" not in loan_data:
+            loan_data["clientId"] = int(self.client_id) if self.client_id else None
+        try:
+            return self.fetch_with_admin(path, method="POST", json=loan_data, params=params)
+        except MifosUpstreamError as e:
+            # Re-raise with response details if available
+            if hasattr(e, 'response') and hasattr(e.response, 'text'):
+                raise MifosUpstreamError(f"Schedule calculation failed: {e.response.text}") from e
+            raise
+
+    def submit_loan_application(self, loan_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Submit a new loan application."""
+        # POST /loans (without command parameter = submit application)
+        path = "/loans"
+        # Ensure clientId is set and validate it matches our client
+        if "clientId" not in loan_data:
+            loan_data["clientId"] = int(self.client_id) if self.client_id else None
+        elif str(loan_data.get("clientId")) != str(self.client_id):
+            raise MifosAuthError("Client ID mismatch - cannot submit loan for different client")
+        loan_data["loanType"] = "individual"
+        return self.fetch_with_admin(path, method="POST", json=loan_data)

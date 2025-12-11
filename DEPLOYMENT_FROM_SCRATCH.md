@@ -3,6 +3,7 @@
 ## Overview
 
 This guide will help you deploy the Client Portal to Render:
+
 - **Backend**: Django API (Web Service on Render)
 - **Frontend**: Angular App (Static Site on Render)
 - **Fineract**: Public Fineract server (e.g., demo.mifos.io)
@@ -23,6 +24,7 @@ This guide will help you deploy the Client Portal to Render:
 You can use these public Fineract servers for testing:
 
 ### Option 1: Mifos Demo Server (Recommended)
+
 - **URL**: `https://demo.mifos.io`
 - **Full API URL**: `https://demo.mifos.io/fineract-provider/api/v1`
 - **Tenant ID**: `default`
@@ -30,15 +32,17 @@ You can use these public Fineract servers for testing:
 - **Note**: Check https://demo.mifos.io for current credentials
 
 ### Option 2: Mifos Development Server
+
 - **URL**: `https://fineract.dev.mifos.io`
 - **Full API URL**: `https://fineract.dev.mifos.io/fineract-provider/api/v1`
 - **Tenant ID**: `default`
 - **Credentials**: Check Mifos documentation for current credentials
 
 ### Option 3: Your Own Public Fineract Server
+
 - Use your own deployed Fineract instance URL
 - Ensure it's publicly accessible
-- Ensure CORS is configured to allow your frontend domain  
+- Ensure CORS is configured to allow your frontend domain
 
 ---
 
@@ -81,7 +85,6 @@ git push origin main
 2. **Click "New +" → "Web Service"**
 3. **Connect your Git repository**
 4. **Configure the service:**
-
    - **Name**: `client-portal-backend`
    - **Environment**: `Python 3`
    - **Region**: Choose closest to you
@@ -112,7 +115,7 @@ git push origin main
    MIFOS_CLIENT_ID=3
    ```
 
-   **⚠️ Important**: 
+   **⚠️ Important**:
    - Replace with your public Fineract server URL (e.g., `https://demo.mifos.io/fineract-provider/api/v1`)
    - Update `MIFOS_ADMIN_USER` and `MIFOS_ADMIN_PASS` with valid credentials for the public server
    - Set `MIFOS_VERIFY_SSL=true` for public servers (they have valid SSL certificates)
@@ -146,7 +149,6 @@ git push origin main
 2. **Click "New +" → "Static Site"**
 3. **Connect your Git repository**
 4. **Configure:**
-
    - **Name**: `client-portal-frontend`
    - **Branch**: `main` (or your branch)
    - **Root Directory**: Leave empty (or `Mifos` if repo root is parent)
@@ -168,7 +170,7 @@ git push origin main
    FINERACT_PLATFORM_TENANT_IDENTIFIER=default
    ```
 
-   **⚠️ Important**: 
+   **⚠️ Important**:
    - Replace `client-portal-backend-xxxx` with your actual backend URL from Step 2
    - Replace `https://demo.mifos.io` with your public Fineract server URL (without `/fineract-provider/api/v1`)
 
@@ -236,10 +238,13 @@ After frontend is deployed, update backend to allow frontend requests:
 ### Backend Issues
 
 #### ❌ Build Fails: "ModuleNotFoundError"
+
 **Solution**: Check `requirements.txt` has all dependencies. Verify Python version is 3.11.0.
 
 #### ❌ 503 Upstream Unavailable
-**Solution**: 
+
+**Solution**:
+
 - Check `MIFOS_BASE_URL` is correct (should be full URL: `https://demo.mifos.io/fineract-provider/api/v1`)
 - Verify public Fineract server is accessible (try opening URL in browser)
 - Check `MIFOS_ADMIN_USER` and `MIFOS_ADMIN_PASS` are correct for the public server
@@ -247,7 +252,9 @@ After frontend is deployed, update backend to allow frontend requests:
 - Verify the public server allows API access (some may require registration)
 
 #### ❌ CORS Errors
+
 **Solution**:
+
 - Verify `FRONTEND_URL` and `CORS_ALLOWED_ORIGINS` match frontend URL exactly
 - Check backend logs for CORS errors
 - Ensure frontend URL has `https://` protocol
@@ -255,23 +262,30 @@ After frontend is deployed, update backend to allow frontend requests:
 ### Frontend Issues
 
 #### ❌ Build Fails: "npm error code ERESOLVE"
+
 **Solution**: `.npmrc` file should have `legacy-peer-deps=true`. Verify it's in the repo.
 
 #### ❌ 404 on Routes
-**Solution**: 
+
+**Solution**:
+
 - Check `Publish Directory` is exactly `dist/web-app/browser`
 - Verify build completed successfully
 - Check build logs for errors
 
 #### ❌ API Calls Fail
+
 **Solution**:
+
 - Check `DJANGO_API_URL` environment variable is set correctly
 - Verify backend is running and accessible
 - Check browser console for CORS errors
 - Ensure `DJANGO_API_URL` has `https://` protocol
 
 #### ❌ Blank Page / White Screen
+
 **Solution**:
+
 - Check browser console for JavaScript errors
 - Verify `env.js` is generated correctly (check build logs)
 - Check network tab for failed requests
@@ -282,30 +296,30 @@ After frontend is deployed, update backend to allow frontend requests:
 
 ### Backend (Django)
 
-| Variable | Required | Example | Description |
-|----------|----------|---------|-------------|
-| `PYTHON_VERSION` | Yes | `3.11.0` | Python version |
-| `DJANGO_SECRET_KEY` | Yes | Auto-generated | Django secret key |
-| `DEBUG` | Yes | `false` | Debug mode (false for production) |
-| `MIFOS_BASE_URL` | Yes | `https://demo.mifos.io/fineract-provider/api/v1` | Public Fineract API URL (full path) |
-| `MIFOS_TENANT_ID` | Yes | `default` | Fineract tenant ID |
-| `MIFOS_ADMIN_USER` | Yes | `mifos` | Public Fineract admin username |
-| `MIFOS_ADMIN_PASS` | Yes | `password` | Public Fineract admin password |
-| `MIFOS_VERIFY_SSL` | Yes | `true` | Verify SSL certificates (true for public servers) |
-| `MIFOS_CLIENT_ID` | Yes | `3` | Client ID for portal |
-| `FRONTEND_URL` | Yes | `https://frontend.onrender.com` | Frontend URL for CORS |
-| `CORS_ALLOWED_ORIGINS` | Yes | `https://frontend.onrender.com` | Allowed CORS origins |
+| Variable               | Required | Example                                          | Description                                       |
+| ---------------------- | -------- | ------------------------------------------------ | ------------------------------------------------- |
+| `PYTHON_VERSION`       | Yes      | `3.11.0`                                         | Python version                                    |
+| `DJANGO_SECRET_KEY`    | Yes      | Auto-generated                                   | Django secret key                                 |
+| `DEBUG`                | Yes      | `false`                                          | Debug mode (false for production)                 |
+| `MIFOS_BASE_URL`       | Yes      | `https://demo.mifos.io/fineract-provider/api/v1` | Public Fineract API URL (full path)               |
+| `MIFOS_TENANT_ID`      | Yes      | `default`                                        | Fineract tenant ID                                |
+| `MIFOS_ADMIN_USER`     | Yes      | `mifos`                                          | Public Fineract admin username                    |
+| `MIFOS_ADMIN_PASS`     | Yes      | `password`                                       | Public Fineract admin password                    |
+| `MIFOS_VERIFY_SSL`     | Yes      | `true`                                           | Verify SSL certificates (true for public servers) |
+| `MIFOS_CLIENT_ID`      | Yes      | `3`                                              | Client ID for portal                              |
+| `FRONTEND_URL`         | Yes      | `https://frontend.onrender.com`                  | Frontend URL for CORS                             |
+| `CORS_ALLOWED_ORIGINS` | Yes      | `https://frontend.onrender.com`                  | Allowed CORS origins                              |
 
 ### Frontend (Angular)
 
-| Variable | Required | Example | Description |
-|----------|----------|---------|-------------|
-| `NODE_VERSION` | Yes | `20.x` | Node.js version |
-| `DJANGO_API_URL` | Yes | `https://backend.onrender.com` | Django backend URL |
-| `FINERACT_API_URL` | Yes | `https://demo.mifos.io` | Public Fineract server URL (base URL only) |
-| `FINERACT_API_PROVIDER` | Yes | `/fineract-provider/api` | Fineract API provider path |
-| `FINERACT_API_VERSION` | Yes | `/v1` | Fineract API version |
-| `FINERACT_PLATFORM_TENANT_IDENTIFIER` | Yes | `default` | Fineract tenant identifier |
+| Variable                              | Required | Example                        | Description                                |
+| ------------------------------------- | -------- | ------------------------------ | ------------------------------------------ |
+| `NODE_VERSION`                        | Yes      | `20.x`                         | Node.js version                            |
+| `DJANGO_API_URL`                      | Yes      | `https://backend.onrender.com` | Django backend URL                         |
+| `FINERACT_API_URL`                    | Yes      | `https://demo.mifos.io`        | Public Fineract server URL (base URL only) |
+| `FINERACT_API_PROVIDER`               | Yes      | `/fineract-provider/api`       | Fineract API provider path                 |
+| `FINERACT_API_VERSION`                | Yes      | `/v1`                          | Fineract API version                       |
+| `FINERACT_PLATFORM_TENANT_IDENTIFIER` | Yes      | `default`                      | Fineract tenant identifier                 |
 
 ---
 
@@ -337,6 +351,7 @@ After frontend is deployed, update backend to allow frontend requests:
 ### Update URLs
 
 If you get custom domains:
+
 1. Update `FRONTEND_URL` and `CORS_ALLOWED_ORIGINS` in backend
 2. Update `DJANGO_API_URL` in frontend
 3. Redeploy both services
@@ -352,6 +367,7 @@ If you get custom domains:
 ## Support
 
 If you encounter issues:
+
 1. Check Render logs (Dashboard → Service → Logs)
 2. Check browser console (F12 → Console)
 3. Verify all environment variables are set correctly
@@ -370,4 +386,3 @@ If you encounter issues:
 - ⚠️ **Public Server Credentials** - You may need to register or obtain credentials for the public Fineract server
 - ⚠️ **Client ID** - Create a test client in the public Fineract server and update `MIFOS_CLIENT_ID` accordingly
 - ⚠️ **SSL Verification** - Set `MIFOS_VERIFY_SSL=true` for public servers (they have valid certificates)
-
