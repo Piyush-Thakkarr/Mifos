@@ -208,7 +208,7 @@ class MifosClient:
                 headers=headers,
                 auth=(self.admin_user, self.admin_pass),
                 json=json,
-                timeout=10,  # Reduced from 15 to 10 seconds to prevent long hangs
+                timeout=30,  # Increased to 30 seconds for slow Fineract API responses
                 verify=self.verify_ssl,
             )
         except requests.RequestException as exc:  # type: ignore[no-untyped-def]
