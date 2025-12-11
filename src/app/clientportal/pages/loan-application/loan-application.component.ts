@@ -388,7 +388,6 @@ export class ClientportalLoanApplicationComponent implements OnInit {
 
     // Map form fields to Fineract API field names
     const formData: any = {
-      clientId: this.clientProfile?.id || null, // Required by Fineract
       productId: step1Data.productId,
       principal: step2Data.principalAmount, // Map principalAmount to principal
       numberOfRepayments: step2Data.numberOfRepayments,
@@ -406,6 +405,11 @@ export class ClientportalLoanApplicationComponent implements OnInit {
       dateFormat: 'yyyy-MM-dd',
       locale: 'en'
     };
+
+    // Add clientId only if available (backend will set it from session if not provided)
+    if (this.clientProfile?.id) {
+      formData.clientId = this.clientProfile.id;
+    }
 
     // Convert dates to ISO format strings
     if (step1Data.submittedOnDate) {
@@ -498,7 +502,6 @@ export class ClientportalLoanApplicationComponent implements OnInit {
 
     // Map form fields to Fineract API field names (same as calculateSchedule)
     const formData: any = {
-      clientId: this.clientProfile?.id || null, // Required by Fineract
       productId: step1Data.productId,
       principal: step2Data.principalAmount, // Map principalAmount to principal
       numberOfRepayments: step2Data.numberOfRepayments,
@@ -516,6 +519,11 @@ export class ClientportalLoanApplicationComponent implements OnInit {
       dateFormat: 'yyyy-MM-dd',
       locale: 'en'
     };
+
+    // Add clientId only if available (backend will set it from session if not provided)
+    if (this.clientProfile?.id) {
+      formData.clientId = this.clientProfile.id;
+    }
 
     // Convert dates to ISO format strings
     if (step1Data.submittedOnDate) {

@@ -1722,29 +1722,63 @@ def submit_loan_application_view(request: HttpRequest):
         date_format = body.get("dateFormat", "yyyy-MM-dd")
         locale = body.get("locale", "en")
         
-        # Convert dates to Fineract format if needed
+        # Ensure required fields are present
+        if not body.get("clientId"):
+            response = JsonResponse({"error": "missing_client_id", "details": "Client ID is required"}, status=400)
+            return add_cors_headers(response, request)
+        
+        # Convert dates to Fineract format if needed (handle both ISO and YYYY-MM-DD formats)
         for date_field in ["submittedOnDate", "expectedDisbursementDate", "repaymentsStartingFromDate", "interestChargedFromDate"]:
             if date_field in body and body[date_field]:
                 if isinstance(body[date_field], str):
                     try:
-                        dt = datetime.fromisoformat(body[date_field].replace("Z", "+00:00"))
-                        body[date_field] = dt.strftime("%Y-%m-%d")
-                    except:
-                        pass
+                        # Try parsing as ISO format first
+                        if "T" in body[date_field] or "Z" in body[date_field]:
+                            dt = datetime.fromisoformat(body[date_field].replace("Z", "+00:00"))
+                            body[date_field] = dt.strftime("%Y-%m-%d")
+                        # If already in YYYY-MM-DD format, validate it
+                        elif len(body[date_field]) == 10 and body[date_field].count("-") == 2:
+                            # Already in correct format, just validate
+                            datetime.strptime(body[date_field], "%Y-%m-%d")
+                        else:
+                            # Try other common formats
+                            dt = datetime.strptime(body[date_field], "%Y-%m-%d")
+                            body[date_field] = dt.strftime("%Y-%m-%d")
+                    except (ValueError, AttributeError) as e:
+                        logger.warning(f"Failed to parse date field {date_field}: {body[date_field]}, error: {e}")
+                        # Keep original value if parsing fails
         
         body["dateFormat"] = date_format
         body["locale"] = locale
         
-        # Convert principalAmount to principal
-        if "principalAmount" in body:
+        # Convert principalAmount to principal if present (frontend might send either)
+        if "principalAmount" in body and "principal" not in body:
             body["principal"] = body.pop("principalAmount")
+        elif "principalAmount" in body and "principal" in body:
+            # If both exist, use principal and remove principalAmount
+            body.pop("principalAmount")
+        
+        # Ensure principal is a number
+        if "principal" in body:
+            try:
+                body["principal"] = float(body["principal"])
+            except (ValueError, TypeError):
+                response = JsonResponse({"error": "invalid_principal", "details": "Principal amount must be a valid number"}, status=400)
+                return add_cors_headers(response, request)
         
         # Convert loanTermFrequency if it's not set (calculate from numberOfRepayments * repaymentEvery)
-        if "loanTermFrequency" not in body or not body["loanTermFrequency"]:
+        if "loanTermFrequency" not in body or not body.get("loanTermFrequency"):
             numberOfRepayments = body.get("numberOfRepayments", 0)
             repaymentEvery = body.get("repaymentEvery", 0)
             if numberOfRepayments and repaymentEvery:
-                body["loanTermFrequency"] = numberOfRepayments * repaymentEvery
+                try:
+                    body["loanTermFrequency"] = int(numberOfRepayments) * int(repaymentEvery)
+                except (ValueError, TypeError):
+                    pass
+        
+        # Ensure loanType is set
+        if "loanType" not in body:
+            body["loanType"] = "individual"
         
         result = client.submit_loan_application(body)
         response = JsonResponse(result, status=200)
