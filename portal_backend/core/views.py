@@ -1785,10 +1785,11 @@ def submit_loan_application_view(request: HttpRequest):
         
         # Validate required fields before sending to Fineract
         # Use 'in' check instead of truthiness to allow 0 values
+        # Note: interestRateFrequencyType is required by Fineract but may be empty string
         required_fields = [
             "productId", "principal", "numberOfRepayments", "repaymentEvery",
             "repaymentFrequencyType", "loanTermFrequency", "loanTermFrequencyType",
-            "interestRatePerPeriod", "interestType", "amortizationType",
+            "interestRatePerPeriod", "interestRateFrequencyType", "interestType", "amortizationType",
             "interestCalculationPeriodType", "transactionProcessingStrategyCode",
             "expectedDisbursementDate", "submittedOnDate"
         ]

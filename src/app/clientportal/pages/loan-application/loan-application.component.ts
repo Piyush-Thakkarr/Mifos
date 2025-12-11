@@ -387,6 +387,9 @@ export class ClientportalLoanApplicationComponent implements OnInit {
     const step2Data = this.step2Form.getRawValue();
 
     // Map form fields to Fineract API field names
+    // Get raw values to include disabled fields
+    const step2RawData = this.step2Form.getRawValue();
+
     const formData: any = {
       productId: step1Data.productId,
       principal: step2Data.principalAmount, // Map principalAmount to principal
@@ -395,8 +398,8 @@ export class ClientportalLoanApplicationComponent implements OnInit {
       repaymentFrequencyType: step2Data.repaymentFrequencyType,
       loanTermFrequency: step2Data.loanTermFrequency || step2Data.numberOfRepayments * step2Data.repaymentEvery, // Calculate if not set
       loanTermFrequencyType: step2Data.loanTermFrequencyType,
-      interestRatePerPeriod: step2Data.interestRatePerPeriod,
-      interestRateFrequencyType: step2Data.interestRateFrequencyType,
+      interestRatePerPeriod: step2RawData.interestRatePerPeriod, // Use raw value to get disabled field
+      interestRateFrequencyType: step2RawData.interestRateFrequencyType, // Use raw value to get disabled field
       interestType: step2Data.interestType,
       amortizationType: step2Data.amortizationType,
       interestCalculationPeriodType: step2Data.interestCalculationPeriodType,
