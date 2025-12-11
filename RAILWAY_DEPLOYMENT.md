@@ -720,7 +720,17 @@ Now we need to tell the backend where the frontend is (for CORS):
 **Solutions**:
 1. **Check build logs** for specific errors
 2. **Common issues**:
-   - **Node version**: Make sure `NODE_VERSION=20`
+   - **"Angular CLI requires a minimum Node.js version of v18.19"**:
+     1. Go to Railway dashboard
+     2. Click on `client-portal-frontend` service
+     3. Click "Variables" tab
+     4. Look for `NODE_VERSION` in the list
+     5. If it exists: Click on it, change value to `20`, click "Save"
+     6. If it doesn't exist: Click "+ New Variable", Key: `NODE_VERSION`, Value: `20`, click "Add"
+     7. Go to "Deployments" tab
+     8. Click "Redeploy" button
+     9. Wait for deployment to finish
+     10. Check build logs - should show Node.js v20.x
    - **npm install fails**: Try changing build command to:
      ```
      npm install --legacy-peer-deps && npm run build
