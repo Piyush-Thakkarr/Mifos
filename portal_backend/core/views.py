@@ -1805,24 +1805,43 @@ def submit_loan_application_view(request: HttpRequest):
         # Ensure numeric fields are numbers, not strings
         numeric_fields = ["principal", "numberOfRepayments", "repaymentEvery", "loanTermFrequency", "interestRatePerPeriod"]
         for field in numeric_fields:
-            if field in body and body[field] is not None:
+            if field in body and body[field] is not None and body[field] != "":
                 try:
                     if field == "principal" or field == "interestRatePerPeriod":
                         body[field] = float(body[field])
                     else:
                         body[field] = int(body[field])
-                except (ValueError, TypeError):
+                except (ValueError, TypeError) as e:
                     response = JsonResponse({
                         "error": "invalid_field_value",
-                        "details": f"Field '{field}' must be a valid number",
+                        "details": f"Field '{field}' must be a valid number. Got: {body[field]} (type: {type(body[field]).__name__})",
                         "field": field,
                         "value": body[field]
                     }, status=400)
                     return add_cors_headers(response, request)
         
-        # Log the FULL request payload for debugging
+        # Ensure enum fields are integers
+        enum_fields = ["repaymentFrequencyType", "loanTermFrequencyType", "interestRateFrequencyType", 
+                      "interestType", "amortizationType", "interestCalculationPeriodType"]
+        for field in enum_fields:
+            if field in body and body[field] is not None and body[field] != "":
+                try:
+                    body[field] = int(body[field])
+                except (ValueError, TypeError):
+                    response = JsonResponse({
+                        "error": "invalid_field_value",
+                        "details": f"Field '{field}' must be a valid integer",
+                        "field": field,
+                        "value": body[field]
+                    }, status=400)
+                    return add_cors_headers(response, request)
+        
+        # Log the FULL request payload for debugging - print directly to ensure it shows in logs
+        import json as json_module
+        payload_str = json_module.dumps(body, default=str, indent=2)
+        logger.info(f"Submitting loan application - FULL PAYLOAD:\n{payload_str}")
         logger.info("Submitting loan application - FULL PAYLOAD", extra={
-            "full_payload": json.dumps(body, default=str),
+            "full_payload": payload_str,
             "productId": body.get("productId"),
             "principal": body.get("principal"),
             "clientId": body.get("clientId"),

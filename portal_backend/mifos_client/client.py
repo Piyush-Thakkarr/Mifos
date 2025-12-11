@@ -243,32 +243,43 @@ class MifosClient:
 
         # Handle 400, 500, and other error status codes - extract detailed error message
         error_msg = f"{method} {url} returned {resp.status_code}"
+        full_error_details = []
+        
         try:
             error_data = resp.json()
             logger.error(f"Fineract API error response: {json_module.dumps(error_data, default=str)}")
+            
             if isinstance(error_data, dict):
                 # Try to get user-friendly message first
-                user_msg = error_data.get("defaultUserMessage") or error_data.get("developerMessage") or error_data.get("message")
+                user_msg = error_data.get("defaultUserMessage") or error_data.get("developerMessage") or error_data.get("message") or error_data.get("error")
                 if user_msg:
-                    error_msg = f"{error_msg}: {user_msg}"
+                    full_error_details.append(str(user_msg))
+                
                 # Include errors array if present (for validation errors)
                 if "errors" in error_data:
                     errors_list = error_data["errors"]
                     if isinstance(errors_list, list) and errors_list:
-                        error_details = []
                         for e in errors_list:
                             if isinstance(e, dict):
-                                detail = e.get("defaultUserMessage") or e.get("developerMessage") or str(e)
-                                error_details.append(detail)
+                                detail = e.get("defaultUserMessage") or e.get("developerMessage") or e.get("message") or str(e)
+                                full_error_details.append(str(detail))
                             else:
-                                error_details.append(str(e))
-                        if error_details:
-                            error_msg = f"{error_msg} - Details: {'; '.join(error_details)}"
+                                full_error_details.append(str(e))
+                
+                # For 500 errors, include the full response if no other details
+                if resp.status_code == 500 and not full_error_details:
+                    full_error_details.append(json_module.dumps(error_data, default=str))
+            
+            if full_error_details:
+                error_msg = f"{error_msg}: {'; '.join(full_error_details)}"
+            else:
+                error_msg = f"{error_msg}: {resp.text[:500]}"
+                
         except (ValueError, KeyError, AttributeError) as e:
             # If JSON parsing fails, try to get text
-            logger.error(f"Failed to parse Fineract error response: {e}, response text: {resp.text[:1000]}")
+            logger.error(f"Failed to parse Fineract error response: {e}, response text: {resp.text[:2000]}")
             try:
-                error_text = resp.text[:1000]  # Increased limit
+                error_text = resp.text[:2000]  # Increased limit
                 if error_text:
                     error_msg = f"{error_msg}: {error_text}"
             except:
