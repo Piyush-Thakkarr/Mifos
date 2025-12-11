@@ -6,7 +6,6 @@ from django.conf import settings
 import requests
 from requests import Response
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -223,7 +222,19 @@ class MifosClient:
         if resp.status_code == 404:
             raise MifosNotFoundError(f"{method} {url} returned 404 (resource not found)")
 
-        if resp.status_code in (401, 403):
+        if resp.status_code == 401:
+            raise MifosAuthError(f"Admin authentication failed for {url}")
+
+        # 403 might be a domain rule violation (like missing template type), not auth failure
+        if resp.status_code == 403:
+            # Try to parse error response
+            try:
+                error_data = resp.json()
+                if "errors" in error_data:
+                    # This is a domain rule violation, not auth failure
+                    raise MifosNotFoundError(f"{method} {url} returned 403: {error_data.get('developerMessage', 'Domain rule violation')}")
+            except ValueError:
+                pass
             raise MifosAuthError(f"Admin authentication failed for {url}")
 
         raise MifosUpstreamError(f"{method} {url} returned {resp.status_code}")
@@ -345,16 +356,28 @@ class MifosClient:
 
     def fetch_loan_product_template(self, product_id: int) -> Dict[str, Any]:
         """Fetch loan product template for creating a loan application."""
-        # Use regular template endpoint: GET /loans/template?clientId={id}&productId={id}
+        # Try the template endpoint first, but fallback to product data if it fails
         path = "/loans/template"
         params = {"clientId": self.client_id, "productId": product_id}
         try:
-            return self.fetch_with_admin(path, params=params)
-        except MifosNotFoundError:
+            template_data = self.fetch_with_admin(path, params=params)
+            # Check if the response contains an error
+            if isinstance(template_data, dict) and "errors" in template_data:
+                # Template endpoint returned an error, use fallback
+                raise MifosNotFoundError("Template endpoint returned error")
+            return template_data
+        except (MifosNotFoundError, MifosUpstreamError, MifosAuthError):
             # Fallback: fetch product and construct basic template
+            logger.info(f"Template endpoint failed, using product data fallback for product {product_id}")
             product_path = f"/loanproducts/{product_id}"
             product_data = self.fetch_with_admin(product_path)
-            return {
+            
+            # Get transaction processing strategy options from product
+            transaction_processing_strategy_code = product_data.get("transactionProcessingStrategyCode", "")
+            transaction_processing_strategy_name = product_data.get("transactionProcessingStrategyName", "")
+            
+            # Build a basic template structure
+            template = {
                 "product": product_data,
                 "principal": product_data.get("principal", 0),
                 "numberOfRepayments": product_data.get("numberOfRepayments", 0),
@@ -366,9 +389,18 @@ class MifosClient:
                 "interestType": product_data.get("interestType"),
                 "amortizationType": product_data.get("amortizationType"),
                 "interestCalculationPeriodType": product_data.get("interestCalculationPeriodType"),
-                "transactionProcessingStrategyCode": product_data.get("transactionProcessingStrategyCode", ""),
+                "transactionProcessingStrategyCode": transaction_processing_strategy_code,
+                "transactionProcessingStrategyName": transaction_processing_strategy_name,
                 "allowAttributeOverrides": product_data.get("allowAttributeOverrides", {}),
+                # Add transaction processing strategy options
+                "transactionProcessingStrategyOptions": [
+                    {
+                        "code": transaction_processing_strategy_code,
+                        "name": transaction_processing_strategy_name or "Standard"
+                    }
+                ] if transaction_processing_strategy_code else [],
             }
+            return template
 
     def calculate_loan_schedule(self, loan_data: Dict[str, Any]) -> Dict[str, Any]:
         """Calculate loan repayment schedule."""

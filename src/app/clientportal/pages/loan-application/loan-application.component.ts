@@ -200,6 +200,7 @@ export class ClientportalLoanApplicationComponent implements OnInit {
 
   loadProductTemplate(productId: number): void {
     this.loading = true;
+    this.error = null;
     this.authService.loanProductTemplate(productId).subscribe({
       next: (result: any) => {
         this.loading = false;
@@ -253,8 +254,19 @@ export class ClientportalLoanApplicationComponent implements OnInit {
       },
       error: (err: any) => {
         this.loading = false;
-        this.error = 'Failed to load product details.';
+        const errorMsg = err?.error?.details || err?.error?.error || 'Failed to load product details.';
+        this.error = errorMsg;
         console.error('Error loading product template:', err);
+        // Still try to use basic product data if available
+        const product = this.loanProducts.find((p) => p.id === productId);
+        if (product) {
+          this.selectedProduct = product;
+          // Use basic product data to populate form
+          this.step2Form.patchValue({
+            principalAmount: product.principal || '',
+            interestRatePerPeriod: product.interestRatePerPeriod || ''
+          });
+        }
       }
     });
   }
