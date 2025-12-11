@@ -500,12 +500,15 @@ Now let's trigger the first deployment:
    - It might say **"Dockerfile Automatically Detected"** (Railway found your root Dockerfile)
    - OR it might say **"NIXPACKS"**
    
-4. **Choose your builder** (both work, but NIXPACKS is simpler):
-   
-   **Option A: Use NIXPACKS** (Recommended - simpler):
+4. **IMPORTANT: Change to NIXPACKS** (Required!):
    - **Click on the "Builder" dropdown**
-   - **Select "NIXPACKS"**
-   - **For "Build Command"**, type:
+   - **Select "NIXPACKS"** (NOT Dockerfile!)
+   - **Why**: Your Dockerfile uses nginx, but Railway's start command uses `npx serve`. They conflict!
+   - **NIXPACKS** will use the start command from `railway.json` which works correctly
+   
+5. **For "Build Command"**:
+   - **Click in the "Build Command" field** (or "Custom Build Command")
+   - **Type**:
      ```
      chmod +x build-frontend.sh && ./build-frontend.sh
      ```
@@ -518,15 +521,9 @@ Now let's trigger the first deployment:
      npm install --legacy-peer-deps && npm run build
      ```
    
-   **Option B: Use Dockerfile** (If you prefer):
-   - **Keep "Dockerfile Automatically Detected"** (or select "Dockerfile")
-   - **For "Dockerfile Path"**, type: `/Dockerfile` (or leave as default)
-   - **Note**: Your Dockerfile is already configured, so this should work too
-   - **But**: You'll need to make sure environment variables are passed correctly to the Docker container
-
-5. **Recommendation**: Use **NIXPACKS** for simplicity, unless you specifically want to use Docker
-
 6. **Click "Save"** or changes auto-save
+
+**Note**: If you see "Container failed to start - The executable `npx` could not be found", it means Railway is still using the Dockerfile. Make sure you selected "NIXPACKS" as the builder!
 
 #### 3.2.4 Configure Start Command
 
