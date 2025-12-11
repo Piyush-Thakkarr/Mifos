@@ -1778,6 +1778,41 @@ def submit_loan_application_view(request: HttpRequest):
         if "loanType" not in body:
             body["loanType"] = "individual"
         
+        # Validate required fields before sending to Fineract
+        required_fields = [
+            "productId", "principal", "numberOfRepayments", "repaymentEvery",
+            "repaymentFrequencyType", "loanTermFrequency", "loanTermFrequencyType",
+            "interestRatePerPeriod", "interestType", "amortizationType",
+            "interestCalculationPeriodType", "transactionProcessingStrategyCode",
+            "expectedDisbursementDate", "submittedOnDate"
+        ]
+        missing_fields = [field for field in required_fields if not body.get(field)]
+        if missing_fields:
+            response = JsonResponse({
+                "error": "missing_required_fields",
+                "details": f"Missing required fields: {', '.join(missing_fields)}",
+                "missing_fields": missing_fields
+            }, status=400)
+            return add_cors_headers(response, request)
+        
+        # Ensure numeric fields are numbers, not strings
+        numeric_fields = ["principal", "numberOfRepayments", "repaymentEvery", "loanTermFrequency", "interestRatePerPeriod"]
+        for field in numeric_fields:
+            if field in body and body[field] is not None:
+                try:
+                    if field == "principal" or field == "interestRatePerPeriod":
+                        body[field] = float(body[field])
+                    else:
+                        body[field] = int(body[field])
+                except (ValueError, TypeError):
+                    response = JsonResponse({
+                        "error": "invalid_field_value",
+                        "details": f"Field '{field}' must be a valid number",
+                        "field": field,
+                        "value": body[field]
+                    }, status=400)
+                    return add_cors_headers(response, request)
+        
         # Log the request payload for debugging (without sensitive data)
         logger.info("Submitting loan application", extra={
             "productId": body.get("productId"),
