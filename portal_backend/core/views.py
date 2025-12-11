@@ -1674,17 +1674,37 @@ def calculate_loan_schedule_view(request: HttpRequest):
         schedule = client.calculate_loan_schedule(body)
         response = JsonResponse(schedule, status=200)
         return add_cors_headers(response, request)
-    except (MifosAuthError, MifosUpstreamError) as exc:
+    except MifosUpstreamError as upstream_exc:
+        # Check if it's a timeout error (wrapped in MifosUpstreamError)
+        error_str = str(upstream_exc)
+        if "timed out" in error_str.lower() or "timeout" in error_str.lower():
+            correlation_id = new_correlation_id()
+            logger.error(f"Timeout calculating loan schedule: {upstream_exc}", extra={
+                "correlation_id": correlation_id,
+            })
+            response = JsonResponse({
+                "error": "schedule_calculation_timeout",
+                "details": "The schedule calculation request timed out. Please try again. If the problem persists, the Fineract server may be experiencing high load.",
+                "correlation_id": correlation_id
+            }, status=504)  # 504 Gateway Timeout
+            return add_cors_headers(response, request)
+        # Handle other upstream errors
+        correlation_id = new_correlation_id()
+        logger.exception("Failed to calculate loan schedule", extra={"correlation_id": correlation_id})
+        error_msg = str(upstream_exc)
+        # Extract user-friendly error message if available
+        if hasattr(upstream_exc, 'response') and hasattr(upstream_exc.response, 'text'):
+            try:
+                error_data = json.loads(upstream_exc.response.text)
+                error_msg = error_data.get("defaultUserMessage", error_data.get("developerMessage", str(upstream_exc)))
+            except:
+                pass
+        response = JsonResponse({"error": "calculation_failed", "details": error_msg, "correlation_id": correlation_id}, status=400)
+        return add_cors_headers(response, request)
+    except MifosAuthError as exc:
         correlation_id = new_correlation_id()
         logger.exception("Failed to calculate loan schedule", extra={"correlation_id": correlation_id})
         error_msg = str(exc)
-        # Extract user-friendly error message if available
-        if hasattr(exc, 'response') and hasattr(exc.response, 'text'):
-            try:
-                error_data = json.loads(exc.response.text)
-                error_msg = error_data.get("defaultUserMessage", error_data.get("developerMessage", str(exc)))
-            except:
-                pass
         response = JsonResponse({"error": "calculation_failed", "details": error_msg, "correlation_id": correlation_id}, status=400)
         return add_cors_headers(response, request)
     except Exception as e:
