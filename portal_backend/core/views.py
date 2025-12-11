@@ -1722,10 +1722,8 @@ def submit_loan_application_view(request: HttpRequest):
         date_format = body.get("dateFormat", "yyyy-MM-dd")
         locale = body.get("locale", "en")
         
-        # Ensure required fields are present
-        if not body.get("clientId"):
-            response = JsonResponse({"error": "missing_client_id", "details": "Client ID is required"}, status=400)
-            return add_cors_headers(response, request)
+        # clientId will be set by MifosClient from session if not provided
+        # No need to validate it here - MifosClient will handle it
         
         # Convert dates to Fineract format if needed (handle both ISO and YYYY-MM-DD formats)
         for date_field in ["submittedOnDate", "expectedDisbursementDate", "repaymentsStartingFromDate", "interestChargedFromDate"]:
