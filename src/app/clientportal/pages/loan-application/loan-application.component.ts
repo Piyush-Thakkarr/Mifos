@@ -209,13 +209,25 @@ export class ClientportalLoanApplicationComponent implements OnInit {
 
         // Auto-fill form with product defaults
         if (result) {
+          const product = result.product || result;
+
+          // First, re-enable all fields (in case switching products)
+          this.step2Form.get('interestType')?.enable();
+          this.step2Form.get('amortizationType')?.enable();
+          this.step2Form.get('interestCalculationPeriodType')?.enable();
+          this.step2Form.get('transactionProcessingStrategyCode')?.enable();
+          this.step2Form.get('repaymentEvery')?.enable();
+          this.step2Form.get('repaymentFrequencyType')?.enable();
+          this.step2Form.get('allowPartialPeriodInterestCalculation')?.enable();
+
+          // Auto-fill form with product defaults
           this.step2Form.patchValue({
             principalAmount: result.principal || '',
             numberOfRepayments: result.numberOfRepayments || '',
             repaymentEvery: result.repaymentEvery || '',
             repaymentFrequencyType: result.repaymentFrequencyType?.id || '',
             loanTermFrequencyType: result.termPeriodFrequencyType?.id || '',
-            interestRatePerPeriod: result.interestRatePerPeriod || '', // Auto-filled, read-only
+            interestRatePerPeriod: result.interestRatePerPeriod || '', // Always read-only (set by bank)
             interestRateFrequencyType: result.interestRateFrequencyType?.id || '',
             interestType: result.interestType?.id || '',
             amortizationType: result.amortizationType?.id || '',
@@ -223,9 +235,102 @@ export class ClientportalLoanApplicationComponent implements OnInit {
             transactionProcessingStrategyCode: result.transactionProcessingStrategyCode || ''
           });
 
-          // Disable fields that can't be overridden
-          if (result.product?.allowAttributeOverrides) {
-            const overrides = result.product.allowAttributeOverrides;
+          // Apply field restrictions based on product configuration
+          const overrides = product.allowAttributeOverrides || {};
+
+          // Interest rate is ALWAYS read-only (set by bank/MFI)
+          this.step2Form.get('interestRatePerPeriod')?.disable();
+
+          // If product is linked to floating interest rates, hide/disable interest rate field
+          if (product.isLinkedToFloatingInterestRates) {
+            this.step2Form.get('interestRatePerPeriod')?.disable();
+            this.step2Form.get('interestRateFrequencyType')?.disable();
+          }
+
+          // Disable fields that can't be overridden based on allowAttributeOverrides
+          if (!overrides.interestType) {
+            this.step2Form.get('interestType')?.disable();
+          }
+          if (!overrides.amortizationType) {
+            this.step2Form.get('amortizationType')?.disable();
+          }
+          if (!overrides.interestCalculationPeriodType) {
+            this.step2Form.get('interestCalculationPeriodType')?.disable();
+            this.step2Form.get('allowPartialPeriodInterestCalculation')?.disable();
+          }
+          if (!overrides.transactionProcessingStrategyCode) {
+            this.step2Form.get('transactionProcessingStrategyCode')?.disable();
+          }
+          if (!overrides.repaymentEvery) {
+            this.step2Form.get('repaymentEvery')?.disable();
+            this.step2Form.get('repaymentFrequencyType')?.disable();
+          }
+          if (!overrides.graceOnPrincipalAndInterestPayment) {
+            this.step2Form.get('graceOnPrincipalPayment')?.disable();
+            this.step2Form.get('graceOnInterestPayment')?.disable();
+          }
+          if (!overrides.graceOnArrearsAgeing) {
+            this.step2Form.get('graceOnArrearsAgeing')?.disable();
+          }
+          if (!overrides.inArrearsTolerance) {
+            this.step2Form.get('inArrearsTolerance')?.disable();
+          }
+
+          // Set transaction processing strategies
+          if (result.transactionProcessingStrategyOptions) {
+            this.transactionProcessingStrategies = result.transactionProcessingStrategyOptions;
+          } else if (result.transactionProcessingStrategyCode) {
+            // Fallback: create option from code
+            this.transactionProcessingStrategies = [
+              {
+                code: result.transactionProcessingStrategyCode,
+                name: result.transactionProcessingStrategyName || 'Standard'
+              }
+            ];
+          }
+
+          this.calculateLoanTerm();
+        }
+      },
+      error: (err: any) => {
+        this.loading = false;
+        const errorMsg = err?.error?.details || err?.error?.error || 'Failed to load product details.';
+        this.error = errorMsg;
+        console.error('Error loading product template:', err);
+        // Still try to use basic product data if available
+        const product = this.loanProducts.find((p) => p.id === productId);
+        if (product) {
+          this.selectedProduct = product;
+
+          // Re-enable all fields first
+          this.step2Form.get('interestType')?.enable();
+          this.step2Form.get('amortizationType')?.enable();
+          this.step2Form.get('interestCalculationPeriodType')?.enable();
+          this.step2Form.get('transactionProcessingStrategyCode')?.enable();
+          this.step2Form.get('repaymentEvery')?.enable();
+          this.step2Form.get('repaymentFrequencyType')?.enable();
+
+          // Use basic product data to populate form
+          this.step2Form.patchValue({
+            principalAmount: product.principal || '',
+            numberOfRepayments: product.numberOfRepayments || '',
+            repaymentEvery: product.repaymentEvery || '',
+            repaymentFrequencyType: product.repaymentFrequencyType?.id || '',
+            loanTermFrequencyType: product.termPeriodFrequencyType?.id || '',
+            interestRatePerPeriod: product.interestRatePerPeriod || '', // Always read-only
+            interestRateFrequencyType: product.interestRateFrequencyType?.id || '',
+            interestType: product.interestType?.id || '',
+            amortizationType: product.amortizationType?.id || '',
+            interestCalculationPeriodType: product.interestCalculationPeriodType?.id || '',
+            transactionProcessingStrategyCode: product.transactionProcessingStrategyCode || ''
+          });
+
+          // Apply restrictions from product
+          this.step2Form.get('interestRatePerPeriod')?.disable(); // Always read-only
+
+          // Check if product has allowAttributeOverrides (if available in product list)
+          if (product.allowAttributeOverrides) {
+            const overrides = product.allowAttributeOverrides;
             if (!overrides.interestType) {
               this.step2Form.get('interestType')?.disable();
             }
@@ -244,28 +349,17 @@ export class ClientportalLoanApplicationComponent implements OnInit {
             }
           }
 
-          // Set transaction processing strategies
-          if (result.transactionProcessingStrategyOptions) {
-            this.transactionProcessingStrategies = result.transactionProcessingStrategyOptions;
+          // Set transaction processing strategy
+          if (product.transactionProcessingStrategyCode) {
+            this.transactionProcessingStrategies = [
+              {
+                code: product.transactionProcessingStrategyCode,
+                name: product.transactionProcessingStrategyName || 'Standard'
+              }
+            ];
           }
 
           this.calculateLoanTerm();
-        }
-      },
-      error: (err: any) => {
-        this.loading = false;
-        const errorMsg = err?.error?.details || err?.error?.error || 'Failed to load product details.';
-        this.error = errorMsg;
-        console.error('Error loading product template:', err);
-        // Still try to use basic product data if available
-        const product = this.loanProducts.find((p) => p.id === productId);
-        if (product) {
-          this.selectedProduct = product;
-          // Use basic product data to populate form
-          this.step2Form.patchValue({
-            principalAmount: product.principal || '',
-            interestRatePerPeriod: product.interestRatePerPeriod || ''
-          });
         }
       }
     });

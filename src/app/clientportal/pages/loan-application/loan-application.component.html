@@ -242,13 +242,19 @@
                   formControlName="principalAmount"
                   class="form-control"
                   step="0.01"
-                  min="0"
+                  [min]="selectedProduct?.minPrincipal || 0"
+                  [max]="selectedProduct?.maxPrincipal || undefined"
                 />
               </div>
               <div class="helper-text" *ngIf="selectedProduct">
-                Enter amount between ${{ selectedProduct.minPrincipal || 0 | number: '1.0-0' }} and ${{
-                  selectedProduct.maxPrincipal || 0 | number: '1.0-0'
-                }}
+                <span *ngIf="selectedProduct.minPrincipal || selectedProduct.maxPrincipal">
+                  Enter amount between ${{ selectedProduct.minPrincipal || 0 | number: '1.0-0' }} and ${{
+                    selectedProduct.maxPrincipal || selectedProduct.principal | number: '1.0-0'
+                  }}
+                </span>
+                <span *ngIf="!selectedProduct.minPrincipal && !selectedProduct.maxPrincipal">
+                  Default amount: ${{ selectedProduct.principal | number: '1.0-0' }}
+                </span>
               </div>
               <div
                 class="error-message"
@@ -268,8 +274,18 @@
                   id="numberOfRepayments"
                   formControlName="numberOfRepayments"
                   class="form-control"
-                  min="1"
+                  [min]="selectedProduct?.minNumberOfRepayments || 1"
+                  [max]="selectedProduct?.maxNumberOfRepayments || undefined"
                 />
+                <div
+                  class="helper-text"
+                  *ngIf="
+                    selectedProduct && (selectedProduct.minNumberOfRepayments || selectedProduct.maxNumberOfRepayments)
+                  "
+                >
+                  Range: {{ selectedProduct.minNumberOfRepayments || 1 }} -
+                  {{ selectedProduct.maxNumberOfRepayments || 'unlimited' }} repayments
+                </div>
                 <div
                   class="error-message"
                   *ngIf="step2Form.get('numberOfRepayments')?.invalid && step2Form.get('numberOfRepayments')?.touched"
@@ -361,7 +377,14 @@
                   />
                   <span class="percentage-symbol">%</span>
                 </div>
-                <div class="helper-text">Set by bank/MFI - cannot be edited</div>
+                <div class="helper-text">
+                  <span *ngIf="selectedProduct?.isLinkedToFloatingInterestRates"
+                    >Floating interest rate - set by bank/MFI</span
+                  >
+                  <span *ngIf="!selectedProduct?.isLinkedToFloatingInterestRates"
+                    >Fixed rate - set by bank/MFI (cannot be edited)</span
+                  >
+                </div>
               </div>
 
               <div class="form-group">
