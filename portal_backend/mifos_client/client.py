@@ -189,13 +189,15 @@ class MifosClient:
         params = params or {}
         params.setdefault("tenantIdentifier", self.tenant_id)
 
+        # Use json_data variable to avoid shadowing json module
+        json_data = json
         logger.info(
             "Mifos admin fetch",
             extra={
                 "method": method,
                 "url": url,
                 "params": params,
-                "json_payload": json.dumps(json, default=str) if json else None,
+                "json_payload": json.dumps(json_data, default=str) if json_data else None,
                 "verify_ssl": self.verify_ssl,
             },
         )
@@ -207,7 +209,7 @@ class MifosClient:
                 params=params,
                 headers=headers,
                 auth=(self.admin_user, self.admin_pass),
-                json=json,
+                json=json_data,
                 timeout=30,  # Increased to 30 seconds for slow Fineract API responses
                 verify=self.verify_ssl,
             )
