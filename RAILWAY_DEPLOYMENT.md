@@ -91,7 +91,7 @@ Let's break down what each part means:
 
 ##### `buildCommand`
 - **What it is**: The exact command Railway runs to build your app
-- **When it runs**: During the build phase, after NIXPACKS sets up the environment
+- **When it runs**: During the build phase, after RAILPACK sets up the environment
 - **For Frontend**: `chmod +x build-frontend.sh && ./build-frontend.sh`
   - `chmod +x` makes the script executable
   - `./build-frontend.sh` runs the build script
@@ -193,7 +193,7 @@ After logging in, you'll see the Railway dashboard:
 
 1. **Detect multiple services** in your repo (if you have `railway.json` files or a monorepo structure)
 2. **Auto-create services** for each detected service
-3. **Auto-detect the builder** (Dockerfile, NIXPACKS, etc.)
+3. **Auto-detect the builder** (Dockerfile, RAILPACK, etc.)
 
 **What you might see**:
 - Railway automatically created **2 services**:
@@ -287,7 +287,7 @@ The root directory tells Railway where your backend code is located:
 2. **Scroll down to find "Build" section**
 3. **You'll see the "Builder" field**:
    - It might say **"Dockerfile Automatically Detected"** (if Railway found a Dockerfile)
-   - OR it might say **"NIXPACKS"**
+   - OR it might say **"RAILPACK"** or **"NIXPACKS"** (deprecated)
    - OR it might be empty
 
 4. **Change the Builder to RAILPACK** (Important for backend!):
@@ -311,7 +311,7 @@ The root directory tells Railway where your backend code is located:
    - **Note**: The `collectstatic` is important because your backend uses WhiteNoise to serve static files
 
 6. **For "Dockerfile Path"** (if shown):
-   - **Leave this empty** or ignore it (we're using NIXPACKS, not Dockerfile)
+   - **Leave this empty** or ignore it (we're using RAILPACK, not Dockerfile)
    - If you see this field, it's because Railway detected a Dockerfile in the root, but we don't want to use it for the backend
 
 7. **Click "Save"** or changes auto-save
@@ -506,7 +506,7 @@ Now let's trigger the first deployment:
 2. **Scroll down to find "Build" section**
 3. **You'll see the "Builder" field**:
    - It might say **"Dockerfile Automatically Detected"** (Railway found your root Dockerfile)
-   - OR it might say **"NIXPACKS"**
+   - OR it might say **"RAILPACK"** or **"NIXPACKS"** (deprecated)
    
 4. **IMPORTANT: Change to RAILPACK** (Required!):
    - **Click on the "Builder" dropdown**
@@ -533,7 +533,7 @@ Now let's trigger the first deployment:
    
 6. **Click "Save"** or changes auto-save
 
-**Note**: If you see "Container failed to start - The executable `npx` could not be found", it means Railway is still using the Dockerfile. Make sure you selected "NIXPACKS" as the builder!
+**Note**: If you see "Container failed to start - The executable `npx` could not be found", it means Railway is still using the Dockerfile. Make sure you selected "RAILPACK" as the builder (not NIXPACKS - that's deprecated)!
 
 #### 3.2.4 Configure Start Command
 
