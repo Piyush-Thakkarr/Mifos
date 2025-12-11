@@ -290,11 +290,17 @@ The root directory tells Railway where your backend code is located:
    - **Why**: The backend doesn't have a Dockerfile in `portal_backend/`, so we need NIXPACKS
    - **What this does**: Uses Railway's smart auto-detection for Python/Django
 
-5. **For "Build Command"** (optional, but recommended):
+5. **For "Build Command"** (recommended):
    - **Click in the "Build Command" field** (or "Custom Build Command")
-   - **Type**: `pip install -r requirements.txt`
-   - **What this does**: Explicitly tells Railway to install Python dependencies
-   - **Note**: If you leave this empty, NIXPACKS will auto-detect and run this anyway, but being explicit is better
+   - **Type**: `pip install -r requirements.txt && python manage.py collectstatic --noinput`
+   - **What this does**: 
+     - Installs Python dependencies
+     - Collects Django static files for WhiteNoise to serve (required for production)
+   - **Breakdown**:
+     - `pip install -r requirements.txt` - Installs all Python packages
+     - `&&` - Runs next command only if first succeeds
+     - `python manage.py collectstatic --noinput` - Collects static files (no prompts)
+   - **Note**: The `collectstatic` is important because your backend uses WhiteNoise to serve static files
 
 6. **For "Dockerfile Path"** (if shown):
    - **Leave this empty** or ignore it (we're using NIXPACKS, not Dockerfile)
