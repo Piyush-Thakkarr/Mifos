@@ -386,22 +386,56 @@ export class ClientportalLoanApplicationComponent implements OnInit {
     const step1Data = this.step1Form.getRawValue();
     const step2Data = this.step2Form.getRawValue();
 
+    // Map form fields to Fineract API field names
     const formData: any = {
-      ...step1Data,
-      ...step2Data,
+      clientId: this.clientProfile?.id || null, // Required by Fineract
+      productId: step1Data.productId,
+      principal: step2Data.principalAmount, // Map principalAmount to principal
+      numberOfRepayments: step2Data.numberOfRepayments,
+      repaymentEvery: step2Data.repaymentEvery,
+      repaymentFrequencyType: step2Data.repaymentFrequencyType,
+      loanTermFrequency: step2Data.loanTermFrequency || step2Data.numberOfRepayments * step2Data.repaymentEvery, // Calculate if not set
+      loanTermFrequencyType: step2Data.loanTermFrequencyType,
+      interestRatePerPeriod: step2Data.interestRatePerPeriod,
+      interestRateFrequencyType: step2Data.interestRateFrequencyType,
+      interestType: step2Data.interestType,
+      amortizationType: step2Data.amortizationType,
+      interestCalculationPeriodType: step2Data.interestCalculationPeriodType,
+      transactionProcessingStrategyCode: step2Data.transactionProcessingStrategyCode,
+      loanType: 'individual', // Required by Fineract for client portal
       dateFormat: 'yyyy-MM-dd',
       locale: 'en'
     };
 
     // Convert dates to ISO format strings
-    if (formData.submittedOnDate) {
-      formData.submittedOnDate = new Date(formData.submittedOnDate).toISOString().split('T')[0];
+    if (step1Data.submittedOnDate) {
+      formData.submittedOnDate = new Date(step1Data.submittedOnDate).toISOString().split('T')[0];
     }
-    if (formData.expectedDisbursementDate) {
-      formData.expectedDisbursementDate = new Date(formData.expectedDisbursementDate).toISOString().split('T')[0];
+    if (step1Data.expectedDisbursementDate) {
+      formData.expectedDisbursementDate = new Date(step1Data.expectedDisbursementDate).toISOString().split('T')[0];
     }
 
-    // Convert empty strings to null for optional fields
+    // Add optional fields if they have values
+    if (step1Data.loanPurposeId) {
+      formData.loanPurposeId = step1Data.loanPurposeId;
+    }
+    if (step2Data.repaymentsStartingFromDate) {
+      formData.repaymentsStartingFromDate = new Date(step2Data.repaymentsStartingFromDate).toISOString().split('T')[0];
+    }
+    if (step2Data.graceOnPrincipalPayment) {
+      formData.graceOnPrincipalPayment = step2Data.graceOnPrincipalPayment;
+    }
+    if (step2Data.graceOnInterestPayment) {
+      formData.graceOnInterestPayment = step2Data.graceOnInterestPayment;
+    }
+    if (step2Data.graceOnInterestCharged) {
+      formData.graceOnInterestCharged = step2Data.graceOnInterestCharged;
+    }
+    if (step2Data.allowPartialPeriodInterestCalculation) {
+      formData.allowPartialPeriodInterestCalculation = step2Data.allowPartialPeriodInterestCalculation;
+    }
+
+    // Remove null/undefined/empty values
     Object.keys(formData).forEach((key) => {
       if (formData[key] === '' || formData[key] === null || formData[key] === undefined) {
         delete formData[key];
@@ -419,7 +453,7 @@ export class ClientportalLoanApplicationComponent implements OnInit {
       error: (err: any) => {
         this.loading = false;
         console.error('Error calculating schedule:', err);
-        this.error = err?.error?.details || 'Failed to calculate repayment schedule.';
+        this.error = err?.error?.details || err?.error?.error || 'Failed to calculate repayment schedule.';
       }
     });
   }
@@ -462,29 +496,56 @@ export class ClientportalLoanApplicationComponent implements OnInit {
     const step1Data = this.step1Form.getRawValue();
     const step2Data = this.step2Form.getRawValue();
 
+    // Map form fields to Fineract API field names (same as calculateSchedule)
     const formData: any = {
-      ...step1Data,
-      ...step2Data,
-      loanType: 'individual',
+      clientId: this.clientProfile?.id || null, // Required by Fineract
+      productId: step1Data.productId,
+      principal: step2Data.principalAmount, // Map principalAmount to principal
+      numberOfRepayments: step2Data.numberOfRepayments,
+      repaymentEvery: step2Data.repaymentEvery,
+      repaymentFrequencyType: step2Data.repaymentFrequencyType,
+      loanTermFrequency: step2Data.loanTermFrequency || step2Data.numberOfRepayments * step2Data.repaymentEvery, // Calculate if not set
+      loanTermFrequencyType: step2Data.loanTermFrequencyType,
+      interestRatePerPeriod: step2Data.interestRatePerPeriod,
+      interestRateFrequencyType: step2Data.interestRateFrequencyType,
+      interestType: step2Data.interestType,
+      amortizationType: step2Data.amortizationType,
+      interestCalculationPeriodType: step2Data.interestCalculationPeriodType,
+      transactionProcessingStrategyCode: step2Data.transactionProcessingStrategyCode,
+      loanType: 'individual', // Required by Fineract for client portal
       dateFormat: 'yyyy-MM-dd',
       locale: 'en'
     };
 
     // Convert dates to ISO format strings
-    if (formData.submittedOnDate) {
-      formData.submittedOnDate = new Date(formData.submittedOnDate).toISOString().split('T')[0];
+    if (step1Data.submittedOnDate) {
+      formData.submittedOnDate = new Date(step1Data.submittedOnDate).toISOString().split('T')[0];
     }
-    if (formData.expectedDisbursementDate) {
-      formData.expectedDisbursementDate = new Date(formData.expectedDisbursementDate).toISOString().split('T')[0];
-    }
-    if (formData.repaymentsStartingFromDate) {
-      formData.repaymentsStartingFromDate = new Date(formData.repaymentsStartingFromDate).toISOString().split('T')[0];
-    }
-    if (formData.interestChargedFromDate) {
-      formData.interestChargedFromDate = new Date(formData.interestChargedFromDate).toISOString().split('T')[0];
+    if (step1Data.expectedDisbursementDate) {
+      formData.expectedDisbursementDate = new Date(step1Data.expectedDisbursementDate).toISOString().split('T')[0];
     }
 
-    // Convert empty strings to null for optional fields
+    // Add optional fields if they have values
+    if (step1Data.loanPurposeId) {
+      formData.loanPurposeId = step1Data.loanPurposeId;
+    }
+    if (step2Data.repaymentsStartingFromDate) {
+      formData.repaymentsStartingFromDate = new Date(step2Data.repaymentsStartingFromDate).toISOString().split('T')[0];
+    }
+    if (step2Data.graceOnPrincipalPayment) {
+      formData.graceOnPrincipalPayment = step2Data.graceOnPrincipalPayment;
+    }
+    if (step2Data.graceOnInterestPayment) {
+      formData.graceOnInterestPayment = step2Data.graceOnInterestPayment;
+    }
+    if (step2Data.graceOnInterestCharged) {
+      formData.graceOnInterestCharged = step2Data.graceOnInterestCharged;
+    }
+    if (step2Data.allowPartialPeriodInterestCalculation) {
+      formData.allowPartialPeriodInterestCalculation = step2Data.allowPartialPeriodInterestCalculation;
+    }
+
+    // Remove null/undefined/empty values
     Object.keys(formData).forEach((key) => {
       if (formData[key] === '' || formData[key] === null || formData[key] === undefined) {
         delete formData[key];
