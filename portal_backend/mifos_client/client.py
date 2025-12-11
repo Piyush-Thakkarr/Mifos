@@ -230,26 +230,37 @@ class MifosClient:
             # Try to parse error response
             try:
                 error_data = resp.json()
-                error_msg = error_data.get("defaultUserMessage", error_data.get("developerMessage", "Forbidden"))
-                raise MifosUpstreamError(f"403 Forbidden: {error_msg}")
+                if "errors" in error_data:
+                    # This is a domain rule violation, not auth failure
+                    error_msg = error_data.get('developerMessage', error_data.get('defaultUserMessage', 'Domain rule violation'))
+                    raise MifosUpstreamError(f"403 Forbidden: {error_msg}")
             except (ValueError, KeyError):
-                raise MifosUpstreamError(f"{method} {url} returned 403 (forbidden)")
+                pass
+            raise MifosAuthError(f"Admin authentication failed for {url}")
 
-        # Handle 400, 500, and other error status codes
+        # Handle 400, 500, and other error status codes - extract detailed error message
         error_msg = f"{method} {url} returned {resp.status_code}"
         try:
             error_data = resp.json()
             if isinstance(error_data, dict):
+                # Try to get user-friendly message first
                 user_msg = error_data.get("defaultUserMessage") or error_data.get("developerMessage") or error_data.get("message")
                 if user_msg:
                     error_msg = f"{error_msg}: {user_msg}"
-                # Include errors array if present
+                # Include errors array if present (for validation errors)
                 if "errors" in error_data:
                     errors_list = error_data["errors"]
                     if isinstance(errors_list, list) and errors_list:
-                        error_details = [str(e) for e in errors_list]
-                        error_msg = f"{error_msg} - Details: {'; '.join(error_details)}"
-        except (ValueError, KeyError):
+                        error_details = []
+                        for e in errors_list:
+                            if isinstance(e, dict):
+                                detail = e.get("defaultUserMessage") or e.get("developerMessage") or str(e)
+                                error_details.append(detail)
+                            else:
+                                error_details.append(str(e))
+                        if error_details:
+                            error_msg = f"{error_msg} - Details: {'; '.join(error_details)}"
+        except (ValueError, KeyError, AttributeError):
             # If JSON parsing fails, try to get text
             try:
                 error_text = resp.text[:500]  # Limit to 500 chars
@@ -258,16 +269,7 @@ class MifosClient:
             except:
                 pass
 
-        raise MifosUpstreamError(error_msg):
-                error_data = resp.json()
-                if "errors" in error_data:
-                    # This is a domain rule violation, not auth failure
-                    raise MifosNotFoundError(f"{method} {url} returned 403: {error_data.get('developerMessage', 'Domain rule violation')}")
-            except ValueError:
-                pass
-            raise MifosAuthError(f"Admin authentication failed for {url}")
-
-        raise MifosUpstreamError(f"{method} {url} returned {resp.status_code}")
+        raise MifosUpstreamError(error_msg)
 
     def fetch_client_bundle(self) -> Dict[str, Any]:
         """Fetch client profile with associations for dashboard."""

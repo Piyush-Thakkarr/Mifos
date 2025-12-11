@@ -24,7 +24,12 @@ def add_cors_headers(response: JsonResponse, request: HttpRequest) -> JsonRespon
     origin = request.headers.get("Origin")
     if origin:
         response["Access-Control-Allow-Origin"] = origin
-        response["Access-Control-Allow-Credentials"] = "true"
+    else:
+        # If no Origin header, allow all origins (for development/testing)
+        response["Access-Control-Allow-Origin"] = "*"
+    response["Access-Control-Allow-Credentials"] = "true"
+    response["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
     return response
 
 
