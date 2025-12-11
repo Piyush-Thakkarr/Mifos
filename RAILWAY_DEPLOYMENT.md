@@ -514,7 +514,12 @@ Now let's trigger the first deployment:
    - **If you don't see RAILPACK**: Look for "Railpack" or "Railway Pack" in the dropdown
    - **Why**: Your Dockerfile uses nginx, but Railway's start command uses `npx serve`. They conflict!
    - **RAILPACK** will use the start command from `railway.json` which works correctly
-   - **Note**: If Railway keeps switching back to Dockerfile on rebuild, make sure you save the settings and the builder is set to RAILPACK before deploying
+   
+   **If Railway keeps switching back to Dockerfile**:
+   - The `Dockerfile` in the root has been renamed to `Dockerfile.backup` to prevent auto-detection
+   - After pushing this change, Railway should stop auto-detecting Dockerfile
+   - Make sure you've pushed the latest code (with `Dockerfile.backup` instead of `Dockerfile`)
+   - Then set builder to RAILPACK and save before deploying
    
 5. **For "Build Command"**:
    - **Click in the "Build Command" field** (or "Custom Build Command")
