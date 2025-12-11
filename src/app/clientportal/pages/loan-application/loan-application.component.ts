@@ -442,9 +442,17 @@ export class ClientportalLoanApplicationComponent implements OnInit {
       formData.allowPartialPeriodInterestCalculation = step2Data.allowPartialPeriodInterestCalculation;
     }
 
-    // Remove null/undefined/empty values
+    // Remove null/undefined/empty values, but keep required fields even if empty
+    // interestRateFrequencyType might be required by Fineract even if empty
+    const requiredFieldsToKeep = [
+      'interestRateFrequencyType',
+      'interestRatePerPeriod'
+    ];
     Object.keys(formData).forEach((key) => {
-      if (formData[key] === '' || formData[key] === null || formData[key] === undefined) {
+      if (
+        !requiredFieldsToKeep.includes(key) &&
+        (formData[key] === '' || formData[key] === null || formData[key] === undefined)
+      ) {
         delete formData[key];
       }
     });
