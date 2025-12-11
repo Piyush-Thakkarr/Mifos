@@ -1,4 +1,4 @@
-import json
+import json as json_module
 import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
@@ -197,7 +197,7 @@ class MifosClient:
                 "method": method,
                 "url": url,
                 "params": params,
-                "json_payload": json.dumps(json_data, default=str) if json_data else None,
+                "json_payload": json_module.dumps(json_data, default=str) if json_data else None,
                 "verify_ssl": self.verify_ssl,
             },
         )
@@ -245,7 +245,7 @@ class MifosClient:
         error_msg = f"{method} {url} returned {resp.status_code}"
         try:
             error_data = resp.json()
-            logger.error(f"Fineract API error response: {json.dumps(error_data, default=str)}")
+            logger.error(f"Fineract API error response: {json_module.dumps(error_data, default=str)}")
             if isinstance(error_data, dict):
                 # Try to get user-friendly message first
                 user_msg = error_data.get("defaultUserMessage") or error_data.get("developerMessage") or error_data.get("message")
