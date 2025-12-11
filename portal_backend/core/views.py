@@ -1784,6 +1784,7 @@ def submit_loan_application_view(request: HttpRequest):
             body["loanType"] = "individual"
         
         # Validate required fields before sending to Fineract
+        # Use 'in' check instead of truthiness to allow 0 values
         required_fields = [
             "productId", "principal", "numberOfRepayments", "repaymentEvery",
             "repaymentFrequencyType", "loanTermFrequency", "loanTermFrequencyType",
@@ -1791,7 +1792,7 @@ def submit_loan_application_view(request: HttpRequest):
             "interestCalculationPeriodType", "transactionProcessingStrategyCode",
             "expectedDisbursementDate", "submittedOnDate"
         ]
-        missing_fields = [field for field in required_fields if not body.get(field)]
+        missing_fields = [field for field in required_fields if field not in body or body[field] is None or body[field] == ""]
         if missing_fields:
             response = JsonResponse({
                 "error": "missing_required_fields",
@@ -1831,9 +1832,20 @@ def submit_loan_application_view(request: HttpRequest):
             "loanTermFrequencyType": body.get("loanTermFrequencyType"),
         })
         
-        result = client.submit_loan_application(body)
-        response = JsonResponse(result, status=200)
-        return add_cors_headers(response, request)
+        try:
+            result = client.submit_loan_application(body)
+            response = JsonResponse(result, status=200)
+            return add_cors_headers(response, request)
+        except Exception as submit_exc:
+            # Log the actual exception before re-raising
+            correlation_id = new_correlation_id()
+            logger.exception("Exception in submit_loan_application call", extra={
+                "correlation_id": correlation_id,
+                "error": str(submit_exc),
+                "error_type": type(submit_exc).__name__
+            })
+            # Re-raise to be caught by outer exception handler
+            raise
     except MifosAuthError as exc:
         correlation_id = new_correlation_id()
         logger.warning("Client ID mismatch in loan application", extra={"correlation_id": correlation_id, "error": str(exc)})
