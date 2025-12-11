@@ -180,14 +180,19 @@ export class ClientportalLoanApplicationComponent implements OnInit {
 
   loadLoanProducts(): void {
     this.loading = true;
+    this.error = null;
     this.authService.loanProducts().subscribe({
       next: (result: any) => {
         this.loading = false;
         this.loanProducts = result.products || [];
+        console.log('Loaded loan products:', this.loanProducts.length, this.loanProducts);
+        if (this.loanProducts.length === 0) {
+          this.error = 'No loan products available. Please contact support.';
+        }
       },
       error: (err: any) => {
         this.loading = false;
-        this.error = 'Failed to load loan products.';
+        this.error = 'Failed to load loan products. Please try again later.';
         console.error('Error loading loan products:', err);
       }
     });

@@ -95,10 +95,10 @@
             <!-- Product Name -->
             <div class="form-group">
               <label for="productId">Product Name <span class="required">*</span></label>
-              <select id="productId" formControlName="productId" class="form-control">
-                <option value="">Search and select loan product</option>
+              <select id="productId" formControlName="productId" class="form-control" [disabled]="loading">
+                <option value="">{{ loading ? 'Loading products...' : 'Search and select loan product' }}</option>
                 <option *ngFor="let product of loanProducts" [value]="product.id">
-                  {{ product.name }}
+                  {{ product.name }} {{ product.shortName ? '(' + product.shortName + ')' : '' }}
                 </option>
               </select>
               <div
@@ -106,6 +106,12 @@
                 *ngIf="step1Form.get('productId')?.invalid && step1Form.get('productId')?.touched"
               >
                 Please select a loan product
+              </div>
+              <div class="error-message" *ngIf="error && currentStep === 1">
+                {{ error }}
+              </div>
+              <div class="helper-text" *ngIf="loanProducts.length > 0 && !loading">
+                {{ loanProducts.length }} product(s) available
               </div>
             </div>
 

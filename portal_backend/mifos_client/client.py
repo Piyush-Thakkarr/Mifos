@@ -329,10 +329,15 @@ class MifosClient:
             active_products = []
             for p in products:
                 status = p.get("status")
+                # Status can be a string like "loanProduct.active" or a dict with "value" key
+                is_active = False
                 if isinstance(status, dict):
-                    if status.get("value") == "Active":
-                        active_products.append(p)
-                elif status == "Active":
+                    status_value = status.get("value", "")
+                    is_active = "active" in status_value.lower()
+                elif isinstance(status, str):
+                    is_active = "active" in status.lower()
+                
+                if is_active:
                     active_products.append(p)
             return active_products
         except MifosNotFoundError:
