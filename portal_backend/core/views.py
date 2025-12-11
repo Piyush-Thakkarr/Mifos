@@ -1901,6 +1901,18 @@ def submit_loan_application_view(request: HttpRequest):
             result = client.submit_loan_application(body)
             response = JsonResponse(result, status=200)
             return add_cors_headers(response, request)
+        except requests.exceptions.Timeout as timeout_exc:
+            # Handle timeout specifically
+            correlation_id = new_correlation_id()
+            logger.error(f"Timeout submitting loan application to Fineract: {timeout_exc}", extra={
+                "correlation_id": correlation_id,
+            })
+            response = JsonResponse({
+                "error": "submission_timeout",
+                "details": "The loan application request timed out. Please try again. If the problem persists, the Fineract server may be experiencing high load.",
+                "correlation_id": correlation_id
+            }, status=504)  # 504 Gateway Timeout
+            return add_cors_headers(response, request)
         except Exception as submit_exc:
             # Log the actual exception before re-raising
             correlation_id = new_correlation_id()
