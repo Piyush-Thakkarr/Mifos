@@ -203,8 +203,16 @@ class MifosClient:
         )
 
         try:
-            # Use longer timeout for loan submission (90 seconds) as it can take time to process
-            timeout_value = 90 if method == "POST" and "loans" in path else 30
+            # Use longer timeout for loan operations (90 seconds) as they can take time to process
+            # This includes loan submission and schedule calculation
+            is_loan_operation = (
+                method == "POST" and "loans" in path and (
+                    json_data is None or  # Loan submission
+                    params is None or  # Loan submission
+                    (params and "command" in params and params.get("command") == "calculateLoanSchedule")  # Schedule calculation
+                )
+            )
+            timeout_value = 90 if is_loan_operation else 30
             resp = requests.request(
                 method,
                 url,
