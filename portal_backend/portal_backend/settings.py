@@ -17,12 +17,14 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key-change-me")
 DEBUG = os.getenv("DEBUG", "true").lower() == "true"
 
-# Allow Render and localhost
+# Allow Render, Railway, and localhost
 ALLOWED_HOSTS: list[str] = [
     "localhost",
     "127.0.0.1",
     ".onrender.com",  # Render subdomains
     ".render.com",    # Render domains
+    ".up.railway.app",  # Railway subdomains
+    ".railway.app",     # Railway domains
 ]
 # Add custom domain if provided
 if os.getenv("RENDER_EXTERNAL_HOSTNAME"):
