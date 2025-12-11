@@ -1770,7 +1770,7 @@ def submit_loan_application_view(request: HttpRequest):
                 return add_cors_headers(response, request)
         
         # Convert loanTermFrequency if it's not set (calculate from numberOfRepayments * repaymentEvery)
-        if "loanTermFrequency" not in body or not body.get("loanTermFrequency"):
+        if "loanTermFrequency" not in body or body.get("loanTermFrequency") is None or body.get("loanTermFrequency") == "":
             numberOfRepayments = body.get("numberOfRepayments", 0)
             repaymentEvery = body.get("repaymentEvery", 0)
             if numberOfRepayments and repaymentEvery:
@@ -1778,6 +1778,19 @@ def submit_loan_application_view(request: HttpRequest):
                     body["loanTermFrequency"] = int(numberOfRepayments) * int(repaymentEvery)
                 except (ValueError, TypeError):
                     pass
+        
+        # Ensure loanTermFrequency is an integer
+        if "loanTermFrequency" in body and body["loanTermFrequency"] is not None:
+            try:
+                body["loanTermFrequency"] = int(body["loanTermFrequency"])
+            except (ValueError, TypeError):
+                response = JsonResponse({
+                    "error": "invalid_field_value",
+                    "details": f"Field 'loanTermFrequency' must be a valid integer",
+                    "field": "loanTermFrequency",
+                    "value": body["loanTermFrequency"]
+                }, status=400)
+                return add_cors_headers(response, request)
         
         # Ensure loanType is set
         if "loanType" not in body:
