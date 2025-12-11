@@ -188,13 +188,13 @@ class MifosClient:
         params = params or {}
         params.setdefault("tenantIdentifier", self.tenant_id)
 
-        logger.debug(
+        logger.info(
             "Mifos admin fetch",
             extra={
                 "method": method,
                 "url": url,
                 "params": params,
-                "json": json,
+                "json_payload": json.dumps(json, default=str) if json else None,
                 "verify_ssl": self.verify_ssl,
             },
         )
@@ -242,6 +242,7 @@ class MifosClient:
         error_msg = f"{method} {url} returned {resp.status_code}"
         try:
             error_data = resp.json()
+            logger.error(f"Fineract API error response: {json.dumps(error_data, default=str)}")
             if isinstance(error_data, dict):
                 # Try to get user-friendly message first
                 user_msg = error_data.get("defaultUserMessage") or error_data.get("developerMessage") or error_data.get("message")
@@ -260,10 +261,11 @@ class MifosClient:
                                 error_details.append(str(e))
                         if error_details:
                             error_msg = f"{error_msg} - Details: {'; '.join(error_details)}"
-        except (ValueError, KeyError, AttributeError):
+        except (ValueError, KeyError, AttributeError) as e:
             # If JSON parsing fails, try to get text
+            logger.error(f"Failed to parse Fineract error response: {e}, response text: {resp.text[:1000]}")
             try:
-                error_text = resp.text[:500]  # Limit to 500 chars
+                error_text = resp.text[:1000]  # Increased limit
                 if error_text:
                     error_msg = f"{error_msg}: {error_text}"
             except:

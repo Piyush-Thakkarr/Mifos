@@ -1820,8 +1820,9 @@ def submit_loan_application_view(request: HttpRequest):
                     }, status=400)
                     return add_cors_headers(response, request)
         
-        # Log the request payload for debugging (without sensitive data)
-        logger.info("Submitting loan application", extra={
+        # Log the FULL request payload for debugging
+        logger.info("Submitting loan application - FULL PAYLOAD", extra={
+            "full_payload": json.dumps(body, default=str),
             "productId": body.get("productId"),
             "principal": body.get("principal"),
             "clientId": body.get("clientId"),
@@ -1831,6 +1832,12 @@ def submit_loan_application_view(request: HttpRequest):
             "repaymentFrequencyType": body.get("repaymentFrequencyType"),
             "loanTermFrequency": body.get("loanTermFrequency"),
             "loanTermFrequencyType": body.get("loanTermFrequencyType"),
+            "interestRatePerPeriod": body.get("interestRatePerPeriod"),
+            "interestRateFrequencyType": body.get("interestRateFrequencyType"),
+            "interestType": body.get("interestType"),
+            "amortizationType": body.get("amortizationType"),
+            "interestCalculationPeriodType": body.get("interestCalculationPeriodType"),
+            "transactionProcessingStrategyCode": body.get("transactionProcessingStrategyCode"),
         })
         
         try:
@@ -1843,7 +1850,8 @@ def submit_loan_application_view(request: HttpRequest):
             logger.exception("Exception in submit_loan_application call", extra={
                 "correlation_id": correlation_id,
                 "error": str(submit_exc),
-                "error_type": type(submit_exc).__name__
+                "error_type": type(submit_exc).__name__,
+                "payload_sent": json.dumps(body, default=str)
             })
             # Re-raise to be caught by outer exception handler
             raise
