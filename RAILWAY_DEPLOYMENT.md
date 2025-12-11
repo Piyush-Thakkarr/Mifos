@@ -562,10 +562,11 @@ Now let's trigger the first deployment:
 
 #### Variables to Add (Frontend):
 
-**1. NODE_VERSION**
+**1. NODE_VERSION** (REQUIRED - Fix Node version error!)
 - **Key**: `NODE_VERSION`
 - **Value**: `20`
 - **What it does**: Tells Railway to use Node.js version 20
+- **IMPORTANT**: If build fails with "Angular CLI requires a minimum Node.js version of v18.19", this fixes it
 
 **2. DJANGO_API_URL**
 - **Key**: `DJANGO_API_URL`
