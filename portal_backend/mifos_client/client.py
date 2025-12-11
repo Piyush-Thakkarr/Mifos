@@ -203,6 +203,8 @@ class MifosClient:
         )
 
         try:
+            # Use longer timeout for loan submission (90 seconds) as it can take time to process
+            timeout_value = 90 if method == "POST" and "loans" in path else 30
             resp = requests.request(
                 method,
                 url,
@@ -210,9 +212,11 @@ class MifosClient:
                 headers=headers,
                 auth=(self.admin_user, self.admin_pass),
                 json=json_data,
-                timeout=30,  # Increased to 30 seconds for slow Fineract API responses
+                timeout=timeout_value,
                 verify=self.verify_ssl,
             )
+        except requests.exceptions.Timeout as timeout_exc:
+            raise MifosUpstreamError(f"Request to Fineract timed out after {timeout_value} seconds: {str(timeout_exc)}") from timeout_exc
         except requests.RequestException as exc:  # type: ignore[no-untyped-def]
             raise MifosUpstreamError(str(exc)) from exc
 
