@@ -51,8 +51,16 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
     }
 
     const isClientImage404 = status === 404 && request.url.includes('/clients/') && request.url.includes('/images');
+    
+    // Silently handle business date configuration errors (expected when feature not configured)
+    const isBusinessDateConfig = request.url.includes('/configurations/name/enable-business-date') || 
+                                 request.url.includes('/businessdate/');
+    if (isBusinessDateConfig && (status === 404 || status === 500)) {
+      // Business date feature not configured - this is expected, don't show error
+      return EMPTY;
+    }
 
-    if (!environment.production && !isClientImage404) {
+    if (!environment.production && !isClientImage404 && !isBusinessDateConfig) {
       log.error(`Request Error: ${errorMessage}`);
     }
 
@@ -83,10 +91,13 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
         });
       }
     } else if (status === 500) {
-      this.alertService.alert({
-        type: 'Internal Server Error',
-        message: 'Internal Server Error. Please try again later.'
-      });
+      // Don't show alerts for business date configuration errors (already handled above)
+      if (!isBusinessDateConfig) {
+        this.alertService.alert({
+          type: 'Internal Server Error',
+          message: 'Internal Server Error. Please try again later.'
+        });
+      }
     } else if (status === 501) {
       this.alertService.alert({
         type: this.translate.instant('error.resource.notImplemented.type'),
