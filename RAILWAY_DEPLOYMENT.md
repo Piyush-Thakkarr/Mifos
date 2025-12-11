@@ -766,6 +766,43 @@ Now we need to tell the backend where the frontend is (for CORS):
    - Go to backend service → Deployments
    - Status should be "Active"
 
+### Client Portal Login Returns 400 Bad Request
+
+**Problem**: Client portal login shows "Login failed. Please try again." with 400 error in console
+
+**Solutions**:
+1. **Check backend logs**:
+   - Go to Railway dashboard
+   - Click `client-portal-backend` service
+   - Click "Deployments" tab
+   - Click on latest deployment
+   - Click "View Logs"
+   - Look for error messages (red text)
+   - Look for "invalid_json" or other 400 errors
+2. **Check backend environment variables**:
+   - Go to `client-portal-backend` → "Variables" tab
+   - Verify these are set:
+     - `MIFOS_BASE_URL=https://demo.mifos.io/fineract-provider/api/v1`
+     - `MIFOS_TENANT_ID=default`
+     - `MIFOS_ADMIN_USER=mifos`
+     - `MIFOS_ADMIN_PASS=password`
+     - `FRONTEND_URL=https://your-frontend-railway-url.up.railway.app`
+     - `CORS_ALLOWED_ORIGINS=https://your-frontend-railway-url.up.railway.app`
+3. **Verify CORS settings**:
+   - `FRONTEND_URL` must match your frontend Railway URL exactly
+   - `CORS_ALLOWED_ORIGINS` must match your frontend Railway URL exactly
+   - Both must include `https://`
+   - Both must NOT have trailing slash
+4. **Redeploy backend**:
+   - After changing variables, go to "Deployments" tab
+   - Click "Redeploy" button
+   - Wait for deployment to finish
+5. **Test backend endpoint directly**:
+   - Open terminal
+   - Run: `curl -X POST https://your-backend-url.up.railway.app/auth/login -H "Content-Type: application/json" -d '{"username":"client","password":"password"}'`
+   - Should return 200 with JSON response
+   - If returns 400, check backend logs for specific error
+
 ### Environment Variables Not Working
 
 **Problem**: App behaves as if variables aren't set
