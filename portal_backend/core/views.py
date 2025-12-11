@@ -1778,6 +1778,19 @@ def submit_loan_application_view(request: HttpRequest):
         if "loanType" not in body:
             body["loanType"] = "individual"
         
+        # Log the request payload for debugging (without sensitive data)
+        logger.info("Submitting loan application", extra={
+            "productId": body.get("productId"),
+            "principal": body.get("principal"),
+            "clientId": body.get("clientId"),
+            "loanType": body.get("loanType"),
+            "numberOfRepayments": body.get("numberOfRepayments"),
+            "repaymentEvery": body.get("repaymentEvery"),
+            "repaymentFrequencyType": body.get("repaymentFrequencyType"),
+            "loanTermFrequency": body.get("loanTermFrequency"),
+            "loanTermFrequencyType": body.get("loanTermFrequencyType"),
+        })
+        
         result = client.submit_loan_application(body)
         response = JsonResponse(result, status=200)
         return add_cors_headers(response, request)
@@ -1788,16 +1801,16 @@ def submit_loan_application_view(request: HttpRequest):
         return add_cors_headers(response, request)
     except (MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
-        logger.exception("Failed to submit loan application", extra={"correlation_id": correlation_id})
         error_msg = str(exc)
-        # Try to extract user-friendly error message
-        if hasattr(exc, 'response') and hasattr(exc.response, 'text'):
-            try:
-                error_data = json.loads(exc.response.text)
-                error_msg = error_data.get("defaultUserMessage", error_data.get("developerMessage", str(exc)))
-            except:
-                pass
-        response = JsonResponse({"error": "submission_failed", "details": error_msg, "correlation_id": correlation_id}, status=400)
+        logger.exception("Failed to submit loan application", extra={"correlation_id": correlation_id, "error": error_msg, "request_body": body})
+        # The error message from MifosUpstreamError should already contain detailed Fineract error
+        # Determine status code based on error message
+        status_code = 400
+        if "500" in error_msg or "Internal Server Error" in error_msg:
+            status_code = 500
+        elif "403" in error_msg or "Forbidden" in error_msg:
+            status_code = 403
+        response = JsonResponse({"error": "submission_failed", "details": error_msg, "correlation_id": correlation_id}, status=status_code)
         return add_cors_headers(response, request)
     except Exception as e:
         correlation_id = new_correlation_id()

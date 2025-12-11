@@ -230,6 +230,36 @@ class MifosClient:
             # Try to parse error response
             try:
                 error_data = resp.json()
+                error_msg = error_data.get("defaultUserMessage", error_data.get("developerMessage", "Forbidden"))
+                raise MifosUpstreamError(f"403 Forbidden: {error_msg}")
+            except (ValueError, KeyError):
+                raise MifosUpstreamError(f"{method} {url} returned 403 (forbidden)")
+
+        # Handle 400, 500, and other error status codes
+        error_msg = f"{method} {url} returned {resp.status_code}"
+        try:
+            error_data = resp.json()
+            if isinstance(error_data, dict):
+                user_msg = error_data.get("defaultUserMessage") or error_data.get("developerMessage") or error_data.get("message")
+                if user_msg:
+                    error_msg = f"{error_msg}: {user_msg}"
+                # Include errors array if present
+                if "errors" in error_data:
+                    errors_list = error_data["errors"]
+                    if isinstance(errors_list, list) and errors_list:
+                        error_details = [str(e) for e in errors_list]
+                        error_msg = f"{error_msg} - Details: {'; '.join(error_details)}"
+        except (ValueError, KeyError):
+            # If JSON parsing fails, try to get text
+            try:
+                error_text = resp.text[:500]  # Limit to 500 chars
+                if error_text:
+                    error_msg = f"{error_msg}: {error_text}"
+            except:
+                pass
+
+        raise MifosUpstreamError(error_msg):
+                error_data = resp.json()
                 if "errors" in error_data:
                     # This is a domain rule violation, not auth failure
                     raise MifosNotFoundError(f"{method} {url} returned 403: {error_data.get('developerMessage', 'Domain rule violation')}")
