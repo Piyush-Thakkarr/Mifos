@@ -1815,6 +1815,31 @@ def submit_loan_application_view(request: HttpRequest):
             }, status=400)
             return add_cors_headers(response, request)
         
+        # Ensure productId and clientId are integers
+        if "productId" in body and body["productId"] is not None:
+            try:
+                body["productId"] = int(body["productId"])
+            except (ValueError, TypeError):
+                response = JsonResponse({
+                    "error": "invalid_field_value",
+                    "details": f"Field 'productId' must be a valid integer",
+                    "field": "productId",
+                    "value": body["productId"]
+                }, status=400)
+                return add_cors_headers(response, request)
+        
+        if "clientId" in body and body["clientId"] is not None:
+            try:
+                body["clientId"] = int(body["clientId"])
+            except (ValueError, TypeError):
+                response = JsonResponse({
+                    "error": "invalid_field_value",
+                    "details": f"Field 'clientId' must be a valid integer",
+                    "field": "clientId",
+                    "value": body["clientId"]
+                }, status=400)
+                return add_cors_headers(response, request)
+        
         # Ensure numeric fields are numbers, not strings
         numeric_fields = ["principal", "numberOfRepayments", "repaymentEvery", "loanTermFrequency", "interestRatePerPeriod"]
         for field in numeric_fields:
