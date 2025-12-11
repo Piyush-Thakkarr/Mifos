@@ -46,8 +46,8 @@ export class ClientportalLoanApplicationComponent implements OnInit {
   ];
 
   interestCalculationPeriodTypes: any[] = [
-    { id: 0, value: 'Daily' },
     { id: 1, value: 'Same as repayment period' }
+    // Removed 'Daily' - not typical for microfinance (usually same as repayment period)
   ];
 
   transactionProcessingStrategies: any[] = [];
