@@ -300,6 +300,9 @@ export class ClientportalLoanApplicationComponent implements OnInit {
 
   populateFormFromProduct(product: any): void {
     // Fallback: populate from product data if template fails
+    // First, ensure we have default options if template didn't provide them
+    this.ensureDefaultOptions();
+
     const repaymentFreqTypeId = product.repaymentFrequencyType?.id ?? product.repaymentFrequencyType?.value ?? '';
     const termFreqTypeId = product.termPeriodFrequencyType?.id ?? product.termPeriodFrequencyType?.value ?? '';
     const interestRateFreqTypeId =
