@@ -282,7 +282,7 @@
                 <label for="repaymentFrequencyType">Frequency <span class="required">*</span></label>
                 <select id="repaymentFrequencyType" formControlName="repaymentFrequencyType" class="form-control">
                   <option value="">Select</option>
-                  <option *ngFor="let type of termFrequencyTypes" [value]="type.id">
+                  <option *ngFor="let type of repaymentFrequencyTypes" [value]="type.id">
                     {{ type.value }}
                   </option>
                 </select>
@@ -363,7 +363,7 @@
                   disabled
                 >
                   <option value="">Select</option>
-                  <option *ngFor="let type of termFrequencyTypes" [value]="type.id">
+                  <option *ngFor="let type of interestRateFrequencyTypes" [value]="type.id">
                     {{ type.value }}
                   </option>
                 </select>
