@@ -182,12 +182,19 @@ SESSION_COOKIE_SAMESITE = "None" if not DEBUG else "Lax"
 SESSION_COOKIE_SECURE = True  # Always True when SameSite=None (required by browsers)
 SESSION_COOKIE_AGE = 86400  # 24 hours
 
+# Fineract Configuration
+# For local development: defaults to localhost:8443 (local Docker)
+# For Railway/production: set MIFOS_BASE_URL environment variable
+# Environment variables take precedence over .env file
 MIFOS_BASE_URL = os.getenv("MIFOS_BASE_URL", "https://localhost:8443/fineract-provider/api/v1")
 MIFOS_TENANT_ID = os.getenv("MIFOS_TENANT_ID", "default")
 MIFOS_ADMIN_USER = os.getenv("MIFOS_ADMIN_USER", "mifos")
 MIFOS_ADMIN_PASS = os.getenv("MIFOS_ADMIN_PASS", "password")
-MIFOS_VERIFY_SSL = os.getenv("MIFOS_VERIFY_SSL", "true").lower() == "true"
-MIFOS_CLIENT_ID = os.getenv("MIFOS_CLIENT_ID", "3")
+# For local Docker: SSL verification should be false (self-signed certs)
+# For production: SSL verification should be true (valid certs)
+# Default to false for local dev, but Railway will override with true
+MIFOS_VERIFY_SSL = os.getenv("MIFOS_VERIFY_SSL", "false").lower() == "true"
+MIFOS_CLIENT_ID = os.getenv("MIFOS_CLIENT_ID", "1")
 
 LOGGING = {
     "version": 1,
