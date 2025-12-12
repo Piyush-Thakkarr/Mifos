@@ -205,54 +205,57 @@ export class ClientportalLoanApplicationComponent implements OnInit {
 
   populateOptionsFromTemplate(template: any): void {
     // Populate frequency type options from template
-    if (template.termFrequencyTypeOptions) {
+    if (template.termFrequencyTypeOptions && Array.isArray(template.termFrequencyTypeOptions)) {
       this.termFrequencyTypes = template.termFrequencyTypeOptions.map((opt: any) => ({
         id: opt.id,
-        value: opt.value
+        value: opt.value || opt.name || `Type ${opt.id}`
       }));
     }
 
-    if (template.repaymentFrequencyTypeOptions) {
+    if (template.repaymentFrequencyTypeOptions && Array.isArray(template.repaymentFrequencyTypeOptions)) {
       this.repaymentFrequencyTypes = template.repaymentFrequencyTypeOptions.map((opt: any) => ({
         id: opt.id,
-        value: opt.value
+        value: opt.value || opt.name || `Type ${opt.id}`
       }));
     }
 
-    if (template.interestRateFrequencyTypeOptions) {
+    if (template.interestRateFrequencyTypeOptions && Array.isArray(template.interestRateFrequencyTypeOptions)) {
       this.interestRateFrequencyTypes = template.interestRateFrequencyTypeOptions.map((opt: any) => ({
         id: opt.id,
-        value: opt.value
+        value: opt.value || opt.name || `Type ${opt.id}`
       }));
     }
 
-    if (template.interestTypeOptions) {
+    if (template.interestTypeOptions && Array.isArray(template.interestTypeOptions)) {
       this.interestTypes = template.interestTypeOptions.map((opt: any) => ({
         id: opt.id,
-        value: opt.value
+        value: opt.value || opt.name || `Type ${opt.id}`
       }));
     }
 
-    if (template.amortizationTypeOptions) {
+    if (template.amortizationTypeOptions && Array.isArray(template.amortizationTypeOptions)) {
       this.amortizationTypes = template.amortizationTypeOptions.map((opt: any) => ({
         id: opt.id,
-        value: opt.value
+        value: opt.value || opt.name || `Type ${opt.id}`
       }));
     }
 
-    if (template.interestCalculationPeriodTypeOptions) {
+    if (template.interestCalculationPeriodTypeOptions && Array.isArray(template.interestCalculationPeriodTypeOptions)) {
       this.interestCalculationPeriodTypes = template.interestCalculationPeriodTypeOptions.map((opt: any) => ({
         id: opt.id,
-        value: opt.value
+        value: opt.value || opt.name || `Type ${opt.id}`
       }));
     }
 
-    if (template.transactionProcessingStrategyOptions) {
+    if (template.transactionProcessingStrategyOptions && Array.isArray(template.transactionProcessingStrategyOptions)) {
       this.transactionProcessingStrategies = template.transactionProcessingStrategyOptions.map((opt: any) => ({
         code: opt.code,
-        name: opt.name
+        name: opt.name || opt.code
       }));
     }
+
+    // Ensure we have at least default options if template didn't provide them
+    this.ensureDefaultOptions();
   }
 
   populateFormFromTemplate(template: any): void {

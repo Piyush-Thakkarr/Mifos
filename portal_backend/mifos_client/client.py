@@ -417,9 +417,9 @@ class MifosClient:
 
     def fetch_loan_product_template(self, product_id: int) -> Dict[str, Any]:
         """Fetch loan product template for creating a loan application."""
-        # Try the template endpoint first, but fallback to product data if it fails
+        # Try the template endpoint first with templateType parameter
         path = "/loans/template"
-        params = {"clientId": self.client_id, "productId": product_id}
+        params = {"clientId": self.client_id, "productId": product_id, "templateType": "individual"}
         try:
             template_data = self.fetch_with_admin(path, params=params)
             # Check if the response contains an error
@@ -428,7 +428,7 @@ class MifosClient:
                 raise MifosNotFoundError("Template endpoint returned error")
             return template_data
         except (MifosNotFoundError, MifosUpstreamError, MifosAuthError):
-            # Fallback: fetch product and construct basic template
+            # Fallback: fetch product and construct basic template with all options
             logger.info(f"Template endpoint failed, using product data fallback for product {product_id}")
             product_path = f"/loanproducts/{product_id}"
             product_data = self.fetch_with_admin(product_path)
@@ -437,7 +437,8 @@ class MifosClient:
             transaction_processing_strategy_code = product_data.get("transactionProcessingStrategyCode", "")
             transaction_processing_strategy_name = product_data.get("transactionProcessingStrategyName", "")
             
-            # Build a basic template structure
+            # Build a basic template structure with all required options arrays
+            # These match Fineract's enum values
             template = {
                 "product": product_data,
                 "principal": product_data.get("principal", 0),
@@ -453,7 +454,35 @@ class MifosClient:
                 "transactionProcessingStrategyCode": transaction_processing_strategy_code,
                 "transactionProcessingStrategyName": transaction_processing_strategy_name,
                 "allowAttributeOverrides": product_data.get("allowAttributeOverrides", {}),
-                # Add transaction processing strategy options
+                # Add all required options arrays (matching Fineract enum values)
+                "repaymentFrequencyTypeOptions": [
+                    {"id": 0, "code": "periodFrequencyType.days", "value": "Days"},
+                    {"id": 1, "code": "periodFrequencyType.weeks", "value": "Weeks"},
+                    {"id": 2, "code": "periodFrequencyType.months", "value": "Months"}
+                ],
+                "termFrequencyTypeOptions": [
+                    {"id": 0, "code": "periodFrequencyType.days", "value": "Days"},
+                    {"id": 1, "code": "periodFrequencyType.weeks", "value": "Weeks"},
+                    {"id": 2, "code": "periodFrequencyType.months", "value": "Months"},
+                    {"id": 3, "code": "periodFrequencyType.years", "value": "Years"}
+                ],
+                "interestRateFrequencyTypeOptions": [
+                    {"id": 0, "code": "periodFrequencyType.days", "value": "Per day"},
+                    {"id": 1, "code": "periodFrequencyType.weeks", "value": "Per week"},
+                    {"id": 2, "code": "periodFrequencyType.months", "value": "Per month"}
+                ],
+                "interestTypeOptions": [
+                    {"id": 0, "code": "interestType.declining.balance", "value": "Declining Balance"},
+                    {"id": 1, "code": "interestType.flat", "value": "Flat"}
+                ],
+                "amortizationTypeOptions": [
+                    {"id": 0, "code": "amortizationType.equal.principal.payments", "value": "Equal Principal Payments"},
+                    {"id": 1, "code": "amortizationType.equal.installments", "value": "Equal Installments"}
+                ],
+                "interestCalculationPeriodTypeOptions": [
+                    {"id": 0, "code": "interestCalculationPeriodType.daily", "value": "Daily"},
+                    {"id": 1, "code": "interestCalculationPeriodType.same.as.repayment.period", "value": "Same as repayment period"}
+                ],
                 "transactionProcessingStrategyOptions": [
                     {
                         "code": transaction_processing_strategy_code,
