@@ -560,4 +560,54 @@ export class ClientportalLoanApplicationComponent implements OnInit {
   navigateToNotifications(): void {
     this.router.navigate(['/clientportal/notifications']);
   }
+
+  ensureDefaultOptions(): void {
+    // Ensure all options arrays have at least default values if they're empty
+    if (!this.repaymentFrequencyTypes || this.repaymentFrequencyTypes.length === 0) {
+      this.repaymentFrequencyTypes = [
+        { id: 0, value: 'Days' },
+        { id: 1, value: 'Weeks' },
+        { id: 2, value: 'Months' }
+      ];
+    }
+    if (!this.termFrequencyTypes || this.termFrequencyTypes.length === 0) {
+      this.termFrequencyTypes = [
+        { id: 0, value: 'Days' },
+        { id: 1, value: 'Weeks' },
+        { id: 2, value: 'Months' },
+        { id: 3, value: 'Years' }
+      ];
+    }
+    if (!this.interestRateFrequencyTypes || this.interestRateFrequencyTypes.length === 0) {
+      this.interestRateFrequencyTypes = [
+        { id: 0, value: 'Per day' },
+        { id: 1, value: 'Per week' },
+        { id: 2, value: 'Per month' }
+      ];
+    }
+    if (!this.interestTypes || this.interestTypes.length === 0) {
+      this.interestTypes = [
+        { id: 0, value: 'Declining Balance' },
+        { id: 1, value: 'Flat' }
+      ];
+    }
+    if (!this.amortizationTypes || this.amortizationTypes.length === 0) {
+      this.amortizationTypes = [
+        { id: 0, value: 'Equal Principal Payments' },
+        { id: 1, value: 'Equal Installments' }
+      ];
+    }
+    if (!this.interestCalculationPeriodTypes || this.interestCalculationPeriodTypes.length === 0) {
+      this.interestCalculationPeriodTypes = [
+        { id: 0, value: 'Daily' },
+        { id: 1, value: 'Same as repayment period' }
+      ];
+    }
+    if (!this.transactionProcessingStrategies || this.transactionProcessingStrategies.length === 0) {
+      this.transactionProcessingStrategies = [
+        { code: 'advanced-payment-allocation-strategy', name: 'Advanced payment allocation strategy' },
+        { code: 'standard-strategy', name: 'Standard strategy' }
+      ];
+    }
+  }
 }
