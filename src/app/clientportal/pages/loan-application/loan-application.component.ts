@@ -346,6 +346,20 @@ export class ClientportalLoanApplicationComponent implements OnInit {
             if (!overrides.repaymentEvery) {
               this.step2Form.get('repaymentEvery')?.disable();
               this.step2Form.get('repaymentFrequencyType')?.disable();
+              // Ensure we use the product's frequency type
+              if (product.repaymentFrequencyType?.id !== undefined) {
+                this.step2Form.patchValue({
+                  repaymentFrequencyType: product.repaymentFrequencyType.id
+                });
+              }
+            }
+          } else {
+            // If no overrides defined, assume repayment frequency can't be changed
+            this.step2Form.get('repaymentFrequencyType')?.disable();
+            if (product.repaymentFrequencyType?.id !== undefined) {
+              this.step2Form.patchValue({
+                repaymentFrequencyType: product.repaymentFrequencyType.id
+              });
             }
           }
 
