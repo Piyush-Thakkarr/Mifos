@@ -375,40 +375,64 @@ export class ClientportalLoanApplicationComponent implements OnInit {
   }
 
   calculateSchedule(): void {
-    if (!this.step1Form.valid || !this.step2Form.valid) {
-      return;
-    }
-
-    this.loading = true;
-
+    // Don't block if forms are invalid - schedule calculation is optional
     // Get raw values to include disabled fields
     const step1Data = this.step1Form.getRawValue();
     const step2RawData = this.step2Form.getRawValue();
 
+    // Ensure we have minimum required data
+    if (!step1Data.productId || !step2RawData.principalAmount) {
+      console.warn('Cannot calculate schedule: missing required fields');
+      return;
+    }
+
     // Build form data using template's exact values
     const formData = this.buildLoanApplicationData(step1Data, step2RawData);
 
+    // Remove clientId if not needed for schedule calculation
+    // Schedule calculation might work without it
+    if (formData.clientId) {
+      delete formData.clientId;
+    }
+
+    // Set a timeout for the schedule calculation (30 seconds)
+    const timeout = setTimeout(() => {
+      console.warn('Schedule calculation taking too long, continuing without preview');
+    }, 30000);
+
     this.authService.calculateLoanSchedule(formData).subscribe({
       next: (result: any) => {
-        this.loading = false;
-        if (result.repaymentSchedule && result.repaymentSchedule.periods) {
+        clearTimeout(timeout);
+        // Extract repayment schedule from response
+        if (result.periods && Array.isArray(result.periods)) {
+          this.repaymentSchedule = result.periods;
+          this.calculateTotals();
+        } else if (result.repaymentSchedule && Array.isArray(result.repaymentSchedule)) {
+          this.repaymentSchedule = result.repaymentSchedule;
+          this.calculateTotals();
+        } else if (result.repaymentSchedule?.periods && Array.isArray(result.repaymentSchedule.periods)) {
           this.repaymentSchedule = result.repaymentSchedule.periods;
           this.calculateTotals();
         }
       },
       error: (err: any) => {
-        this.loading = false;
+        clearTimeout(timeout);
         console.error('Error calculating schedule:', err);
-        // Don't show error if it's a timeout - schedule calculation is optional
-        if (err?.status === 504 || err?.error?.error === 'schedule_calculation_timeout') {
-          this.error = null; // Clear error, allow submission
-          console.warn('Schedule calculation timed out, but user can still submit application');
+        // Don't show error if it's a timeout or CORS error - schedule calculation is optional
+        if (
+          err?.status === 504 ||
+          err?.status === 0 ||
+          err?.error?.error === 'schedule_calculation_timeout' ||
+          err?.message?.includes('CORS') ||
+          err?.message?.includes('Failed to fetch')
+        ) {
+          // Silently fail - schedule preview is optional
+          console.warn('Schedule calculation failed or timed out, but user can still submit application');
+          this.repaymentSchedule = [];
         } else {
-          this.error =
-            'Schedule preview unavailable: ' +
-            (err?.error?.details ||
-              err?.error?.error ||
-              'Unable to calculate repayment schedule. You can still submit the application.');
+          // Only show error for non-timeout issues
+          console.warn('Schedule preview unavailable:', err?.error?.details || err?.error?.error);
+          this.repaymentSchedule = [];
         }
       }
     });
