@@ -145,8 +145,9 @@ export class ClientportalLoanApplicationComponent implements OnInit {
   loadLoanProducts(): void {
     this.loading = true;
     this.authService.loanProducts().subscribe({
-      next: (products: any[]) => {
-        this.loanProducts = products;
+      next: (result: any) => {
+        // Backend returns {products: [...]}, so extract the products array
+        this.loanProducts = result.products || result || [];
         this.loading = false;
       },
       error: (err: any) => {
