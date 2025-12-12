@@ -410,7 +410,7 @@ export class ClientportalLoanApplicationComponent implements OnInit {
     const step2Data = this.step2Form.getRawValue();
 
     // Map form fields to Fineract API field names
-    // Get raw values to include disabled fields
+    // Get raw values to include disabled fields - CRITICAL for frequency types
     const step2RawData = this.step2Form.getRawValue();
 
     const formData: any = {
@@ -418,9 +418,10 @@ export class ClientportalLoanApplicationComponent implements OnInit {
       principal: step2Data.principalAmount, // Map principalAmount to principal
       numberOfRepayments: step2Data.numberOfRepayments,
       repaymentEvery: step2Data.repaymentEvery,
-      repaymentFrequencyType: step2Data.repaymentFrequencyType,
+      // CRITICAL: Use raw values for frequency types to get product's exact values (even if not in dropdown)
+      repaymentFrequencyType: step2RawData.repaymentFrequencyType ?? step2Data.repaymentFrequencyType,
       loanTermFrequency: step2Data.loanTermFrequency || step2Data.numberOfRepayments * step2Data.repaymentEvery, // Calculate if not set
-      loanTermFrequencyType: step2Data.loanTermFrequencyType,
+      loanTermFrequencyType: step2RawData.loanTermFrequencyType ?? step2Data.loanTermFrequencyType,
       interestRatePerPeriod: step2RawData.interestRatePerPeriod, // Use raw value to get disabled field
       interestRateFrequencyType: step2RawData.interestRateFrequencyType, // Use raw value to get disabled field
       interestType: step2Data.interestType,
@@ -550,7 +551,7 @@ export class ClientportalLoanApplicationComponent implements OnInit {
     const step2Data = this.step2Form.getRawValue();
 
     // Map form fields to Fineract API field names (same as calculateSchedule)
-    // Get raw values to include disabled fields
+    // Get raw values to include disabled fields - CRITICAL for frequency types
     const step2RawData = this.step2Form.getRawValue();
 
     const formData: any = {
@@ -558,9 +559,10 @@ export class ClientportalLoanApplicationComponent implements OnInit {
       principal: step2Data.principalAmount, // Map principalAmount to principal
       numberOfRepayments: step2Data.numberOfRepayments,
       repaymentEvery: step2Data.repaymentEvery,
-      repaymentFrequencyType: step2Data.repaymentFrequencyType,
+      // CRITICAL: Use raw values for frequency types to get product's exact values (even if not in dropdown)
+      repaymentFrequencyType: step2RawData.repaymentFrequencyType ?? step2Data.repaymentFrequencyType,
       loanTermFrequency: step2Data.loanTermFrequency || step2Data.numberOfRepayments * step2Data.repaymentEvery, // Calculate if not set
-      loanTermFrequencyType: step2Data.loanTermFrequencyType,
+      loanTermFrequencyType: step2RawData.loanTermFrequencyType ?? step2Data.loanTermFrequencyType,
       interestRatePerPeriod: step2RawData.interestRatePerPeriod, // Use raw value to get disabled field
       interestRateFrequencyType: step2RawData.interestRateFrequencyType, // Use raw value to get disabled field
       interestType: step2Data.interestType,
