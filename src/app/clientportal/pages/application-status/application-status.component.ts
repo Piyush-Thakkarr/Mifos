@@ -96,8 +96,9 @@ export class ClientportalApplicationStatusComponent implements OnInit {
     const events: any[] = [];
     const timeline = loan.timeline || {};
     const transactions = loan.transactions || [];
+    const status = loan.status || {};
 
-    // Application submitted event - use real timeline data
+    // Application submitted event - ONLY if timeline has submittedOnDate
     const submittedDate = this.parseDate(timeline.submittedOnDate || loan.submittedOnDate);
     if (submittedDate) {
       const submittedBy =
@@ -114,7 +115,7 @@ export class ClientportalApplicationStatusComponent implements OnInit {
       });
     }
 
-    // Approved event - use real timeline data
+    // Approved event - ONLY if timeline has approvedOnDate
     const approvedDate = this.parseDate(timeline.approvedOnDate);
     if (approvedDate) {
       const approvedBy =
@@ -131,7 +132,7 @@ export class ClientportalApplicationStatusComponent implements OnInit {
       });
     }
 
-    // Disbursed event - use real timeline data
+    // Disbursed event - ONLY if timeline has actualDisbursementDate
     const disbursedDate = this.parseDate(timeline.actualDisbursementDate);
     if (disbursedDate) {
       const disbursedBy =
@@ -148,54 +149,77 @@ export class ClientportalApplicationStatusComponent implements OnInit {
       });
     }
 
-    // Add transaction-based events (disbursements, repayments, etc.)
+    // Closed event - ONLY if timeline has closedOnDate
+    const closedDate = this.parseDate(timeline.closedOnDate);
+    if (closedDate) {
+      events.push({
+        event: 'Closed',
+        date: closedDate.date,
+        time: closedDate.time,
+        performedBy: 'System',
+        status: 'Completed'
+      });
+    }
+
+    // Add transaction-based events - ONLY real transactions
+    // Group by type to avoid duplicates
+    const transactionEvents = new Map<string, any>();
+
     transactions.forEach((txn: any) => {
       const txnType = txn.type?.value || txn.type?.code || '';
       const txnDate = this.parseDate(txn.date);
 
       if (!txnDate) return;
 
-      // Only include significant transaction types
+      // Skip disbursement transactions (already covered by timeline)
       if (txnType.toLowerCase().includes('disbursement')) {
-        // Already handled by timeline.actualDisbursementDate
         return;
-      } else if (txnType.toLowerCase().includes('repayment') && txn.amount > 0) {
-        events.push({
-          event: 'Repayment Received',
+      }
+
+      // Create event key to avoid duplicates
+      const eventKey = `${txnType}-${txnDate.date}`;
+
+      if (!transactionEvents.has(eventKey)) {
+        let eventName = txnType;
+        // Format transaction type names
+        if (txnType.toLowerCase().includes('repayment')) {
+          eventName = 'Repayment Received';
+        } else if (txnType.toLowerCase().includes('charge')) {
+          eventName = 'Charge Applied';
+        } else if (txnType.toLowerCase().includes('waive')) {
+          eventName = 'Interest Waived';
+        } else if (txnType.toLowerCase().includes('write')) {
+          eventName = 'Written Off';
+        }
+
+        transactionEvents.set(eventKey, {
+          event: eventName,
           date: txnDate.date,
           time: txnDate.time,
-          performedBy: 'System',
-          status: 'Completed'
-        });
-      } else if (txnType.toLowerCase().includes('charge')) {
-        events.push({
-          event: 'Charge Applied',
-          date: txnDate.date,
-          time: txnDate.time,
-          performedBy: 'System',
+          performedBy: txn.madeOnDate ? 'System' : 'System',
           status: 'Completed'
         });
       }
     });
 
-    // Current status event if not already covered
-    const currentStatus = this.getStatusLabel(loan.status);
-    const statusAlreadyInEvents = events.some((e) => e.event === currentStatus);
+    // Add transaction events to main events array
+    transactionEvents.forEach((event) => {
+      events.push(event);
+    });
 
-    if (!statusAlreadyInEvents && currentStatus !== 'Submitted') {
-      // Use the most recent event date or submitted date as fallback
-      const lastEventDate =
-        events.length > 0
-          ? events[events.length - 1].date
-          : submittedDate?.date ||
-            new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    // Add current status event ONLY if status indicates pending and no other events exist
+    const statusId = status.id || (typeof status === 'number' ? status : null);
+    const isPendingApproval = statusId === 100 || status.pendingApproval === true;
 
+    if (isPendingApproval && events.length === 1) {
+      // Only submitted, add pending approval status
+      const lastEvent = events[events.length - 1];
       events.push({
-        event: currentStatus,
-        date: lastEventDate,
-        time: 'N/A',
-        performedBy: 'System',
-        status: this.getStatusBadgeType(loan.status)
+        event: 'Pending Approval',
+        date: lastEvent.date,
+        time: lastEvent.time,
+        performedBy: 'Loan Officer',
+        status: 'In Progress'
       });
     }
 
