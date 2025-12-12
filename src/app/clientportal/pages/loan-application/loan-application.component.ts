@@ -534,4 +534,15 @@ export class ClientportalLoanApplicationComponent implements OnInit {
       }
     });
   }
+
+  getFrequencyLabel(frequencyTypeId: number): string {
+    // Find label from any of the frequency type arrays
+    const allTypes = [
+      ...this.termFrequencyTypes,
+      ...this.repaymentFrequencyTypes,
+      ...this.interestRateFrequencyTypes
+    ];
+    const type = allTypes.find((t) => t.id === frequencyTypeId);
+    return type?.value || `Type ${frequencyTypeId}`;
+  }
 }
