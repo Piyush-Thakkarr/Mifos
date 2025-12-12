@@ -13,6 +13,7 @@ import { ClientportalNotificationsComponent } from './pages/notifications/notifi
 import { ClientportalSupportComponent } from './pages/support/support.component';
 import { ClientportalLoanApplicationComponent } from './pages/loan-application/loan-application.component';
 import { ClientportalCalculatorsComponent } from './pages/calculators/calculators.component';
+import { ClientportalApplicationStatusComponent } from './pages/application-status/application-status.component';
 import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
@@ -25,7 +26,8 @@ import { SharedModule } from '../shared/shared.module';
     ClientportalNotificationsComponent,
     ClientportalSupportComponent,
     ClientportalLoanApplicationComponent,
-    ClientportalCalculatorsComponent
+    ClientportalCalculatorsComponent,
+    ClientportalApplicationStatusComponent
   ],
   imports: [
     CommonModule,
