@@ -97,9 +97,11 @@ export class ClientportalApplicationStatusComponent implements OnInit {
       status.includes('submitted');
 
     if (isClickable) {
-      this.router.navigate(['/clientportal/application-status'], {
-        queryParams: { loanId: loan.id }
-      });
+      // Update state directly without navigation to avoid reload
+      this.loanId = String(loan.id);
+      this.showDetailView = true;
+      this.error = null;
+      this.load();
     }
   }
 
@@ -107,7 +109,13 @@ export class ClientportalApplicationStatusComponent implements OnInit {
     this.showDetailView = false;
     this.application = null;
     this.loanId = null;
-    this.router.navigate(['/clientportal/application-status']);
+    this.timelineEvents = [];
+    this.error = null;
+    // Update URL without reloading
+    this.router.navigate(['/clientportal/application-status'], {
+      replaceUrl: true,
+      queryParams: {}
+    });
   }
 
   load(): void {
