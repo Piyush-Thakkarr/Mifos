@@ -602,6 +602,21 @@ export class ClientportalLoanApplicationComponent implements OnInit {
     this.router.navigate(['/clientportal/notifications']);
   }
 
+  formatDate(date: string | Date | null | undefined): string {
+    if (!date) return 'N/A';
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      if (isNaN(dateObj.getTime())) return 'N/A';
+      return dateObj.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (e) {
+      return 'N/A';
+    }
+  }
+
   ensureDefaultOptions(): void {
     // Ensure all options arrays have at least default values if they're empty
     if (!this.repaymentFrequencyTypes || this.repaymentFrequencyTypes.length === 0) {

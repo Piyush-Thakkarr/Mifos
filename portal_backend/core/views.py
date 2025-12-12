@@ -1671,9 +1671,22 @@ def calculate_loan_schedule_view(request: HttpRequest):
         body["dateFormat"] = date_format
         body["locale"] = locale
         
-        schedule = client.calculate_loan_schedule(body)
-        response = JsonResponse(schedule, status=200)
-        return add_cors_headers(response, request)
+        try:
+            schedule = client.calculate_loan_schedule(body)
+            response = JsonResponse(schedule, status=200)
+            return add_cors_headers(response, request)
+        except requests.exceptions.Timeout:
+            # Handle timeout specifically to return proper CORS headers
+            correlation_id = new_correlation_id()
+            logger.error(f"Timeout calculating loan schedule after 30 seconds", extra={
+                "correlation_id": correlation_id,
+            })
+            response = JsonResponse({
+                "error": "schedule_calculation_timeout",
+                "details": "The schedule calculation request timed out. Please try again. If the problem persists, the Fineract server may be experiencing high load.",
+                "correlation_id": correlation_id
+            }, status=504)  # 504 Gateway Timeout
+            return add_cors_headers(response, request)
     except MifosUpstreamError as upstream_exc:
         # Check if it's a timeout error (wrapped in MifosUpstreamError)
         error_str = str(upstream_exc)
