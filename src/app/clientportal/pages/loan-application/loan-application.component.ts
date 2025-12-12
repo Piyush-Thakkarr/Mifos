@@ -144,7 +144,7 @@ export class ClientportalLoanApplicationComponent implements OnInit {
 
   loadLoanProducts(): void {
     this.loading = true;
-    this.authService.getLoanProducts().subscribe({
+    this.authService.loanProducts().subscribe({
       next: (products: any[]) => {
         this.loanProducts = products;
         this.loading = false;
@@ -158,9 +158,9 @@ export class ClientportalLoanApplicationComponent implements OnInit {
   }
 
   loadClientProfile(): void {
-    this.authService.getClientProfile().subscribe({
-      next: (profile: any) => {
-        this.clientProfile = profile;
+    this.authService.client().subscribe({
+      next: (result: any) => {
+        this.clientProfile = result.profile || result;
       },
       error: (err: any) => {
         console.error('Error loading client profile:', err);
@@ -172,7 +172,7 @@ export class ClientportalLoanApplicationComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    this.authService.getLoanProductTemplate(productId).subscribe({
+    this.authService.loanProductTemplate(productId).subscribe({
       next: (result: any) => {
         this.productTemplate = result;
         this.selectedProduct = this.loanProducts.find((p) => p.id === productId);
@@ -544,5 +544,13 @@ export class ClientportalLoanApplicationComponent implements OnInit {
     ];
     const type = allTypes.find((t) => t.id === frequencyTypeId);
     return type?.value || `Type ${frequencyTypeId}`;
+  }
+
+  getUserName(): string {
+    return this.clientProfile?.displayName || 'User';
+  }
+
+  navigateToNotifications(): void {
+    this.router.navigate(['/clientportal/notifications']);
   }
 }
