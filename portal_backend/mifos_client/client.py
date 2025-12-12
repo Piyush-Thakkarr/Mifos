@@ -84,10 +84,10 @@ class MifosClient:
         json_body = {"username": self.admin_user, "password": self.admin_pass}
 
         attempts: List[Dict[str, Any]] = [
-            # Preferred: POST with JSON body (confirmed working format) - try this first with shorter timeout
-            {"method": "POST", "path": "/authentication", "tenant_strategy": "both", "auth_type": "json_body", "timeout": 3},
+            # Preferred: POST with JSON body (confirmed working format) - try this first with longer timeout for demo server
+            {"method": "POST", "path": "/authentication", "tenant_strategy": "both", "auth_type": "json_body", "timeout": 10},
             # Fallback: Basic Auth variant - only try one more
-            {"method": "POST", "path": "/authentication", "tenant_strategy": "both", "auth_type": "basic", "timeout": 3},
+            {"method": "POST", "path": "/authentication", "tenant_strategy": "both", "auth_type": "basic", "timeout": 10},
         ]
 
         errors: List[str] = []
@@ -126,8 +126,8 @@ class MifosClient:
             )
 
             try:
-                # Use attempt-specific timeout if provided, otherwise default to 5 seconds
-                attempt_timeout = attempt.get("timeout", 5)
+                # Use attempt-specific timeout if provided, otherwise default to 10 seconds (demo server can be slow)
+                attempt_timeout = attempt.get("timeout", 10)
                 resp = requests.request(
                     attempt["method"],
                     url,
