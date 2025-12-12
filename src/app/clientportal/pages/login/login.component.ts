@@ -46,7 +46,7 @@ export class ClientportalLoginComponent {
     this.authService
       .login(username, password)
       .pipe(
-        timeout(15000), // 15 second timeout for login
+        timeout(30000), // 30 second timeout for login (increased to handle slow Fineract checks)
         catchError((err: any) => {
           this.loading = false;
           if (err?.name === 'TimeoutError') {
