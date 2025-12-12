@@ -16,6 +16,9 @@ export class ClientportalApplicationStatusComponent implements OnInit {
   application: any = null;
   timelineEvents: any[] = [];
   clientProfile: any = null;
+  allLoans: any[] = [];
+  showDetailView = false;
+  dataUnavailable = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -28,10 +31,12 @@ export class ClientportalApplicationStatusComponent implements OnInit {
     this.route.queryParams.subscribe((params) => {
       this.loanId = params['loanId'] || null;
       if (this.loanId) {
+        this.showDetailView = true;
         this.load();
       } else {
-        // If no loanId, load first loan or show message
-        this.loadFirstLoan();
+        // Show list of all loans
+        this.showDetailView = false;
+        this.loadAllLoans();
       }
     });
   }
@@ -47,26 +52,62 @@ export class ClientportalApplicationStatusComponent implements OnInit {
     });
   }
 
-  loadFirstLoan(): void {
+  loadAllLoans(): void {
     this.loading = true;
+    this.error = null;
+    this.dataUnavailable = false;
+
     this.authService.loans().subscribe({
       next: (result: any) => {
         this.loading = false;
         const loans = result.loans || [];
-        if (loans.length > 0) {
-          // Sort loans by ID descending to get the most recent first
-          loans.sort((a: any, b: any) => (b.id || 0) - (a.id || 0));
-          this.loanId = loans[0].id;
-          this.load();
-        } else {
-          this.error = 'No loan applications found.';
+
+        if (loans.length === 0) {
+          this.dataUnavailable = true;
+          this.error = 'No loan applications found. This may be a known limitation of the Fineract demo server.';
+          return;
         }
+
+        // Sort loans by ID descending to get the most recent first
+        this.allLoans = loans.sort((a: any, b: any) => (b.id || 0) - (a.id || 0));
       },
-      error: () => {
+      error: (err: any) => {
         this.loading = false;
-        this.error = 'Failed to load applications.';
+        this.dataUnavailable = true;
+        if (err?.error?.error === 'upstream_unavailable' || err?.status === 503) {
+          this.error =
+            'Unable to load loan applications. This is a known limitation of the Fineract demo server (demo.mifos.io) which may be slow or unavailable. This is not an issue with our application.';
+        } else {
+          this.error = 'Failed to load loan applications. Please try again later.';
+        }
       }
     });
+  }
+
+  viewLoanDetails(loan: any): void {
+    if (!loan || !loan.id) return;
+
+    // Only allow clicking on approved/active/disbursed loans
+    const status = this.getStatus(loan.status).toLowerCase();
+    const isClickable =
+      status.includes('approved') ||
+      status.includes('disbursed') ||
+      status.includes('active') ||
+      status.includes('pending') ||
+      status.includes('submitted');
+
+    if (isClickable) {
+      this.router.navigate(['/clientportal/application-status'], {
+        queryParams: { loanId: loan.id }
+      });
+    }
+  }
+
+  backToList(): void {
+    this.showDetailView = false;
+    this.application = null;
+    this.loanId = null;
+    this.router.navigate(['/clientportal/application-status']);
   }
 
   load(): void {
@@ -74,19 +115,33 @@ export class ClientportalApplicationStatusComponent implements OnInit {
 
     this.loading = true;
     this.error = null;
+    this.dataUnavailable = false;
 
     this.authService.loanDetails(this.loanId).subscribe({
       next: (result: any) => {
         this.loading = false;
         this.application = result.loan || null;
+
+        if (!this.application) {
+          this.dataUnavailable = true;
+          this.error =
+            'Loan application data is not available. This may be a known limitation of the Fineract demo server. This is not an issue with our application.';
+          return;
+        }
+
         this.buildTimelineEvents(result.loan);
       },
       error: (err: any) => {
         this.loading = false;
-        if (err?.error?.error) {
-          this.error = err.error.error;
+        this.dataUnavailable = true;
+
+        if (err?.error?.error === 'upstream_unavailable' || err?.status === 503) {
+          this.error =
+            'Unable to load loan application details. This is a known limitation of the Fineract demo server (demo.mifos.io) which may be slow or unavailable. This is not an issue with our application.';
+        } else if (err?.status === 404) {
+          this.error = 'Loan application not found.';
         } else {
-          this.error = 'Failed to load application status.';
+          this.error = 'Failed to load application status. This may be a known limitation of the Fineract demo server.';
         }
       }
     });
@@ -377,6 +432,12 @@ export class ClientportalApplicationStatusComponent implements OnInit {
     if (!date) return '—';
     const parsed = this.parseDate(date);
     return parsed ? parsed.date : String(date);
+  }
+
+  getAppliedDate(loan: any): any {
+    // Try to get submitted date from various possible fields
+    // Note: The loans list endpoint may not include this, so we show N/A if not available
+    return loan.submittedOnDate || loan.timeline?.submittedOnDate || loan.appliedDate || null;
   }
 
   getUserName(): string {
