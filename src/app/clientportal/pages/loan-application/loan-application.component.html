@@ -663,7 +663,25 @@
           <!-- Error Message -->
           <div class="error-banner" *ngIf="error">
             <span>⚠️</span>
-            <span>{{ error }}</span>
+            <span [innerHTML]="error"></span>
+          </div>
+
+          <!-- Demo Server Notice -->
+          <div
+            class="info-banner"
+            style="
+              margin-top: 20px;
+              padding: 12px;
+              background-color: #e3f2fd;
+              border-left: 4px solid #2196f3;
+              border-radius: 4px;
+              color: #1565c0;
+            "
+          >
+            <strong>ℹ️ Note:</strong> This demo uses the public Fineract demo server (demo.mifos.io) which may be slow
+            or timeout during loan submission. If you experience timeouts, your application may still have been
+            submitted - please check your loan list. For production use, a self-hosted Fineract instance is recommended
+            for better performance.
           </div>
         </div>
       </div>

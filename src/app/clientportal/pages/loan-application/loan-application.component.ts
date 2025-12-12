@@ -591,6 +591,23 @@ export class ClientportalLoanApplicationComponent implements OnInit {
       error: (err: any) => {
         this.loading = false;
         console.error('Error submitting application:', err);
+
+        // Handle timeout errors with user-friendly message
+        if (
+          err?.status === 504 ||
+          err?.status === 0 ||
+          err?.error?.error === 'schedule_calculation_timeout' ||
+          err?.error?.error === 'submission_timeout' ||
+          err?.error?.demo_server_limitation
+        ) {
+          this.error =
+            '⏱️ <strong>Request Timeout</strong><br>' +
+            'The loan application request timed out. This is a known limitation of the demo server (demo.mifos.io) which is slow and overloaded.<br><br>' +
+            '✅ <strong>Your application may still have been submitted successfully!</strong> Please check your <a href="/clientportal/loans" style="color: #1976d2; text-decoration: underline;">loan list</a> to verify.<br><br>' +
+            '💡 For production use, please use a self-hosted Fineract instance for better performance.';
+          return;
+        }
+
         // Extract detailed error message
         let errorMessage = 'Failed to submit loan application. Please try again.';
         if (err?.error?.details) {

@@ -1946,8 +1946,9 @@ def submit_loan_application_view(request: HttpRequest):
                 })
                 response = JsonResponse({
                     "error": "submission_timeout",
-                    "details": "The loan application request timed out. Please try again. If the problem persists, the Fineract server may be experiencing high load.",
-                    "correlation_id": correlation_id
+                    "details": "The loan application submission request timed out. This is a known limitation of the demo server (demo.mifos.io) which is slow and overloaded. Your application may still have been submitted successfully - please check your loan list to verify. For production use, please use a self-hosted Fineract instance for better performance.",
+                    "correlation_id": correlation_id,
+                    "demo_server_limitation": True
                 }, status=504)  # 504 Gateway Timeout
                 return add_cors_headers(response, request)
             # Re-raise other upstream errors to be handled by outer handler
