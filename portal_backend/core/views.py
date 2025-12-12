@@ -1961,8 +1961,13 @@ def submit_loan_application_view(request: HttpRequest):
                 "error_type": type(submit_exc).__name__,
                 "payload_sent": json.dumps(body, default=str)
             })
-            # Re-raise to be caught by outer exception handler
-            raise
+            # Don't re-raise - handle it here to ensure CORS headers are set
+            response = JsonResponse({
+                "error": "submission_failed",
+                "details": f"An error occurred while submitting the loan application: {str(submit_exc)}",
+                "correlation_id": correlation_id
+            }, status=500)
+            return add_cors_headers(response, request)
     except MifosAuthError as exc:
         correlation_id = new_correlation_id()
         logger.warning("Client ID mismatch in loan application", extra={"correlation_id": correlation_id, "error": str(exc)})
