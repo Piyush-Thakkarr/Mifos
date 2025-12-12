@@ -106,16 +106,8 @@ export class ClientportalApplicationStatusComponent implements OnInit {
   }
 
   backToList(): void {
-    this.showDetailView = false;
-    this.application = null;
-    this.loanId = null;
-    this.timelineEvents = [];
-    this.error = null;
-    // Update URL without reloading
-    this.router.navigate(['/clientportal/application-status'], {
-      replaceUrl: true,
-      queryParams: {}
-    });
+    // Redirect to loans page
+    this.router.navigate(['/clientportal/loans']);
   }
 
   load(): void {
