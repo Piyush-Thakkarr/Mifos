@@ -1971,6 +1971,17 @@ def submit_loan_application_view(request: HttpRequest):
     except (MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
         error_msg = str(exc)
+        # Check if it's a timeout error that wasn't caught by inner handler
+        if "timed out" in error_msg.lower() or "timeout" in error_msg.lower():
+            logger.error(f"Timeout submitting loan application to Fineract: {exc}", extra={
+                "correlation_id": correlation_id,
+            })
+            response = JsonResponse({
+                "error": "submission_timeout",
+                "details": "The loan application request timed out. Please try again. If the problem persists, the Fineract server may be experiencing high load.",
+                "correlation_id": correlation_id
+            }, status=504)  # 504 Gateway Timeout
+            return add_cors_headers(response, request)
         logger.exception("Failed to submit loan application", extra={"correlation_id": correlation_id, "error": error_msg, "request_body": body})
         # The error message from MifosUpstreamError should already contain detailed Fineract error
         # Determine status code based on error message

@@ -205,19 +205,19 @@ class MifosClient:
         try:
             # Use longer timeout for loan operations, but shorter for schedule calculation
             # Schedule calculation: 30 seconds (to avoid gunicorn worker timeout)
-            # Loan submission: 120 seconds (can take longer)
+            # Loan submission: 90 seconds (can take longer, but less than gunicorn worker timeout of 120s)
             is_schedule_calculation = (
                 method == "POST" and "loans" in path and
                 params and "command" in params and params.get("command") == "calculateLoanSchedule"
             )
             is_loan_submission = (
                 method == "POST" and "loans" in path and
-                (params is None or "command" not in params)
+                (params is None or ("command" in params and params.get("command") != "calculateLoanSchedule"))
             )
             if is_schedule_calculation:
                 timeout_value = 30  # 30 seconds for schedule calculation to avoid worker timeout
             elif is_loan_submission:
-                timeout_value = 120  # 120 seconds for loan submission
+                timeout_value = 90  # 90 seconds for loan submission (less than gunicorn worker timeout)
             else:
                 timeout_value = 30  # Default 30 seconds
             resp = requests.request(
