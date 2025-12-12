@@ -54,6 +54,8 @@ export class ClientportalApplicationStatusComponent implements OnInit {
         this.loading = false;
         const loans = result.loans || [];
         if (loans.length > 0) {
+          // Sort loans by ID descending to get the most recent first
+          loans.sort((a: any, b: any) => (b.id || 0) - (a.id || 0));
           this.loanId = loans[0].id;
           this.load();
         } else {

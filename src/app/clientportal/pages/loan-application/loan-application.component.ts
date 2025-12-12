@@ -480,12 +480,23 @@ export class ClientportalLoanApplicationComponent implements OnInit {
       formData.clientId = this.clientProfile.id;
     }
 
-    // Convert dates to ISO format strings
+    // Convert dates to ISO format strings - these are REQUIRED by Fineract
+    // Always include submittedOnDate (default to today if not set)
     if (step1Data.submittedOnDate) {
       formData.submittedOnDate = new Date(step1Data.submittedOnDate).toISOString().split('T')[0];
+    } else {
+      // Default to today if not provided
+      formData.submittedOnDate = new Date().toISOString().split('T')[0];
     }
+
+    // Always include expectedDisbursementDate (default to today + 7 days if not set)
     if (step1Data.expectedDisbursementDate) {
       formData.expectedDisbursementDate = new Date(step1Data.expectedDisbursementDate).toISOString().split('T')[0];
+    } else {
+      // Default to 7 days from today if not provided
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 7);
+      formData.expectedDisbursementDate = defaultDate.toISOString().split('T')[0];
     }
 
     // Add optional fields if they have values
@@ -514,30 +525,60 @@ export class ClientportalLoanApplicationComponent implements OnInit {
   }
 
   submitApplication(): void {
-    if (!this.step1Form.valid || !this.step2Form.valid) {
+    // Validate forms but allow submission even if some fields are invalid (they might be disabled)
+    // Just ensure required fields are present
+    const step1Data = this.step1Form.getRawValue();
+    const step2RawData = this.step2Form.getRawValue();
+
+    // Ensure required fields are present
+    if (!step1Data.productId) {
+      this.error = 'Please select a loan product.';
+      return;
+    }
+
+    if (!step2RawData.principalAmount || step2RawData.principalAmount <= 0) {
+      this.error = 'Please enter a valid loan amount.';
       return;
     }
 
     this.loading = true;
     this.error = null;
 
-    // Get raw values to include disabled fields
-    const step1Data = this.step1Form.getRawValue();
-    const step2RawData = this.step2Form.getRawValue();
-
     // Build form data using template's exact values
     const formData = this.buildLoanApplicationData(step1Data, step2RawData);
+
+    // Log the payload for debugging
+    console.log('Submitting loan application with data:', formData);
 
     this.authService.submitLoanApplication(formData).subscribe({
       next: (result: any) => {
         this.loading = false;
-        // Redirect to success page or loan details
-        this.router.navigate(['/clientportal/loans']);
+        // Redirect to application status page with the new loan ID
+        const loanId = result.loanId || result.resourceId || result.id;
+        if (loanId) {
+          this.router.navigate(['/clientportal/application-status'], {
+            queryParams: { loanId: loanId }
+          });
+        } else {
+          // Fallback to loans page if no ID returned
+          this.router.navigate(['/clientportal/loans']);
+        }
       },
       error: (err: any) => {
         this.loading = false;
         console.error('Error submitting application:', err);
-        this.error = err?.error?.details || err?.error?.error || 'Failed to submit loan application. Please try again.';
+        // Extract detailed error message
+        let errorMessage = 'Failed to submit loan application. Please try again.';
+        if (err?.error?.details) {
+          errorMessage = err.error.details;
+        } else if (err?.error?.error) {
+          errorMessage = err.error.error;
+        } else if (err?.error?.errors && Array.isArray(err.error.errors)) {
+          // Extract first error message from errors array
+          const firstError = err.error.errors[0];
+          errorMessage = firstError?.defaultUserMessage || firstError?.developerMessage || errorMessage;
+        }
+        this.error = errorMessage;
       }
     });
   }
