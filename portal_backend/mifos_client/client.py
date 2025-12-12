@@ -372,12 +372,18 @@ class MifosClient:
 
     def fetch_savings_transactions(self, savings_account_id: int, limit: int = 10) -> List[Dict[str, Any]]:
         """Fetch recent transactions for a savings account."""
-        path = f"/savingsaccounts/{savings_account_id}/transactions"
+        # Use the /search endpoint which supports GET requests
+        path = f"/savingsaccounts/{savings_account_id}/transactions/search"
         params = {"limit": limit, "offset": 0}
         try:
             data = self.fetch_with_admin(path, params=params)
+            # The search endpoint returns pageItems array
             return data.get("pageItems", [])
         except MifosNotFoundError:
+            return []
+        except MifosUpstreamError as e:
+            # If search endpoint fails, return empty list (don't block other operations)
+            logger.warning(f"Failed to fetch savings transactions for account {savings_account_id}: {e}")
             return []
 
     def fetch_loan_transactions(self, loan_id: int) -> List[Dict[str, Any]]:
