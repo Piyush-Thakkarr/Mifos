@@ -134,9 +134,12 @@ export class ClientportalApplicationStatusComponent implements OnInit {
     // Current status event
     const currentStatus = this.getStatusLabel(loan.status);
     if (currentStatus !== 'Submitted') {
+      const fallbackDate =
+        submittedDate?.date ||
+        new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
       events.push({
         event: currentStatus,
-        date: approvedDate?.date || this.addDays(submittedDate?.date || new Date(), 1),
+        date: approvedDate?.date || this.addDays(fallbackDate, 1),
         time: approvedDate?.time || '9:20 AM',
         performedBy: 'Loan Officer',
         status: this.getStatusBadgeType(loan.status)
