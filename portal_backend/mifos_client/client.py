@@ -207,9 +207,10 @@ class MifosClient:
             # This includes loan submission and schedule calculation
             is_loan_operation = (
                 method == "POST" and "loans" in path and (
-                    json_data is None or  # Loan submission
-                    params is None or  # Loan submission
-                    (params and "command" in params and params.get("command") == "calculateLoanSchedule")  # Schedule calculation
+                    # Schedule calculation has command parameter
+                    (params and "command" in params and params.get("command") == "calculateLoanSchedule") or
+                    # Loan submission doesn't have command parameter (or has different command)
+                    (params is None or "command" not in params)
                 )
             )
             timeout_value = 90 if is_loan_operation else 30
