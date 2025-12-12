@@ -173,9 +173,7 @@
         >
           <h3 style="margin-top: 0; color: #856404">⚠️ Data Unavailable</h3>
           <p style="color: #856404; margin-bottom: 10px">{{ error }}</p>
-          <button (click)="backToList()" class="btn btn-secondary" style="margin-top: 10px">
-            ← Back to Applications
-          </button>
+          <button (click)="backToList()" class="btn btn-secondary" style="margin-top: 10px">← Back to Loans</button>
         </div>
 
         <div *ngIf="!loading && !error && application" class="application-detail-content">
@@ -304,7 +302,7 @@
 
           <!-- Navigation -->
           <div class="navigation-actions">
-            <button (click)="backToList()" class="btn btn-secondary">← Back to Applications</button>
+            <button (click)="backToList()" class="btn btn-secondary">← Back to Loans</button>
             <button (click)="viewApplicationDetails()" class="btn-view-details" *ngIf="loanId">
               <span>👁️</span>
               View Full Loan Details
