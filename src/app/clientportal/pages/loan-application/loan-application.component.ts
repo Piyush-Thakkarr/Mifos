@@ -173,6 +173,11 @@ export class ClientportalLoanApplicationComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
+    // Reset form to clear previous product's data
+    this.step2Form.reset();
+    this.productTemplate = null;
+    this.selectedProduct = null;
+
     this.authService.loanProductTemplate(productId).subscribe({
       next: (result: any) => {
         this.productTemplate = result;
@@ -181,7 +186,7 @@ export class ClientportalLoanApplicationComponent implements OnInit {
         // Populate dynamic options from template
         this.populateOptionsFromTemplate(result);
 
-        // Populate form with template values
+        // Populate form with template values (this will set all fields from API)
         this.populateFormFromTemplate(result);
 
         // Apply field restrictions based on allowAttributeOverrides
@@ -197,6 +202,7 @@ export class ClientportalLoanApplicationComponent implements OnInit {
         // Fallback: use product data directly
         const product = this.loanProducts.find((p) => p.id === productId);
         if (product) {
+          this.selectedProduct = product;
           this.populateFormFromProduct(product);
         }
       }
@@ -271,25 +277,56 @@ export class ClientportalLoanApplicationComponent implements OnInit {
     this.step2Form.get('transactionProcessingStrategyCode')?.enable();
 
     // Populate form with template values - use exact values from template
-    const repaymentFreqTypeId = template.repaymentFrequencyType?.id ?? template.repaymentFrequencyType?.value ?? '';
-    const termFreqTypeId = template.termPeriodFrequencyType?.id ?? template.termPeriodFrequencyType?.value ?? '';
+    // CRITICAL: Extract IDs correctly - template may have nested objects
+    const repaymentFreqTypeId =
+      template.repaymentFrequencyType?.id ??
+      (typeof template.repaymentFrequencyType === 'object'
+        ? template.repaymentFrequencyType?.id
+        : template.repaymentFrequencyType) ??
+      '';
+    const termFreqTypeId =
+      template.termPeriodFrequencyType?.id ??
+      (typeof template.termPeriodFrequencyType === 'object'
+        ? template.termPeriodFrequencyType?.id
+        : template.termPeriodFrequencyType) ??
+      '';
     const interestRateFreqTypeId =
-      template.interestRateFrequencyType?.id ?? template.interestRateFrequencyType?.value ?? '';
+      template.interestRateFrequencyType?.id ??
+      (typeof template.interestRateFrequencyType === 'object'
+        ? template.interestRateFrequencyType?.id
+        : template.interestRateFrequencyType) ??
+      '';
     const loanTermFreq = template.termFrequency ?? template.loanTermFrequency ?? '';
 
+    // CRITICAL: Use exact values from template - these come from the API
+    const interestRate = template.interestRatePerPeriod ?? '';
+    const principal = template.principal ?? template.proposedPrincipal ?? template.approvedPrincipal ?? '';
+    const numberOfRepayments = template.numberOfRepayments ?? '';
+    const repaymentEvery = template.repaymentEvery ?? '';
+
     this.step2Form.patchValue({
-      principalAmount: template.principal || '',
-      numberOfRepayments: template.numberOfRepayments || '',
-      repaymentEvery: template.repaymentEvery || '',
+      principalAmount: principal,
+      numberOfRepayments: numberOfRepayments,
+      repaymentEvery: repaymentEvery,
       repaymentFrequencyType: repaymentFreqTypeId, // Use template's exact value
       loanTermFrequency: loanTermFreq, // Use template's termFrequency
       loanTermFrequencyType: termFreqTypeId, // Use template's exact value
-      interestRatePerPeriod: template.interestRatePerPeriod || '', // Always read-only
+      interestRatePerPeriod: interestRate, // Always read-only - use exact value from API
       interestRateFrequencyType: interestRateFreqTypeId, // Always read-only
-      interestType: template.interestType?.id ?? template.interestType?.value ?? '',
-      amortizationType: template.amortizationType?.id ?? template.amortizationType?.value ?? '',
+      interestType:
+        template.interestType?.id ??
+        (typeof template.interestType === 'object' ? template.interestType?.id : template.interestType) ??
+        '',
+      amortizationType:
+        template.amortizationType?.id ??
+        (typeof template.amortizationType === 'object' ? template.amortizationType?.id : template.amortizationType) ??
+        '',
       interestCalculationPeriodType:
-        template.interestCalculationPeriodType?.id ?? template.interestCalculationPeriodType?.value ?? '',
+        template.interestCalculationPeriodType?.id ??
+        (typeof template.interestCalculationPeriodType === 'object'
+          ? template.interestCalculationPeriodType?.id
+          : template.interestCalculationPeriodType) ??
+        '',
       transactionProcessingStrategyCode: template.transactionProcessingStrategyCode || ''
     });
 
@@ -303,22 +340,52 @@ export class ClientportalLoanApplicationComponent implements OnInit {
     // First, ensure we have default options if template didn't provide them
     this.ensureDefaultOptions();
 
-    const repaymentFreqTypeId = product.repaymentFrequencyType?.id ?? product.repaymentFrequencyType?.value ?? '';
-    const termFreqTypeId = product.termPeriodFrequencyType?.id ?? product.termPeriodFrequencyType?.value ?? '';
+    // CRITICAL: Extract IDs correctly - product may have nested objects
+    const repaymentFreqTypeId =
+      product.repaymentFrequencyType?.id ??
+      (typeof product.repaymentFrequencyType === 'object'
+        ? product.repaymentFrequencyType?.id
+        : product.repaymentFrequencyType) ??
+      '';
+    const termFreqTypeId =
+      product.termPeriodFrequencyType?.id ??
+      (typeof product.termPeriodFrequencyType === 'object'
+        ? product.termPeriodFrequencyType?.id
+        : product.termPeriodFrequencyType) ??
+      '';
     const interestRateFreqTypeId =
-      product.interestRateFrequencyType?.id ?? product.interestRateFrequencyType?.value ?? '';
+      product.interestRateFrequencyType?.id ??
+      (typeof product.interestRateFrequencyType === 'object'
+        ? product.interestRateFrequencyType?.id
+        : product.interestRateFrequencyType) ??
+      '';
+
+    // CRITICAL: Use exact values from product - these come from the API
+    const interestRate = product.interestRatePerPeriod ?? '';
+    const principal = product.principal ?? '';
 
     this.step2Form.patchValue({
-      principalAmount: product.principal || '',
+      principalAmount: principal,
       numberOfRepayments: product.numberOfRepayments || '',
       repaymentEvery: product.repaymentEvery || '',
       repaymentFrequencyType: repaymentFreqTypeId,
       loanTermFrequencyType: termFreqTypeId,
-      interestRatePerPeriod: product.interestRatePerPeriod || '',
+      interestRatePerPeriod: interestRate, // Use exact value from API
       interestRateFrequencyType: interestRateFreqTypeId,
-      interestType: product.interestType?.id ?? '',
-      amortizationType: product.amortizationType?.id ?? '',
-      interestCalculationPeriodType: product.interestCalculationPeriodType?.id ?? '',
+      interestType:
+        product.interestType?.id ??
+        (typeof product.interestType === 'object' ? product.interestType?.id : product.interestType) ??
+        '',
+      amortizationType:
+        product.amortizationType?.id ??
+        (typeof product.amortizationType === 'object' ? product.amortizationType?.id : product.amortizationType) ??
+        '',
+      interestCalculationPeriodType:
+        product.interestCalculationPeriodType?.id ??
+        (typeof product.interestCalculationPeriodType === 'object'
+          ? product.interestCalculationPeriodType?.id
+          : product.interestCalculationPeriodType) ??
+        '',
       transactionProcessingStrategyCode: product.transactionProcessingStrategyCode || ''
     });
 
