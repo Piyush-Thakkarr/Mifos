@@ -206,13 +206,14 @@ class MifosClient:
             # Use longer timeout for loan operations, but shorter for schedule calculation
             # Schedule calculation: 30 seconds (to avoid gunicorn worker timeout)
             # Loan submission: 90 seconds (can take longer, but less than gunicorn worker timeout of 120s)
+            # Note: params is converted to {} if None on line 189, so check for empty dict or missing command
             is_schedule_calculation = (
                 method == "POST" and "loans" in path and
                 params and "command" in params and params.get("command") == "calculateLoanSchedule"
             )
             is_loan_submission = (
                 method == "POST" and "loans" in path and
-                (params is None or ("command" in params and params.get("command") != "calculateLoanSchedule"))
+                (not params or "command" not in params or params.get("command") != "calculateLoanSchedule")
             )
             if is_schedule_calculation:
                 timeout_value = 30  # 30 seconds for schedule calculation to avoid worker timeout
