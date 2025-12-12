@@ -182,12 +182,30 @@ SESSION_COOKIE_SAMESITE = "None" if not DEBUG else "Lax"
 SESSION_COOKIE_SECURE = True  # Always True when SameSite=None (required by browsers)
 SESSION_COOKIE_AGE = 86400  # 24 hours
 
-MIFOS_BASE_URL = os.getenv("MIFOS_BASE_URL", "https://localhost:8443/fineract-provider/api/v1")
+# Fineract Configuration - Auto-detect environment
+# Check if we're running on Railway (has RAILWAY_ENVIRONMENT or PORT env var)
+is_railway = os.getenv("RAILWAY_ENVIRONMENT") is not None or os.getenv("PORT") is not None
+is_local = not is_railway and DEBUG
+
+# Set defaults based on environment
+if is_railway:
+    # Railway/Production: Use demo.mifos.io
+    default_fineract_url = "https://demo.mifos.io/fineract-provider/api/v1"
+    default_verify_ssl = "true"
+    default_client_id = "3"
+else:
+    # Local development: Use local Docker instance
+    default_fineract_url = "https://localhost:8443/fineract-provider/api/v1"
+    default_verify_ssl = "false"
+    default_client_id = "1"
+
+# Environment variables take precedence over defaults
+MIFOS_BASE_URL = os.getenv("MIFOS_BASE_URL", default_fineract_url)
 MIFOS_TENANT_ID = os.getenv("MIFOS_TENANT_ID", "default")
 MIFOS_ADMIN_USER = os.getenv("MIFOS_ADMIN_USER", "mifos")
 MIFOS_ADMIN_PASS = os.getenv("MIFOS_ADMIN_PASS", "password")
-MIFOS_VERIFY_SSL = os.getenv("MIFOS_VERIFY_SSL", "true").lower() == "true"
-MIFOS_CLIENT_ID = os.getenv("MIFOS_CLIENT_ID", "3")
+MIFOS_VERIFY_SSL = os.getenv("MIFOS_VERIFY_SSL", default_verify_ssl).lower() == "true"
+MIFOS_CLIENT_ID = os.getenv("MIFOS_CLIENT_ID", default_client_id)
 
 LOGGING = {
     "version": 1,
