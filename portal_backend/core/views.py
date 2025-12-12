@@ -5,6 +5,8 @@ import csv
 from datetime import date, timedelta
 from io import StringIO
 
+import requests
+
 from django.http import JsonResponse, HttpRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
