@@ -8,6 +8,7 @@ import { ClientportalTransactionsComponent } from './pages/transactions/transact
 import { ClientportalNotificationsComponent } from './pages/notifications/notifications.component';
 import { ClientportalSupportComponent } from './pages/support/support.component';
 import { ClientportalLoanApplicationComponent } from './pages/loan-application/loan-application.component';
+import { ClientportalCalculatorsComponent } from './pages/calculators/calculators.component';
 
 const routes: Routes = [
   {
@@ -46,6 +47,10 @@ const routes: Routes = [
   {
     path: 'loan-application',
     component: ClientportalLoanApplicationComponent
+  },
+  {
+    path: 'calculators',
+    component: ClientportalCalculatorsComponent
   }
 ];
 
