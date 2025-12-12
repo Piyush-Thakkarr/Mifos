@@ -94,62 +94,115 @@ export class ClientportalApplicationStatusComponent implements OnInit {
     if (!loan) return;
 
     const events: any[] = [];
+    const timeline = loan.timeline || {};
     const transactions = loan.transactions || [];
 
-    // Application submitted event
-    const submittedDate = this.parseDate(loan.timeline?.submittedOnDate || loan.submittedOnDate);
+    // Application submitted event - use real timeline data
+    const submittedDate = this.parseDate(timeline.submittedOnDate || loan.submittedOnDate);
     if (submittedDate) {
+      const submittedBy =
+        timeline.submittedByFirstname && timeline.submittedByLastname
+          ? `${timeline.submittedByFirstname} ${timeline.submittedByLastname}`
+          : timeline.submittedByUsername || this.clientProfile?.displayName || 'You';
+
       events.push({
         event: 'Application Submitted',
         date: submittedDate.date,
         time: submittedDate.time,
-        performedBy: this.clientProfile?.displayName || 'You',
+        performedBy: submittedBy,
         status: 'Completed'
       });
     }
 
-    // Document verification (if available)
-    const approvedDate = this.parseDate(loan.timeline?.approvedOnDate);
-    if (approvedDate && submittedDate) {
+    // Approved event - use real timeline data
+    const approvedDate = this.parseDate(timeline.approvedOnDate);
+    if (approvedDate) {
+      const approvedBy =
+        timeline.approvedByFirstname && timeline.approvedByLastname
+          ? `${timeline.approvedByFirstname} ${timeline.approvedByLastname}`
+          : timeline.approvedByUsername || 'Loan Officer';
+
       events.push({
-        event: 'Document Verification',
-        date: this.addDays(submittedDate.date, 1),
-        time: '9:15 AM',
-        performedBy: 'System',
+        event: 'Approved',
+        date: approvedDate.date,
+        time: approvedDate.time,
+        performedBy: approvedBy,
         status: 'Completed'
       });
     }
 
-    // Sent for approval
-    if (approvedDate && submittedDate) {
+    // Disbursed event - use real timeline data
+    const disbursedDate = this.parseDate(timeline.actualDisbursementDate);
+    if (disbursedDate) {
+      const disbursedBy =
+        timeline.disbursedByFirstname && timeline.disbursedByLastname
+          ? `${timeline.disbursedByFirstname} ${timeline.disbursedByLastname}`
+          : timeline.disbursedByUsername || 'System';
+
       events.push({
-        event: 'Sent for Approval',
-        date: this.addDays(submittedDate.date, 1),
-        time: '9:20 AM',
-        performedBy: 'System',
+        event: 'Disbursed',
+        date: disbursedDate.date,
+        time: disbursedDate.time,
+        performedBy: disbursedBy,
         status: 'Completed'
       });
     }
 
-    // Current status event
+    // Add transaction-based events (disbursements, repayments, etc.)
+    transactions.forEach((txn: any) => {
+      const txnType = txn.type?.value || txn.type?.code || '';
+      const txnDate = this.parseDate(txn.date);
+
+      if (!txnDate) return;
+
+      // Only include significant transaction types
+      if (txnType.toLowerCase().includes('disbursement')) {
+        // Already handled by timeline.actualDisbursementDate
+        return;
+      } else if (txnType.toLowerCase().includes('repayment') && txn.amount > 0) {
+        events.push({
+          event: 'Repayment Received',
+          date: txnDate.date,
+          time: txnDate.time,
+          performedBy: 'System',
+          status: 'Completed'
+        });
+      } else if (txnType.toLowerCase().includes('charge')) {
+        events.push({
+          event: 'Charge Applied',
+          date: txnDate.date,
+          time: txnDate.time,
+          performedBy: 'System',
+          status: 'Completed'
+        });
+      }
+    });
+
+    // Current status event if not already covered
     const currentStatus = this.getStatusLabel(loan.status);
-    if (currentStatus !== 'Submitted') {
-      const fallbackDate =
-        submittedDate?.date ||
-        new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    const statusAlreadyInEvents = events.some((e) => e.event === currentStatus);
+
+    if (!statusAlreadyInEvents && currentStatus !== 'Submitted') {
+      // Use the most recent event date or submitted date as fallback
+      const lastEventDate =
+        events.length > 0
+          ? events[events.length - 1].date
+          : submittedDate?.date ||
+            new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
       events.push({
         event: currentStatus,
-        date: approvedDate?.date || this.addDays(fallbackDate, 1),
-        time: approvedDate?.time || '9:20 AM',
-        performedBy: 'Loan Officer',
+        date: lastEventDate,
+        time: 'N/A',
+        performedBy: 'System',
         status: this.getStatusBadgeType(loan.status)
       });
     }
 
-    // Sort events by date
+    // Sort events by date and time
     this.timelineEvents = events.sort((a, b) => {
-      const dateA = new Date(a.date + ' ' + a.time);
-      const dateB = new Date(b.date + ' ' + b.time);
+      const dateA = new Date(a.date + ' ' + (a.time || '00:00'));
+      const dateB = new Date(b.date + ' ' + (b.time || '00:00'));
       return dateA.getTime() - dateB.getTime();
     });
   }
@@ -329,7 +382,29 @@ export class ClientportalApplicationStatusComponent implements OnInit {
   }
 
   getLastModifiedTime(loan: any): string {
-    const parsed = this.parseDate(loan.timeline?.lastModifiedDate || loan.lastModifiedDate);
+    // Use the most recent timeline date as last modified
+    const timeline = loan.timeline || {};
+    const dates = [
+      timeline.actualDisbursementDate,
+      timeline.approvedOnDate,
+      timeline.submittedOnDate,
+      loan.lastModifiedDate
+    ].filter(Boolean);
+
+    if (dates.length === 0) return 'N/A';
+
+    // Get the most recent date
+    const mostRecent = dates.reduce((latest, current) => {
+      const latestDate = this.parseDate(latest);
+      const currentDate = this.parseDate(current);
+      if (!latestDate) return current;
+      if (!currentDate) return latest;
+      return new Date(latestDate.date + ' ' + latestDate.time) > new Date(currentDate.date + ' ' + currentDate.time)
+        ? latest
+        : current;
+    });
+
+    const parsed = this.parseDate(mostRecent);
     return parsed?.time || 'N/A';
   }
 }
