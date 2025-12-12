@@ -236,6 +236,18 @@ class MifosClient:
         except requests.RequestException as exc:  # type: ignore[no-untyped-def]
             raise MifosUpstreamError(str(exc)) from exc
 
+        # Log response status - use warning for non-success to make it visible
+        if resp.status_code not in (200, 201, 204):
+            logger.warning(
+                f"Fineract API returned non-success status {resp.status_code}",
+                extra={
+                    "method": method,
+                    "url": url,
+                    "status_code": resp.status_code,
+                    "response_preview": resp.text[:500] if resp.text else None,
+                },
+            )
+        
         if resp.status_code in (200, 201, 204):
             try:
                 return resp.json()
