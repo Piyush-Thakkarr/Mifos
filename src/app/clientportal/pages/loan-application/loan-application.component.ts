@@ -468,7 +468,20 @@ export class ClientportalLoanApplicationComponent implements OnInit {
       error: (err: any) => {
         this.loading = false;
         console.error('Error calculating schedule:', err);
-        this.error = err?.error?.details || err?.error?.error || 'Failed to calculate repayment schedule.';
+        // Don't show error if it's a timeout - schedule calculation is optional
+        // Users can still submit the application without seeing the schedule
+        if (err?.status === 504 || err?.error?.error === 'schedule_calculation_timeout') {
+          // Schedule calculation timed out - this is okay, user can still submit
+          this.error = null; // Clear error, allow submission
+          console.warn('Schedule calculation timed out, but user can still submit application');
+        } else {
+          // For other errors, show a warning but don't block
+          this.error =
+            'Schedule preview unavailable: ' +
+            (err?.error?.details ||
+              err?.error?.error ||
+              'Unable to calculate repayment schedule. You can still submit the application.');
+        }
       }
     });
   }
@@ -488,7 +501,9 @@ export class ClientportalLoanApplicationComponent implements OnInit {
     if (this.currentStep === 1 && this.step1Form.valid) {
       this.currentStep = 2;
     } else if (this.currentStep === 2 && this.step2Form.valid) {
+      // Try to calculate schedule, but don't block navigation if it fails
       this.calculateSchedule();
+      // Always allow navigation to step 3, even if schedule calculation is in progress or fails
       this.currentStep = 3;
     }
   }

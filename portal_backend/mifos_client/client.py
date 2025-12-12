@@ -213,7 +213,7 @@ class MifosClient:
                     (params is None or "command" not in params)
                 )
             )
-            timeout_value = 90 if is_loan_operation else 30
+            timeout_value = 120 if is_loan_operation else 30  # Increased to 120 seconds for loan operations
             resp = requests.request(
                 method,
                 url,
