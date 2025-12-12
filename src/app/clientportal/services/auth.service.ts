@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { timeout, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 interface LoginResponse {
@@ -148,8 +149,26 @@ export class AuthService {
   }
 
   submitLoanApplication(formData: any): Observable<unknown> {
-    return this.http.post<unknown>(`${this.baseUrl}/clientportal/loans/apply`, formData, {
-      withCredentials: true
-    });
+    return this.http
+      .post<unknown>(`${this.baseUrl}/clientportal/loans/apply`, formData, {
+        withCredentials: true
+      })
+      .pipe(
+        timeout(30000), // 30 second timeout
+        catchError((error) => {
+          // If it's a timeout error, return a structured error that the component can handle
+          if (error.name === 'TimeoutError' || error.message?.includes('timeout')) {
+            return throwError(() => ({
+              status: 504,
+              error: {
+                error: 'submission_timeout',
+                details: 'Request timed out after 30 seconds',
+                demo_server_limitation: true
+              }
+            }));
+          }
+          return throwError(() => error);
+        })
+      );
   }
 }
