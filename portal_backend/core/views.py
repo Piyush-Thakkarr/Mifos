@@ -71,14 +71,20 @@ def login_view(request: HttpRequest):
 
     client = MifosClient()
 
+    # Try to verify upstream Fineract availability, but don't block login if it's temporarily unavailable
+    # This allows users to log in even if the demo server is down/slow
     try:
         # Verify upstream Fineract availability using admin credentials only.
         client.auth_check()
+        logger.info("Fineract connectivity verified during login")
     except (MifosAuthError, MifosUpstreamError) as e:
         correlation_id = new_correlation_id()
-        logger.exception("Upstream Fineract error during admin auth_check", extra={"correlation_id": correlation_id, "error": str(e)})
-        response = JsonResponse({"error": "upstream_unavailable", "correlation_id": correlation_id, "message": str(e)}, status=503)
-        return add_cors_headers(response, request)
+        # Log warning but don't block login - demo server can be slow/down
+        logger.warning(
+            "Fineract temporarily unavailable during login (non-blocking)",
+            extra={"correlation_id": correlation_id, "error": str(e)}
+        )
+        # Continue with login - user can still access the portal, but some features may not work
     except Exception as e:
         # Catch any other unexpected errors
         correlation_id = new_correlation_id()
