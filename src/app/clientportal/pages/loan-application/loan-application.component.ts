@@ -310,14 +310,20 @@ export class ClientportalLoanApplicationComponent implements OnInit {
           this.step2Form.get('repaymentFrequencyType')?.enable();
 
           // Use basic product data to populate form
+          // IMPORTANT: Use the product's frequency types exactly as they are configured
+          const repaymentFreqType = product.repaymentFrequencyType?.id ?? product.repaymentFrequencyType?.value ?? '';
+          const termFreqType = product.termPeriodFrequencyType?.id ?? product.termPeriodFrequencyType?.value ?? '';
+          const interestRateFreqType =
+            product.interestRateFrequencyType?.id ?? product.interestRateFrequencyType?.value ?? '';
+
           this.step2Form.patchValue({
             principalAmount: product.principal || '',
             numberOfRepayments: product.numberOfRepayments || '',
             repaymentEvery: product.repaymentEvery || '',
-            repaymentFrequencyType: product.repaymentFrequencyType?.id || '',
-            loanTermFrequencyType: product.termPeriodFrequencyType?.id || '',
+            repaymentFrequencyType: repaymentFreqType, // Use product's exact value
+            loanTermFrequencyType: termFreqType, // Use product's exact value
             interestRatePerPeriod: product.interestRatePerPeriod || '', // Always read-only
-            interestRateFrequencyType: product.interestRateFrequencyType?.id || '',
+            interestRateFrequencyType: interestRateFreqType, // Use product's exact value
             interestType: product.interestType?.id || '',
             amortizationType: product.amortizationType?.id || '',
             interestCalculationPeriodType: product.interestCalculationPeriodType?.id || '',
@@ -346,10 +352,13 @@ export class ClientportalLoanApplicationComponent implements OnInit {
             if (!overrides.repaymentEvery) {
               this.step2Form.get('repaymentEvery')?.disable();
               this.step2Form.get('repaymentFrequencyType')?.disable();
-              // Ensure we use the product's frequency type
-              if (product.repaymentFrequencyType?.id !== undefined) {
+              // Ensure we use the product's frequency type (check both id and value)
+              const productRepaymentFreq = product.repaymentFrequencyType?.id ?? product.repaymentFrequencyType?.value;
+              const productTermFreq = product.termPeriodFrequencyType?.id ?? product.termPeriodFrequencyType?.value;
+              if (productRepaymentFreq !== undefined) {
                 this.step2Form.patchValue({
-                  repaymentFrequencyType: product.repaymentFrequencyType.id
+                  repaymentFrequencyType: productRepaymentFreq,
+                  loanTermFrequencyType: productTermFreq ?? productRepaymentFreq // Use same as repayment if term not specified
                 });
               }
             }
