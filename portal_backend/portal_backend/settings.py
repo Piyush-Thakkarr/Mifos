@@ -183,15 +183,39 @@ SESSION_COOKIE_SECURE = True  # Always True when SameSite=None (required by brow
 SESSION_COOKIE_AGE = 86400  # 24 hours
 
 # Fineract Configuration - Auto-detect environment
-# Priority: Environment variables > Auto-detection > Defaults
+# Priority: Environment variables > Cloudflare Tunnel > Defaults
 # 
-# To use your own Fineract server on Railway:
-# 1. Set MIFOS_BASE_URL in Railway environment variables
-# 2. Example: MIFOS_BASE_URL=https://your-fineract.up.railway.app/fineract-provider/api/v1
+# Local Development (REQUIRES Cloudflare Tunnel):
+# 1. Run: ./start-cloudflare-tunnel.sh (saves URL to /tmp/cloudflared-url.txt)
+# 2. Or set MIFOS_BASE_URL environment variable with tunnel URL
+# 3. Or set CLOUDFLARE_TUNNEL_URL environment variable
+# If tunnel is not available, an error will be raised (no fallback to localhost)
+#
+# Railway/Production:
+# 1. Set CLOUDFLARE_TUNNEL_URL or MIFOS_BASE_URL in environment variables
+# 2. Falls back to demo.mifos.io if tunnel not configured
+# 3. Example: MIFOS_BASE_URL=https://your-fineract.up.railway.app/fineract-provider/api/v1
 #
 # Check if we're running on Railway (has RAILWAY_ENVIRONMENT or PORT env var)
 is_railway = os.getenv("RAILWAY_ENVIRONMENT") is not None or os.getenv("PORT") is not None
 is_local = not is_railway and DEBUG
+
+# Try to get Cloudflare Tunnel URL
+# Priority: Environment variable > Saved file (local only)
+cloudflare_tunnel_url = os.getenv("CLOUDFLARE_TUNNEL_URL")
+if not cloudflare_tunnel_url and is_local:
+    try:
+        tunnel_url_file = Path("/tmp/cloudflared-url.txt")
+        if tunnel_url_file.exists():
+            cloudflare_tunnel_url = tunnel_url_file.read_text().strip()
+    except Exception:
+        pass  # Ignore errors reading tunnel URL
+
+# Add /fineract-provider/api/v1 suffix if needed
+if cloudflare_tunnel_url and not cloudflare_tunnel_url.endswith("/fineract-provider/api/v1"):
+    if not cloudflare_tunnel_url.endswith("/"):
+        cloudflare_tunnel_url += "/"
+    cloudflare_tunnel_url += "fineract-provider/api/v1"
 
 # Set defaults based on environment (only if MIFOS_BASE_URL is not explicitly set)
 if os.getenv("MIFOS_BASE_URL"):
@@ -204,16 +228,27 @@ if os.getenv("MIFOS_BASE_URL"):
         default_verify_ssl = "false"
     # Default client ID when URL is explicitly set (can be overridden via env var)
     default_client_id = "1"
+elif cloudflare_tunnel_url:
+    # Use Cloudflare Tunnel URL (available for both local and deployed)
+    default_fineract_url = cloudflare_tunnel_url
+    default_verify_ssl = "false"  # Cloudflare handles SSL, but Fineract uses self-signed cert
+    default_client_id = "1"
 elif is_railway:
-    # Railway/Production: Use demo.mifos.io as fallback (if not explicitly set)
+    # Railway/Production: Use demo.mifos.io as fallback (if tunnel not available)
     default_fineract_url = "https://demo.mifos.io/fineract-provider/api/v1"
     default_verify_ssl = "true"
     default_client_id = "3"
 else:
-    # Local development: Use local Docker instance
-    default_fineract_url = "https://localhost:8443/fineract-provider/api/v1"
-    default_verify_ssl = "false"
-    default_client_id = "1"
+    # Local development: Require Cloudflare Tunnel - no fallback to localhost
+    raise ValueError(
+        "❌ Cloudflare Tunnel is not available!\n\n"
+        "To fix this:\n"
+        "1. Start the tunnel: cd Mifos && ./start-cloudflare-tunnel.sh\n"
+        "2. Or set MIFOS_BASE_URL environment variable\n"
+        "3. Or set CLOUDFLARE_TUNNEL_URL environment variable\n\n"
+        "The tunnel URL should be saved in /tmp/cloudflared-url.txt\n"
+        "Check if tunnel is running: ps aux | grep cloudflared"
+    )
 
 # Environment variables take precedence over defaults
 MIFOS_BASE_URL = os.getenv("MIFOS_BASE_URL", default_fineract_url)
