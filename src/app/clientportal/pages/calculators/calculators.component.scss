@@ -27,7 +27,8 @@
         gap: 12px;
 
         .logo-icon {
-          font-size: 32px;
+          font-size: 24px;
+          color: #1976d2;
           width: 48px;
           height: 48px;
           display: flex;
@@ -70,9 +71,13 @@
         border-left: 3px solid transparent;
 
         .nav-icon {
-          font-size: 20px;
+          font-size: 18px;
           width: 24px;
           text-align: center;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: inherit;
         }
 
         &:hover {
