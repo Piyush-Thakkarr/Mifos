@@ -471,16 +471,26 @@ export class ClientportalLoanApplicationComponent implements OnInit {
       next: (result: any) => {
         clearTimeout(timeout);
         // Extract repayment schedule from response
+        let periods: any[] = [];
         if (result.periods && Array.isArray(result.periods)) {
-          this.repaymentSchedule = result.periods;
-          this.calculateTotals();
+          periods = result.periods;
         } else if (result.repaymentSchedule && Array.isArray(result.repaymentSchedule)) {
-          this.repaymentSchedule = result.repaymentSchedule;
-          this.calculateTotals();
+          periods = result.repaymentSchedule;
         } else if (result.repaymentSchedule?.periods && Array.isArray(result.repaymentSchedule.periods)) {
-          this.repaymentSchedule = result.repaymentSchedule.periods;
-          this.calculateTotals();
+          periods = result.repaymentSchedule.periods;
         }
+        
+        // Filter out disbursement periods (periods with zero principal, interest, and total)
+        // These are typically the first period representing the loan disbursement date
+        this.repaymentSchedule = periods.filter((period: any) => {
+          const principal = period.principalDue || period.principal || 0;
+          const interest = period.interestCharged || period.interest || 0;
+          const total = period.totalDueForPeriod || period.totalDue || 0;
+          // Keep periods that have at least one non-zero value (actual repayment periods)
+          return principal > 0 || interest > 0 || total > 0;
+        });
+        
+        this.calculateTotals();
       },
       error: (err: any) => {
         clearTimeout(timeout);
@@ -509,10 +519,15 @@ export class ClientportalLoanApplicationComponent implements OnInit {
     if (this.repaymentSchedule.length > 0) {
       const principal = this.step2Form.get('principalAmount')?.value || 0;
       this.totalInterest = this.repaymentSchedule.reduce((sum: number, period: any) => {
-        return sum + (period.interestCharged || 0);
+        return sum + (period.interestCharged || period.interest || 0);
       }, 0);
       this.totalAmount = principal + this.totalInterest;
-      this.calculatedEMI = this.repaymentSchedule[0]?.totalDueForPeriod || 0;
+      // Get EMI from first actual repayment period (not disbursement period)
+      const firstRepayment = this.repaymentSchedule.find((p: any) => {
+        const total = p.totalDueForPeriod || p.totalDue || 0;
+        return total > 0;
+      });
+      this.calculatedEMI = firstRepayment?.totalDueForPeriod || firstRepayment?.totalDue || 0;
     }
   }
 
