@@ -202,6 +202,8 @@ if os.getenv("MIFOS_BASE_URL"):
         default_verify_ssl = "true"
     else:
         default_verify_ssl = "false"
+    # Default client ID when URL is explicitly set (can be overridden via env var)
+    default_client_id = "1"
 elif is_railway:
     # Railway/Production: Use demo.mifos.io as fallback (if not explicitly set)
     default_fineract_url = "https://demo.mifos.io/fineract-provider/api/v1"
