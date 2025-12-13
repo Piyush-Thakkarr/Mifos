@@ -183,13 +183,27 @@ SESSION_COOKIE_SECURE = True  # Always True when SameSite=None (required by brow
 SESSION_COOKIE_AGE = 86400  # 24 hours
 
 # Fineract Configuration - Auto-detect environment
+# Priority: Environment variables > Auto-detection > Defaults
+# 
+# To use your own Fineract server on Railway:
+# 1. Set MIFOS_BASE_URL in Railway environment variables
+# 2. Example: MIFOS_BASE_URL=https://your-fineract.up.railway.app/fineract-provider/api/v1
+#
 # Check if we're running on Railway (has RAILWAY_ENVIRONMENT or PORT env var)
 is_railway = os.getenv("RAILWAY_ENVIRONMENT") is not None or os.getenv("PORT") is not None
 is_local = not is_railway and DEBUG
 
-# Set defaults based on environment
-if is_railway:
-    # Railway/Production: Use demo.mifos.io
+# Set defaults based on environment (only if MIFOS_BASE_URL is not explicitly set)
+if os.getenv("MIFOS_BASE_URL"):
+    # User has explicitly set MIFOS_BASE_URL - use it (highest priority)
+    default_fineract_url = os.getenv("MIFOS_BASE_URL")
+    # If URL is explicitly set, default verify_ssl based on URL
+    if default_fineract_url.startswith("https://"):
+        default_verify_ssl = "true"
+    else:
+        default_verify_ssl = "false"
+elif is_railway:
+    # Railway/Production: Use demo.mifos.io as fallback (if not explicitly set)
     default_fineract_url = "https://demo.mifos.io/fineract-provider/api/v1"
     default_verify_ssl = "true"
     default_client_id = "3"
