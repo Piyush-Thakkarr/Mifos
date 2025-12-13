@@ -1,0 +1,30 @@
+{
+  "loanType": "individual",
+  "clientId": 3,
+  "productId": 1,
+  "principal": 50000,
+
+  "loanTermFrequency": 12,
+  "loanTermFrequencyType": 2,
+
+  "numberOfRepayments": 12,
+  "repaymentEvery": 1,
+  "repaymentFrequencyType": 2,
+
+  "interestRatePerPeriod": 12.5,
+  "interestRateFrequencyType": 3,
+
+  "amortizationType": 1,
+  "interestType": 0,
+  "interestCalculationPeriodType": 1,
+
+  "transactionProcessingStrategyCode": "mifos-standard-strategy",
+
+  "submittedOnDate": "08 December 2025",
+  "expectedDisbursementDate": "08 December 2025",
+  "repaymentsStartingFromDate": "08 December 2025",
+
+  "locale": "en",
+  "dateFormat": "dd MMMM yyyy"
+}
+

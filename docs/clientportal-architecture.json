@@ -1,0 +1,45 @@
+{
+  "frontend_module_path": "Mifos/src/app/clientportal",
+  "django_path": "Mifos/portal_backend",
+  "django_base_url": "http://localhost:8000",
+  "environment_key": "djangoApiUrl",
+  "real_login_mode": "local_credentials_with_admin_healthcheck",
+  "auth_endpoint": "/authentication (POST preferred; /self/authentication fallback)",
+  "tenant_strategy": "both (header + query) with fallback header_only/query_only",
+  "ssl_mode": "MIFOS_VERIFY_SSL env flag (default true; set false for self-signed)",
+  "implemented_endpoints": [
+    "/auth/login",
+    "/auth/me",
+    "/dashboard",
+    "/clientportal/client",
+    "/clientportal/loans",
+    "/clientportal/savings",
+    "/clientportal/transactions"
+  ],
+  "backend_validation_flow": "Local Django credential check (client/password), then admin-only Fineract availability check with Basic Auth and tenant header/query on /authentication or /self/authentication; cp_session session is issued after the health check succeeds",
+  "login_credentials_fixed": {
+    "username": "client",
+    "password": "password"
+  },
+  "cookie_name": "cp_session",
+  "routing_path": "/clientportal",
+  "angular_hash_routing": true,
+  "angular_version": "19.2.x (app)",
+  "django_version": "5.x (pinned in requirements)",
+  "authentication_model": {
+    "frontend_login": "client/password only",
+    "backend_validation": "local Django validation",
+    "fineract_access": "admin credentials only",
+    "notes": "Client credentials are not Fineract users. Django validates them locally and uses the Fineract admin account for all upstream calls."
+  },
+  "notes": [
+    "Angular clientportal is a lazy-loaded feature module under src/app/clientportal.",
+    "Django backend acts as middleware between Angular and future Fineract/Mifos APIs.",
+    "All Angular -> Django HTTP calls must use withCredentials: true.",
+    "Django session cookie is named cp_session with SameSite=Lax and HttpOnly.",
+    "Django /auth/login accepts only fixed credentials client/password for Day 1.",
+    "Django /dashboard confirms session and returns a readiness message for further Fineract integration.",
+    "Future days will implement real MifosConnector behavior using mifos_client.MifosClient for data APIs.",
+    "Backend error responses use correlation_id and map 401 to invalid credentials and 503 to upstream_unavailable."
+  ]
+}
