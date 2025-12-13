@@ -182,8 +182,13 @@ def client_view(request: HttpRequest):
         return add_cors_headers(response, request)
     except (MifosAuthError, MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
-        logger.exception("Failed to fetch client bundle", extra={"correlation_id": correlation_id})
-        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        logger.warning("Fineract unavailable, returning empty profile", extra={"correlation_id": correlation_id, "error": str(exc)})
+        # Return empty profile with warning flag instead of 503, so frontend can still render
+        response = JsonResponse({
+            "profile": {},
+            "warning": "Fineract service temporarily unavailable. Please try again later.",
+            "demo_server_limitation": True
+        }, status=200)
         return add_cors_headers(response, request)
 
     # Extract office and staff information
@@ -213,8 +218,13 @@ def loans_view(request: HttpRequest):
         loan_accounts = client.fetch_client_loans()
     except (MifosAuthError, MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
-        logger.exception("Failed to fetch loan data", extra={"correlation_id": correlation_id})
-        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        logger.warning("Fineract unavailable, returning empty loans list", extra={"correlation_id": correlation_id, "error": str(exc)})
+        # Return empty loans list with warning flag instead of 503, so frontend can still render
+        response = JsonResponse({
+            "loans": [],
+            "warning": "Fineract service temporarily unavailable. Please try again later.",
+            "demo_server_limitation": True
+        }, status=200)
         return add_cors_headers(response, request)
 
     loans = []
@@ -304,8 +314,13 @@ def savings_view(request: HttpRequest):
         savings_accounts = client.fetch_client_savings()
     except (MifosAuthError, MifosUpstreamError) as exc:
         correlation_id = new_correlation_id()
-        logger.exception("Failed to fetch savings data", extra={"correlation_id": correlation_id})
-        response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+        logger.warning("Fineract unavailable, returning empty savings list", extra={"correlation_id": correlation_id, "error": str(exc)})
+        # Return empty savings list with warning flag instead of 503, so frontend can still render
+        response = JsonResponse({
+            "savings": [],
+            "warning": "Fineract service temporarily unavailable. Please try again later.",
+            "demo_server_limitation": True
+        }, status=200)
         return add_cors_headers(response, request)
 
     savings = []
@@ -378,8 +393,13 @@ def transactions_view(request: HttpRequest):
             loan_accounts = client.fetch_client_loans()
         except (MifosAuthError, MifosUpstreamError) as exc:
             correlation_id = new_correlation_id()
-            logger.exception("Failed to fetch transactions data", extra={"correlation_id": correlation_id})
-            response = JsonResponse({"error": "upstream_unavailable", "details": str(exc), "correlation_id": correlation_id}, status=503)
+            logger.warning("Fineract unavailable, returning empty transactions list", extra={"correlation_id": correlation_id, "error": str(exc)})
+            # Return empty transactions list with warning flag instead of 503, so frontend can still render
+            response = JsonResponse({
+                "transactions": [],
+                "warning": "Fineract service temporarily unavailable. Please try again later.",
+                "demo_server_limitation": True
+            }, status=200)
             return add_cors_headers(response, request)
 
         # Fetch savings account transactions (limit to prevent timeout)
