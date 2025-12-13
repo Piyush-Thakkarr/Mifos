@@ -1,6 +1,40 @@
 # Quick Setup: Fineract on Railway with MySQL
 
-## Step 1: Configure Fineract Service Variables
+## Important: Use Docker, Not Railpack
+
+**Railpack is for Python/Node.js apps** - it won't work for Fineract (Java app).
+
+**Use Docker instead:**
+
+- Railway supports Docker images directly
+- Use the official Fineract Docker image: `apache/fineract:latest`
+- Much simpler than building from source
+
+## Step 1: Set Up Fineract Service with Docker
+
+### Option A: Use Official Docker Image (Recommended - Easiest)
+
+1. **In your Railway project:**
+   - Click on your **"fineract"** service
+   - Go to **"Settings"** → **"Deploy"**
+   - Change **"Source"** to **"Docker Image"**
+   - Enter: `apache/fineract:latest`
+   - Click **"Save"**
+
+2. **Set the port:**
+   - Go to **"Settings"** → **"Networking"**
+   - Set **"Port"** to `8443`
+
+### Option B: If You Already Have a Service
+
+If your Fineract service is already set up with Railpack:
+
+1. Go to **"Settings"** → **"Deploy"**
+2. Change **"Source"** from **"GitHub Repo"** to **"Docker Image"**
+3. Enter: `apache/fineract:latest`
+4. Railway will redeploy using Docker
+
+## Step 2: Configure Fineract Service Variables
 
 In your Railway project, click on the **"fineract"** service, then go to **"Variables"** tab.
 
