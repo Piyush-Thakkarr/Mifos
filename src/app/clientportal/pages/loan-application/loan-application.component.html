@@ -655,7 +655,9 @@
               (click)="$event.preventDefault(); router.navigate(['/clientportal/dashboard'])"
               >Cancel</a
             >
-            <button type="button" class="btn btn-secondary" (click)="previousStep()">← Previous</button>
+            <button type="button" class="btn btn-secondary" (click)="previousStep()">
+              <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon> Previous
+            </button>
             <button type="button" class="btn btn-primary btn-large" (click)="submitApplication()" [disabled]="loading">
               <span *ngIf="!loading">Submit Application</span>
               <span *ngIf="loading">Submitting...</span>

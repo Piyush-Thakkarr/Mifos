@@ -133,7 +133,7 @@
 
               <div class="loan-card-footer">
                 <span class="loan-date">Applied: {{ formatDate(getAppliedDate(loan)) || 'N/A' }}</span>
-                <span
+                <button
                   *ngIf="
                     getStatus(loan.status).toLowerCase().includes('approved') ||
                     getStatus(loan.status).toLowerCase().includes('disbursed') ||
@@ -141,9 +141,11 @@
                     getStatus(loan.status).toLowerCase().includes('pending') ||
                     getStatus(loan.status).toLowerCase().includes('submitted')
                   "
-                  class="view-details-link"
-                  >Click to view details →</span
+                  class="btn-view-details-inline"
+                  (click)="viewLoanDetails(loan)"
                 >
+                  View Details <fa-icon [icon]="['fas', 'arrow-right']"></fa-icon>
+                </button>
               </div>
             </div>
           </div>

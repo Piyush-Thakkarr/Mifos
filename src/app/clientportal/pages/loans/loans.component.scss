@@ -371,10 +371,24 @@
         font-size: 14px;
         font-weight: 500;
         cursor: pointer;
-        transition: background 0.2s;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+
+        fa-icon {
+          font-size: 12px;
+        }
 
         &:hover {
           background: #1565c0;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+        }
+
+        &:active {
+          transform: translateY(0);
         }
       }
     }

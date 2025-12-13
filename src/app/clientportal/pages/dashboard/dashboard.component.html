@@ -88,9 +88,9 @@
         <a
           routerLink="/clientportal/loan-application"
           class="apply-loan-btn"
-          style="text-decoration: none; display: inline-block"
-          >+ Apply for New Loan</a
         >
+          <fa-icon [icon]="['fas', 'plus']"></fa-icon> Apply for New Loan
+        </a>
       </div>
 
       <!-- Summary Cards -->
@@ -142,7 +142,9 @@
             <h3>Active Loans</h3>
             <p class="section-subtitle">Your current loan accounts</p>
           </div>
-          <a routerLink="/clientportal/loans" class="view-all-link">View All →</a>
+          <a routerLink="/clientportal/loans" class="btn-view-all">
+            View All <fa-icon [icon]="['fas', 'arrow-right']"></fa-icon>
+          </a>
         </div>
         <div class="table-container" *ngIf="d.loans?.loans?.length; else noLoans">
           <table>
@@ -167,7 +169,11 @@
                 <td>
                   <span class="status-badge active">{{ getStatus(loan.status) }}</span>
                 </td>
-                <td><a [routerLink]="['/clientportal/loans', loan.id]" class="view-details-link">View Details</a></td>
+                <td>
+                  <a [routerLink]="['/clientportal/loans', loan.id]" class="btn-view-details">
+                    View Details
+                  </a>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -184,7 +190,9 @@
             <h3>Recent Transactions</h3>
             <p class="section-subtitle">Latest payment activities</p>
           </div>
-          <a routerLink="/clientportal/transactions" class="view-all-link">View All →</a>
+          <a routerLink="/clientportal/transactions" class="btn-view-all">
+            View All <fa-icon [icon]="['fas', 'arrow-right']"></fa-icon>
+          </a>
         </div>
         <div class="transactions-list" *ngIf="d.transactions?.transactions?.length; else noTransactions">
           <div class="transaction-item" *ngFor="let txn of d.transactions.transactions">

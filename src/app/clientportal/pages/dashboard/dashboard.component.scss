@@ -263,19 +263,33 @@
       }
 
       .apply-loan-btn {
-        padding: 12px 24px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 28px;
         background: white;
         color: #1976d2;
-        border: none;
+        text-decoration: none;
+        border: 2px solid white;
         border-radius: 8px;
         font-size: 16px;
         font-weight: 600;
         cursor: pointer;
-        transition: transform 0.2s;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        fa-icon {
+          font-size: 14px;
+        }
 
         &:hover {
+          background: rgba(255, 255, 255, 0.95);
           transform: translateY(-2px);
-          box-shadow: 0 4px 8px rgb(0 0 0 / 20%);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        &:active {
+          transform: translateY(0);
         }
       }
     }
@@ -398,14 +412,33 @@
         color: #666;
       }
 
-      .view-all-link {
-        color: #1976d2;
+      .btn-view-all {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background: #1976d2;
+        color: white;
         text-decoration: none;
         font-size: 14px;
         font-weight: 500;
+        border-radius: 6px;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+
+        fa-icon {
+          font-size: 12px;
+        }
 
         &:hover {
-          text-decoration: underline;
+          background: #1565c0;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+        }
+
+        &:active {
+          transform: translateY(0);
         }
       }
     }
@@ -465,13 +498,27 @@
                 color: #2e7d32;
               }
 
-              .view-details-link {
+              .btn-view-details {
+                display: inline-block;
+                padding: 6px 12px;
+                background: #e3f2fd;
                 color: #1976d2;
                 text-decoration: none;
+                font-size: 13px;
                 font-weight: 500;
+                border-radius: 4px;
+                transition: all 0.2s;
+                border: 1px solid transparent;
 
                 &:hover {
-                  text-decoration: underline;
+                  background: #1976d2;
+                  color: white;
+                  transform: translateY(-1px);
+                  box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
+                }
+
+                &:active {
+                  transform: translateY(0);
                 }
               }
             }
