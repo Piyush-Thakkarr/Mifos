@@ -3,7 +3,7 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="logo">
-        <span class="logo-icon">🏠</span>
+        <fa-icon [icon]="['fas', 'home']" class="logo-icon"></fa-icon>
         <div class="logo-text">
           <div class="logo-title">MFI Client Portal</div>
           <div class="logo-subtitle">Microfinance Services</div>
@@ -12,39 +12,39 @@
     </div>
     <nav class="sidebar-nav">
       <a routerLink="/clientportal/dashboard" class="nav-item">
-        <span class="nav-icon">🏠</span>
+        <fa-icon [icon]="['fas', 'home']" class="nav-icon"></fa-icon>
         <span>Dashboard</span>
       </a>
       <a routerLink="/clientportal/loan-application" class="nav-item">
-        <span class="nav-icon">📄</span>
+        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
         <span>Loan Application</span>
       </a>
       <a routerLink="/clientportal/application-status" class="nav-item">
-        <span class="nav-icon">✅</span>
+        <fa-icon [icon]="['fas', 'check-circle']" class="nav-icon"></fa-icon>
         <span>Application Status</span>
       </a>
       <a routerLink="/clientportal/calculators" class="nav-item">
-        <span class="nav-icon">🧮</span>
+        <fa-icon [icon]="['fas', 'calculator']" class="nav-icon"></fa-icon>
         <span>Financial Calculators</span>
       </a>
       <a routerLink="/clientportal/loans" class="nav-item">
-        <span class="nav-icon">📄</span>
+        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
         <span>Loans</span>
       </a>
       <a routerLink="/clientportal/transactions" routerLinkActive="active" class="nav-item">
-        <span class="nav-icon">💳</span>
+        <fa-icon [icon]="['fas', 'credit-card']" class="nav-icon"></fa-icon>
         <span>Transactions</span>
       </a>
       <a routerLink="/clientportal/notifications" class="nav-item">
-        <span class="nav-icon">🔔</span>
+        <fa-icon [icon]="['fas', 'bell']" class="nav-icon"></fa-icon>
         <span>Notifications</span>
       </a>
       <a routerLink="/clientportal/support" class="nav-item">
-        <span class="nav-icon">💬</span>
+        <fa-icon [icon]="['fas', 'comment-alt']" class="nav-icon"></fa-icon>
         <span>Support</span>
       </a>
       <a routerLink="/clientportal/login" class="nav-item logout">
-        <span class="nav-icon">🚪</span>
+        <fa-icon [icon]="['fas', 'sign-out-alt']" class="nav-icon"></fa-icon>
         <span>Logout</span>
       </a>
     </nav>
@@ -56,10 +56,10 @@
     <header class="top-header">
       <div class="header-right">
         <button class="icon-button" (click)="navigateToNotifications()">
-          <span>🔔</span>
+          <fa-icon [icon]="['fas', 'bell']"></fa-icon>
         </button>
         <div class="user-info">
-          <span class="user-icon">👤</span>
+          <fa-icon [icon]="['fas', 'user-circle']" class="user-icon"></fa-icon>
           <span class="user-name">{{ getUserName() }}</span>
         </div>
       </div>
@@ -72,14 +72,18 @@
       <!-- Summary Cards -->
       <div class="summary-cards" *ngIf="summary">
         <div class="summary-card">
-          <div class="card-icon">📊</div>
+          <div class="card-icon">
+            <fa-icon [icon]="['fas', 'chart-bar']"></fa-icon>
+          </div>
           <div class="card-content">
             <div class="card-value">{{ summary.totalTransactions }}</div>
             <div class="card-label">Total Transactions</div>
           </div>
         </div>
         <div class="summary-card">
-          <div class="card-icon credit">📈</div>
+          <div class="card-icon credit">
+            <fa-icon [icon]="['fas', 'chart-line']"></fa-icon>
+          </div>
           <div class="card-content">
             <div class="card-value credit">₹{{ summary.totalCredit | number: '1.0-0' }}</div>
             <div class="card-label">Total Credit</div>
@@ -87,7 +91,9 @@
           </div>
         </div>
         <div class="summary-card">
-          <div class="card-icon debit">📉</div>
+          <div class="card-icon debit">
+            <fa-icon [icon]="['fas', 'arrow-down']"></fa-icon>
+          </div>
           <div class="card-content">
             <div class="card-value debit">₹{{ summary.totalDebit | number: '1.0-0' }}</div>
             <div class="card-label">Total Debit</div>
@@ -100,7 +106,7 @@
             [class.remaining-positive]="summary.remaining >= 0"
             [class.remaining-negative]="summary.remaining < 0"
           >
-            💰
+            <fa-icon [icon]="['fas', 'dollar-sign']"></fa-icon>
           </div>
           <div class="card-content">
             <div
@@ -123,7 +129,7 @@
           <div class="filter-group">
             <label>Search</label>
             <div class="search-input-wrapper">
-              <span class="search-icon">🔍</span>
+              <fa-icon [icon]="['fas', 'search']" class="search-icon"></fa-icon>
               <input
                 type="text"
                 class="search-input"
@@ -153,7 +159,7 @@
           </div>
           <div class="filter-group">
             <button class="download-btn" (click)="downloadStatement()">
-              <span>⬇️</span>
+              <fa-icon [icon]="['fas', 'download']"></fa-icon>
               Download Statement
             </button>
           </div>

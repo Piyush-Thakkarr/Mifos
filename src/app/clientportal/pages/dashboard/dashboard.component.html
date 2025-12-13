@@ -3,7 +3,7 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="logo">
-        <span class="logo-icon">🏠</span>
+        <fa-icon [icon]="['fas', 'home']" class="logo-icon"></fa-icon>
         <div class="logo-text">
           <div class="logo-title">MFI Client Portal</div>
           <div class="logo-subtitle">Microfinance Services</div>
@@ -12,39 +12,39 @@
     </div>
     <nav class="sidebar-nav">
       <a routerLink="/clientportal/dashboard" routerLinkActive="active" class="nav-item">
-        <span class="nav-icon">🏠</span>
+        <fa-icon [icon]="['fas', 'home']" class="nav-icon"></fa-icon>
         <span>Dashboard</span>
       </a>
       <a routerLink="/clientportal/loan-application" class="nav-item">
-        <span class="nav-icon">📄</span>
+        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
         <span>Loan Application</span>
       </a>
       <a routerLink="/clientportal/application-status" class="nav-item">
-        <span class="nav-icon">✅</span>
+        <fa-icon [icon]="['fas', 'check-circle']" class="nav-icon"></fa-icon>
         <span>Application Status</span>
       </a>
       <a routerLink="/clientportal/calculators" class="nav-item">
-        <span class="nav-icon">🧮</span>
+        <fa-icon [icon]="['fas', 'calculator']" class="nav-icon"></fa-icon>
         <span>Financial Calculators</span>
       </a>
       <a routerLink="/clientportal/loans" class="nav-item">
-        <span class="nav-icon">📄</span>
+        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
         <span>Loans</span>
       </a>
       <a routerLink="/clientportal/transactions" class="nav-item">
-        <span class="nav-icon">💳</span>
+        <fa-icon [icon]="['fas', 'credit-card']" class="nav-icon"></fa-icon>
         <span>Transactions</span>
       </a>
       <a routerLink="/clientportal/notifications" class="nav-item">
-        <span class="nav-icon">🔔</span>
+        <fa-icon [icon]="['fas', 'bell']" class="nav-icon"></fa-icon>
         <span>Notifications</span>
       </a>
       <a routerLink="/clientportal/support" class="nav-item">
-        <span class="nav-icon">💬</span>
+        <fa-icon [icon]="['fas', 'comment-alt']" class="nav-icon"></fa-icon>
         <span>Support</span>
       </a>
       <a routerLink="/clientportal/login" class="nav-item logout">
-        <span class="nav-icon">🚪</span>
+        <fa-icon [icon]="['fas', 'sign-out-alt']" class="nav-icon"></fa-icon>
         <span>Logout</span>
       </a>
     </nav>
@@ -56,10 +56,10 @@
     <header class="top-header">
       <div class="header-right">
         <button class="icon-button" (click)="navigateToNotifications()">
-          <span>🔔</span>
+          <fa-icon [icon]="['fas', 'bell']"></fa-icon>
         </button>
         <div class="user-info">
-          <span class="user-icon">👤</span>
+          <fa-icon [icon]="['fas', 'user-circle']" class="user-icon"></fa-icon>
           <span class="user-name">{{ dashboard?.client?.profile?.displayName || 'User' }}</span>
         </div>
       </div>
@@ -68,7 +68,9 @@
     <div class="content-wrapper" *ngIf="!loading && !error && dashboard as d">
       <!-- User Profile Card -->
       <div class="profile-card">
-        <div class="profile-avatar">👤</div>
+        <div class="profile-avatar">
+          <fa-icon [icon]="['fas', 'user-circle']"></fa-icon>
+        </div>
         <div class="profile-info">
           <h2>{{ d.client?.profile?.displayName || 'Client' }}</h2>
           <p class="client-id">Client ID: {{ d.client?.profile?.accountNo || d.client?.profile?.id || 'N/A' }}</p>
@@ -94,14 +96,18 @@
       <!-- Summary Cards -->
       <div class="summary-cards">
         <div class="summary-card">
-          <div class="card-icon outstanding">💰</div>
+          <div class="card-icon outstanding">
+            <fa-icon [icon]="['fas', 'dollar-sign']"></fa-icon>
+          </div>
           <div class="card-content">
             <div class="card-amount">₹{{ getTotalOutstanding(d.loans?.loans) | number: '1.0-0' }}</div>
             <div class="card-label">Across all active loans</div>
           </div>
         </div>
         <div class="summary-card">
-          <div class="card-icon emi">📅</div>
+          <div class="card-icon emi">
+            <fa-icon [icon]="['fas', 'calendar']"></fa-icon>
+          </div>
           <div class="card-content">
             <div class="card-amount">₹{{ getNextEMI(d.loans?.loans) | number: '1.0-0' }}</div>
             <div class="card-label">Due: {{ getNextEMIDate(d.loans?.loans) }}</div>
@@ -109,7 +115,9 @@
           </div>
         </div>
         <div class="summary-card">
-          <div class="card-icon loans">✅</div>
+          <div class="card-icon loans">
+            <fa-icon [icon]="['fas', 'check-circle']"></fa-icon>
+          </div>
           <div class="card-content">
             <div class="card-amount">{{ d.loans?.loans?.length || 0 }}</div>
             <div class="card-label">All in good standing</div>
@@ -117,7 +125,9 @@
           </div>
         </div>
         <div class="summary-card">
-          <div class="card-icon savings">🐷</div>
+          <div class="card-icon savings">
+            <fa-icon [icon]="['fas', 'piggy-bank']"></fa-icon>
+          </div>
           <div class="card-content">
             <div class="card-amount">₹{{ getTotalSavings(d.savings?.savings) | number: '1.0-0' }}</div>
             <div class="card-label">In savings account</div>
@@ -183,7 +193,7 @@
               [class.repayment]="txn.type?.toLowerCase().includes('repayment')"
               [class.fee]="txn.type?.toLowerCase().includes('fee')"
             >
-              📈
+              <fa-icon [icon]="['fas', 'chart-line']"></fa-icon>
             </div>
             <div class="transaction-details">
               <div class="transaction-type">{{ txn.type || 'Transaction' }}</div>
@@ -221,7 +231,9 @@
         <button class="close-btn" (click)="closeComingSoonPopup()">×</button>
       </div>
       <div class="popup-content">
-        <div class="popup-icon">🚀</div>
+        <div class="popup-icon">
+          <fa-icon [icon]="['fas', 'rocket']"></fa-icon>
+        </div>
         <p>Loan application feature will be available soon.</p>
         <p class="popup-subtext">Please contact your loan officer for assistance with new loan applications.</p>
       </div>

@@ -3,7 +3,7 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="logo">
-        <span class="logo-icon">🏠</span>
+        <fa-icon [icon]="['fas', 'home']" class="logo-icon"></fa-icon>
         <div class="logo-text">
           <div class="logo-title">MFI Client Portal</div>
           <div class="logo-subtitle">Microfinance Services</div>
@@ -12,39 +12,39 @@
     </div>
     <nav class="sidebar-nav">
       <a routerLink="/clientportal/dashboard" routerLinkActive="active" class="nav-item">
-        <span class="nav-icon">🏠</span>
+        <fa-icon [icon]="['fas', 'home']" class="nav-icon"></fa-icon>
         <span>Dashboard</span>
       </a>
       <a routerLink="/clientportal/loan-application" class="nav-item">
-        <span class="nav-icon">📄</span>
+        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
         <span>Loan Application</span>
       </a>
       <a routerLink="/clientportal/application-status" routerLinkActive="active" class="nav-item">
-        <span class="nav-icon">✅</span>
+        <fa-icon [icon]="['fas', 'check-circle']" class="nav-icon"></fa-icon>
         <span>Application Status</span>
       </a>
       <a routerLink="/clientportal/calculators" class="nav-item">
-        <span class="nav-icon">🧮</span>
+        <fa-icon [icon]="['fas', 'calculator']" class="nav-icon"></fa-icon>
         <span>Financial Calculators</span>
       </a>
       <a routerLink="/clientportal/loans" class="nav-item">
-        <span class="nav-icon">📄</span>
+        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
         <span>Loans</span>
       </a>
       <a routerLink="/clientportal/transactions" class="nav-item">
-        <span class="nav-icon">💳</span>
+        <fa-icon [icon]="['fas', 'credit-card']" class="nav-icon"></fa-icon>
         <span>Transactions</span>
       </a>
       <a routerLink="/clientportal/notifications" class="nav-item">
-        <span class="nav-icon">🔔</span>
+        <fa-icon [icon]="['fas', 'bell']" class="nav-icon"></fa-icon>
         <span>Notifications</span>
       </a>
       <a routerLink="/clientportal/support" class="nav-item">
-        <span class="nav-icon">💬</span>
+        <fa-icon [icon]="['fas', 'comment-alt']" class="nav-icon"></fa-icon>
         <span>Support</span>
       </a>
       <a routerLink="/clientportal/login" class="nav-item logout">
-        <span class="nav-icon">🚪</span>
+        <fa-icon [icon]="['fas', 'sign-out-alt']" class="nav-icon"></fa-icon>
         <span>Logout</span>
       </a>
     </nav>
@@ -173,7 +173,9 @@
         >
           <h3 style="margin-top: 0; color: #856404">⚠️ Data Unavailable</h3>
           <p style="color: #856404; margin-bottom: 10px">{{ error }}</p>
-          <button (click)="backToList()" class="btn btn-secondary" style="margin-top: 10px">← Back to Loans</button>
+          <button (click)="backToList()" class="btn btn-secondary" style="margin-top: 10px">
+            <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon> Back to Loans
+          </button>
         </div>
 
         <div *ngIf="!loading && !error && application" class="application-detail-content">
@@ -219,8 +221,8 @@
                 [ngClass]="{ completed: stage.completed, active: stage.active }"
               >
                 <div class="stage-icon">
-                  <span *ngIf="stage.completed">✓</span>
-                  <span *ngIf="!stage.completed && stage.active">⏰</span>
+                  <fa-icon *ngIf="stage.completed" [icon]="['fas', 'check']"></fa-icon>
+                  <fa-icon *ngIf="!stage.completed && stage.active" [icon]="['fas', 'clock']"></fa-icon>
                   <span *ngIf="!stage.completed && !stage.active">{{ stage.icon }}</span>
                 </div>
                 <div class="stage-content">
