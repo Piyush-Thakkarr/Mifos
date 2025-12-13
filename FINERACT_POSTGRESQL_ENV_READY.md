@@ -7,12 +7,12 @@ Go to **Fineract service** → **Variables** tab and add these:
 ```bash
 # Database Connection (Tenant Store)
 FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME=org.postgresql.Driver
-FINERACT_HIKARI_JDBC_URL=jdbc:postgresql://${{RAILWAY_PRIVATE_DOMAIN}}:5432/fineract_tenants
+FINERACT_HIKARI_JDBC_URL=jdbc:postgresql://postgres.railway.internal:5432/fineract_tenants
 FINERACT_HIKARI_USERNAME=postgres
 FINERACT_HIKARI_PASSWORD=COmLBAnnRqMHQhXUZbzxYXqyDBmcfkst
 
 # Default Tenant Database Creation
-FINERACT_DEFAULT_TENANTDB_HOSTNAME=${{RAILWAY_PRIVATE_DOMAIN}}
+FINERACT_DEFAULT_TENANTDB_HOSTNAME=postgres.railway.internal
 FINERACT_DEFAULT_TENANTDB_PORT=5432
 FINERACT_DEFAULT_TENANTDB_UID=postgres
 FINERACT_DEFAULT_TENANTDB_PWD=COmLBAnnRqMHQhXUZbzxYXqyDBmcfkst
