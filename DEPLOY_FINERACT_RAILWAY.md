@@ -68,43 +68,9 @@ Railway can deploy directly from Docker images. This is the simplest approach:
 
    **Important:** Replace `MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`, `MYSQLUSER`, `MYSQLPASSWORD` with the actual values from your MySQL service.
 
-4. **Create Railway Configuration File:**
-   - In your forked Fineract repo, create a file `railway.json` in the root:
+### Option B: Use Official Docker Image (Simplest - Recommended)
 
-   ```json
-   {
-     "$schema": "https://railway.app/railway.schema.json",
-     "build": {
-       "builder": "DOCKERFILE",
-       "dockerfilePath": "Dockerfile"
-     },
-     "deploy": {
-       "startCommand": "java -jar fineract-provider/build/libs/fineract-provider.jar",
-       "restartPolicyType": "ON_FAILURE",
-       "restartPolicyMaxRetries": 10
-     }
-   }
-   ```
-
-5. **Create Dockerfile (if not exists):**
-   - Create a `Dockerfile` in the root of your Fineract repo:
-
-   ```dockerfile
-   FROM eclipse-temurin:17-jre-alpine
-
-   WORKDIR /app
-
-   # Copy the built JAR (you'll need to build it first or use the official image)
-   COPY fineract-provider/build/libs/fineract-provider.jar app.jar
-
-   EXPOSE 8443
-
-   ENTRYPOINT ["java", "-jar", "app.jar"]
-   ```
-
-### Option B: Use Official Docker Image (Simplest)
-
-If you want to skip building, use the official Fineract Docker image:
+**No Dockerfile or railway.json needed!** Just use the official image directly.
 
 1. **Create a new Railway service:**
    - Click "+ New" → "Empty Service"
@@ -117,6 +83,47 @@ If you want to skip building, use the official Fineract Docker image:
 3. **Set the port:**
    - In Railway, go to "Settings" → "Networking"
    - Set "Port" to `8443`
+
+**That's it!** Railway will automatically pull and run the official Fineract Docker image. No need to fork the repo, build from source, or create any configuration files.
+
+### Option C: Build from Source (Advanced - Only if you need customizations)
+
+If you need to customize Fineract or build from source:
+
+1. **Fork the Fineract repository** (as mentioned in Step 1)
+
+2. **Create a Dockerfile** in the root of your forked repo:
+
+   ```dockerfile
+   FROM azul/zulu-openjdk-alpine:21
+
+   WORKDIR /app
+
+   # Copy the built JAR (you'll need to build it first)
+   COPY fineract-provider/build/libs/fineract-provider.jar app.jar
+
+   EXPOSE 8443
+
+   ENTRYPOINT ["java", "-jar", "app.jar"]
+   ```
+
+3. **Create railway.json** (optional, for custom build settings):
+
+   ```json
+   {
+     "$schema": "https://railway.app/railway.schema.json",
+     "build": {
+       "builder": "DOCKERFILE",
+       "dockerfilePath": "Dockerfile"
+     }
+   }
+   ```
+
+   **Note:** `dockerfilePath` is the path to your Dockerfile relative to the repo root. If your Dockerfile is in the root, use `"Dockerfile"`. If it's in a subdirectory, use `"path/to/Dockerfile"`.
+
+4. **Deploy from your GitHub repo:**
+   - In Railway, connect your forked Fineract repo
+   - Railway will detect the Dockerfile and build it automatically
 
 ## Step 3: Initialize Fineract Database
 
