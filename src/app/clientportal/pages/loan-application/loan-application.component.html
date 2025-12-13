@@ -537,7 +537,9 @@
 
             <!-- Navigation -->
             <div class="form-actions">
-              <button type="button" class="btn btn-secondary" (click)="previousStep()">← Previous</button>
+              <button type="button" class="btn btn-secondary" (click)="previousStep()">
+                <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon> Previous
+              </button>
               <button type="button" class="btn btn-primary" (click)="nextStep()" [disabled]="!step2Form.valid">
                 Next
               </button>

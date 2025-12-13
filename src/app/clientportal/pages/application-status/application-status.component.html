@@ -304,7 +304,9 @@
 
           <!-- Navigation -->
           <div class="navigation-actions">
-            <button (click)="backToList()" class="btn btn-secondary">← Back to Loans</button>
+            <button (click)="backToList()" class="btn btn-secondary">
+              <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon> Back to Loans
+            </button>
             <button (click)="viewApplicationDetails()" class="btn-view-details" *ngIf="loanId">
               <span>👁️</span>
               View Full Loan Details

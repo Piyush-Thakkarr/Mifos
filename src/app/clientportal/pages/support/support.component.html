@@ -146,7 +146,9 @@
           <div class="contact-value">{{ contactInfo.email }}</div>
         </div>
         <div class="contact-card">
-          <div class="contact-icon">⏰</div>
+          <div class="contact-icon">
+            <fa-icon [icon]="['fas', 'clock']"></fa-icon>
+          </div>
           <div class="contact-label">Response Time</div>
           <div class="contact-value">Average: {{ contactInfo.responseTime }}</div>
         </div>

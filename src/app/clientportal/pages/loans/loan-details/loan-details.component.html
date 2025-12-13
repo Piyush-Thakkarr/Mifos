@@ -67,7 +67,9 @@
 
     <div class="content-wrapper" *ngIf="!loading && !error && loan">
       <!-- Back Link -->
-      <a (click)="goBack()" class="back-link">← Back to Loans</a>
+      <a (click)="goBack()" class="back-link">
+        <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon> Back to Loans
+      </a>
 
       <!-- Page Title -->
       <div class="page-header">
@@ -102,28 +104,36 @@
       <!-- Status Overview Cards -->
       <div class="status-cards">
         <div class="status-card">
-          <div class="status-icon">📅</div>
+          <div class="status-icon">
+            <fa-icon [icon]="['fas', 'calendar']"></fa-icon>
+          </div>
           <div class="status-content">
             <div class="status-label">Tenure</div>
             <div class="status-value">{{ loan.tenure || '—' }} months</div>
           </div>
         </div>
         <div class="status-card">
-          <div class="status-icon">✅</div>
+          <div class="status-icon">
+            <fa-icon [icon]="['fas', 'check-circle']"></fa-icon>
+          </div>
           <div class="status-content">
             <div class="status-label">Paid EMIs</div>
             <div class="status-value">{{ loan.paidEMIs || 0 }} / {{ loan.tenure || 0 }}</div>
           </div>
         </div>
         <div class="status-card">
-          <div class="status-icon">⏰</div>
+          <div class="status-icon">
+            <fa-icon [icon]="['fas', 'clock']"></fa-icon>
+          </div>
           <div class="status-content">
             <div class="status-label">Remaining EMIs</div>
             <div class="status-value">{{ loan.remainingEMIs || 0 }}</div>
           </div>
         </div>
         <div class="status-card">
-          <div class="status-icon">📅</div>
+          <div class="status-icon">
+            <fa-icon [icon]="['fas', 'calendar']"></fa-icon>
+          </div>
           <div class="status-content">
             <div class="status-label">Next EMI Date</div>
             <div class="status-value">{{ loan.nextRepaymentDate || '—' }}</div>
@@ -134,11 +144,11 @@
       <!-- Action Buttons -->
       <div class="action-buttons">
         <button class="download-btn" (click)="downloadStatement()">
-          <span>⬇️</span>
+          <fa-icon [icon]="['fas', 'arrow-down']"></fa-icon>
           Download Statement (PDF)
         </button>
         <button class="download-btn" (click)="downloadSchedule()">
-          <span>⬇️</span>
+          <fa-icon [icon]="['fas', 'arrow-down']"></fa-icon>
           Download Repayment Schedule
         </button>
       </div>
@@ -169,7 +179,8 @@
                 <td>₹{{ emi.interestDue || emi.interest || 0 | number: '1.0-0' }}</td>
                 <td>
                   <span class="status-badge" [class.paid]="emi.complete" [class.pending]="!emi.complete">
-                    <span class="status-icon">{{ emi.complete ? '✓' : '⏰' }}</span>
+                    <fa-icon *ngIf="emi.complete" [icon]="['fas', 'check']" class="status-icon"></fa-icon>
+                    <fa-icon *ngIf="!emi.complete" [icon]="['fas', 'clock']" class="status-icon"></fa-icon>
                     {{ emi.complete ? 'Paid' : 'Pending' }}
                   </span>
                 </td>
