@@ -266,18 +266,27 @@ def loans_view(request: HttpRequest):
                     break
         
         # Calculate interest rate (annualized)
-        interest_rate = item.get("interestRatePerPeriod")
-        repayment_frequency = item.get("repaymentFrequencyType", {})
-        if isinstance(repayment_frequency, dict):
-            freq_value = repayment_frequency.get("value", "")
-        else:
-            freq_value = str(repayment_frequency) if repayment_frequency else ""
+        # Prefer annualInterestRate if available (most accurate)
+        interest_rate_annual = item.get("annualInterestRate")
         
-        # Annualize interest rate if it's monthly
-        if interest_rate and "month" in freq_value.lower():
-            interest_rate_annual = interest_rate * 12
-        else:
-            interest_rate_annual = interest_rate
+        if interest_rate_annual is None:
+            # Fallback: calculate from interestRatePerPeriod and frequency
+            interest_rate = item.get("interestRatePerPeriod")
+            interest_rate_frequency = item.get("interestRateFrequencyType", {})
+            if isinstance(interest_rate_frequency, dict):
+                freq_value = interest_rate_frequency.get("value", "")
+            else:
+                freq_value = str(interest_rate_frequency) if interest_rate_frequency else ""
+            
+            # Annualize interest rate if it's per month (not per year)
+            if interest_rate and "month" in freq_value.lower():
+                interest_rate_annual = interest_rate * 12
+            elif interest_rate and ("year" in freq_value.lower() or "annual" in freq_value.lower()):
+                # Already annual, use as is
+                interest_rate_annual = interest_rate
+            else:
+                # Default: assume it's already annual if frequency is unclear
+                interest_rate_annual = interest_rate
         
         # Get tenure (number of repayments)
         tenure = item.get("numberOfRepayments") or total_emis
@@ -771,17 +780,27 @@ def loan_details_view(request: HttpRequest, loan_id: int):
     status_value = status_obj.get("value") if isinstance(status_obj, dict) else status_obj
 
     # Calculate interest rate (annualized)
-    interest_rate = loan_data.get("interestRatePerPeriod")
-    repayment_frequency = loan_data.get("repaymentFrequencyType", {})
-    if isinstance(repayment_frequency, dict):
-        freq_value = repayment_frequency.get("value", "")
-    else:
-        freq_value = str(repayment_frequency) if repayment_frequency else ""
+    # Prefer annualInterestRate if available (most accurate)
+    interest_rate_annual = loan_data.get("annualInterestRate")
+    
+    if interest_rate_annual is None:
+        # Fallback: calculate from interestRatePerPeriod and frequency
+        interest_rate = loan_data.get("interestRatePerPeriod")
+        interest_rate_frequency = loan_data.get("interestRateFrequencyType", {})
+        if isinstance(interest_rate_frequency, dict):
+            freq_value = interest_rate_frequency.get("value", "")
+        else:
+            freq_value = str(interest_rate_frequency) if interest_rate_frequency else ""
 
-    if interest_rate and "month" in freq_value.lower():
-        interest_rate_annual = interest_rate * 12
-    else:
-        interest_rate_annual = interest_rate
+        # Annualize interest rate if it's per month (not per year)
+        if interest_rate and "month" in freq_value.lower():
+            interest_rate_annual = interest_rate * 12
+        elif interest_rate and ("year" in freq_value.lower() or "annual" in freq_value.lower()):
+            # Already annual, use as is
+            interest_rate_annual = interest_rate
+        else:
+            # Default: assume it's already annual if frequency is unclear
+            interest_rate_annual = interest_rate
 
     # Get repayment schedule
     repayment_schedule = loan_data.get("repaymentSchedule", {})
