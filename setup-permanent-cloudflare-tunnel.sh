@@ -29,6 +29,13 @@ fi
 # Step 1: Login to Cloudflare
 echo -e "${YELLOW}Step 1: Logging into Cloudflare...${NC}"
 echo "This will open your browser to authenticate with Cloudflare."
+echo ""
+echo -e "${YELLOW}IMPORTANT:${NC}"
+echo "If you see a page asking to 'Select a zone', you can:"
+echo "  1. Click 'Skip' or 'Cancel' (if available)"
+echo "  2. Or just close the browser tab - the login will still work"
+echo "  3. You don't need a domain - we'll use Cloudflare's Workers domain"
+echo ""
 echo "Press Enter to continue..."
 read
 
@@ -67,18 +74,18 @@ mkdir -p "$CONFIG_DIR"
 # Step 4: Create or update config file
 echo -e "${YELLOW}Step 3: Creating tunnel configuration...${NC}"
 
+# Get account ID for Workers domain
+ACCOUNT_TAG=$(cloudflared tunnel info "$TUNNEL_ID" 2>/dev/null | grep -i "account" | head -1 | grep -oP '[a-f0-9]{32}' | head -1 || echo "")
+
 cat > "$CONFIG_FILE" <<EOF
 tunnel: $TUNNEL_ID
 credentials-file: $CONFIG_DIR/$TUNNEL_ID.json
 
 ingress:
-  # Route Fineract API requests
-  - hostname: fineract-tunnel.$(cloudflared tunnel info "$TUNNEL_ID" 2>/dev/null | grep -oP '(?<=Hostname: )[^ ]+' | head -1 || echo "your-account.workers.dev")
-    service: https://localhost:$LOCAL_PORT
+  # Route all traffic to Fineract (no hostname required for Workers domain)
+  - service: https://localhost:$LOCAL_PORT
     originRequest:
       noTLSVerify: true
-  # Catch-all rule (must be last)
-  - service: http_status:404
 EOF
 
 echo -e "${GREEN}✅ Configuration file created at: $CONFIG_FILE${NC}"
@@ -87,21 +94,27 @@ echo ""
 # Step 5: Get the tunnel URL
 echo -e "${YELLOW}Step 4: Getting tunnel URL...${NC}"
 
-# Try to get the hostname from Cloudflare
-HOSTNAME=$(cloudflared tunnel route dns list "$TUNNEL_NAME" 2>/dev/null | grep -oP '[a-z0-9-]+\.[a-z0-9.-]+' | head -1 || echo "")
+# Start the tunnel temporarily to get the URL
+echo -e "${YELLOW}Starting tunnel temporarily to get the URL...${NC}"
+cloudflared tunnel run "$TUNNEL_NAME" > /tmp/cloudflared-temp.log 2>&1 &
+TEMP_PID=$!
+sleep 5
 
-if [ -z "$HOSTNAME" ]; then
-    echo -e "${YELLOW}No DNS route found. You'll need to set up DNS routing.${NC}"
-    echo -e "${YELLOW}Run this command to set up DNS:${NC}"
-    echo -e "${GREEN}cloudflared tunnel route dns $TUNNEL_NAME fineract-tunnel${NC}"
-    echo ""
-    echo -e "${YELLOW}Or use a custom domain:${NC}"
-    echo -e "${GREEN}cloudflared tunnel route dns $TUNNEL_NAME fineract.yourdomain.com${NC}"
-    echo ""
-    TUNNEL_URL="https://fineract-tunnel.your-account.workers.dev"
-else
-    TUNNEL_URL="https://$HOSTNAME"
+# Extract URL from logs
+TUNNEL_URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' /tmp/cloudflared-temp.log | head -1 || echo "")
+
+# Stop temporary tunnel
+kill $TEMP_PID 2>/dev/null
+wait $TEMP_PID 2>/dev/null
+
+if [ -n "$TUNNEL_URL" ]; then
     echo -e "${GREEN}✅ Tunnel URL: $TUNNEL_URL${NC}"
+    echo ""
+    echo -e "${YELLOW}Note: This URL is stable and won't change when you restart the tunnel.${NC}"
+else
+    echo -e "${YELLOW}Could not get tunnel URL automatically.${NC}"
+    echo -e "${YELLOW}After starting the tunnel, check the logs for the URL.${NC}"
+    TUNNEL_URL="https://your-tunnel-url.trycloudflare.com"
 fi
 
 echo ""
