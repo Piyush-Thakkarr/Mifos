@@ -78,10 +78,6 @@ export class ClientportalLoanDetailsComponent implements OnInit {
     return this.clientProfile?.displayName || 'User';
   }
 
-  navigateToNotifications(): void {
-    this.router.navigate(['/clientportal/notifications']);
-  }
-
   goBack(): void {
     this.router.navigate(['/clientportal/loans']);
   }

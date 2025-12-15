@@ -1,205 +1,138 @@
-<div class="clientportal-loan-details">
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="logo">
-        <fa-icon [icon]="['fas', 'home']" class="logo-icon"></fa-icon>
-        <div class="logo-text">
-          <div class="logo-title">MFI Client Portal</div>
-          <div class="logo-subtitle">Microfinance Services</div>
-        </div>
-      </div>
+<mifosx-clientportal-layout [userName]="getUserName()">
+  <div class="content-wrapper" *ngIf="!loading && !error && loan">
+    <!-- Back Link -->
+    <a (click)="goBack()" class="back-link"> <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon> Back to Loans </a>
+
+    <!-- Page Title -->
+    <div class="page-header">
+      <h1>Loan Details</h1>
+      <div class="loan-identifier">{{ loan.accountNo || loan.id }}</div>
     </div>
-    <nav class="sidebar-nav">
-      <a routerLink="/clientportal/dashboard" class="nav-item">
-        <fa-icon [icon]="['fas', 'home']" class="nav-icon"></fa-icon>
-        <span>Dashboard</span>
-      </a>
-      <a routerLink="/clientportal/loan-application" class="nav-item">
-        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
-        <span>Loan Application</span>
-      </a>
-      <a routerLink="/clientportal/application-status" class="nav-item">
-        <fa-icon [icon]="['fas', 'check-circle']" class="nav-icon"></fa-icon>
-        <span>Application Status</span>
-      </a>
-      <a routerLink="/clientportal/calculators" class="nav-item">
-        <fa-icon [icon]="['fas', 'calculator']" class="nav-icon"></fa-icon>
-        <span>Financial Calculators</span>
-      </a>
-      <a routerLink="/clientportal/loans" routerLinkActive="active" class="nav-item">
-        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
-        <span>Loans</span>
-      </a>
-      <a routerLink="/clientportal/transactions" class="nav-item">
-        <fa-icon [icon]="['fas', 'credit-card']" class="nav-icon"></fa-icon>
-        <span>Transactions</span>
-      </a>
-      <a routerLink="/clientportal/notifications" class="nav-item">
-        <fa-icon [icon]="['fas', 'bell']" class="nav-icon"></fa-icon>
-        <span>Notifications</span>
-      </a>
-      <a routerLink="/clientportal/support" class="nav-item">
-        <fa-icon [icon]="['fas', 'comment-alt']" class="nav-icon"></fa-icon>
-        <span>Support</span>
-      </a>
-      <a routerLink="/clientportal/login" class="nav-item logout">
-        <fa-icon [icon]="['fas', 'sign-out-alt']" class="nav-icon"></fa-icon>
-        <span>Logout</span>
-      </a>
-    </nav>
-  </aside>
 
-  <!-- Main Content -->
-  <div class="main-content">
-    <!-- Header -->
-    <header class="top-header">
-      <div class="header-right">
-        <button class="icon-button" (click)="navigateToNotifications()">
-          <fa-icon [icon]="['fas', 'bell']"></fa-icon>
-        </button>
-        <div class="user-info">
-          <fa-icon [icon]="['fas', 'user-circle']" class="user-icon"></fa-icon>
-          <span class="user-name">{{ getUserName() }}</span>
+    <!-- Loan Summary Card -->
+    <div class="loan-summary-card">
+      <h2>{{ loan.productName || 'Loan' }}</h2>
+      <p class="account-number">Account: {{ loan.accountNo || loan.id }}</p>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span class="label">Disbursed Amount</span>
+          <span class="value">₹{{ loan.principal || 0 | number: '1.0-0' }}</span>
         </div>
-      </div>
-    </header>
-
-    <div class="content-wrapper" *ngIf="!loading && !error && loan">
-      <!-- Back Link -->
-      <a (click)="goBack()" class="back-link"> <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon> Back to Loans </a>
-
-      <!-- Page Title -->
-      <div class="page-header">
-        <h1>Loan Details</h1>
-        <div class="loan-identifier">{{ loan.accountNo || loan.id }}</div>
-      </div>
-
-      <!-- Loan Summary Card -->
-      <div class="loan-summary-card">
-        <h2>{{ loan.productName || 'Loan' }}</h2>
-        <p class="account-number">Account: {{ loan.accountNo || loan.id }}</p>
-        <div class="summary-grid">
-          <div class="summary-item">
-            <span class="label">Disbursed Amount</span>
-            <span class="value">₹{{ loan.principal || 0 | number: '1.0-0' }}</span>
-          </div>
-          <div class="summary-item">
-            <span class="label">Outstanding Balance</span>
-            <span class="value">₹{{ loan.outstanding || loan.principal || 0 | number: '1.0-0' }}</span>
-          </div>
-          <div class="summary-item">
-            <span class="label">EMI Amount</span>
-            <span class="value">₹{{ loan.emiAmount || 0 | number: '1.0-0' }}</span>
-          </div>
-          <div class="summary-item">
-            <span class="label">Interest Rate</span>
-            <span class="value">{{ loan.interestRate || '—' }}% p.a.</span>
-          </div>
+        <div class="summary-item">
+          <span class="label">Outstanding Balance</span>
+          <span class="value">₹{{ loan.outstanding || loan.principal || 0 | number: '1.0-0' }}</span>
         </div>
-      </div>
-
-      <!-- Status Overview Cards -->
-      <div class="status-cards">
-        <div class="status-card">
-          <div class="status-icon">
-            <fa-icon [icon]="['fas', 'calendar']"></fa-icon>
-          </div>
-          <div class="status-content">
-            <div class="status-label">Tenure</div>
-            <div class="status-value">{{ loan.tenure || '—' }} months</div>
-          </div>
+        <div class="summary-item">
+          <span class="label">EMI Amount</span>
+          <span class="value">₹{{ loan.emiAmount || 0 | number: '1.0-0' }}</span>
         </div>
-        <div class="status-card">
-          <div class="status-icon">
-            <fa-icon [icon]="['fas', 'check-circle']"></fa-icon>
-          </div>
-          <div class="status-content">
-            <div class="status-label">Paid EMIs</div>
-            <div class="status-value">{{ loan.paidEMIs || 0 }} / {{ loan.tenure || 0 }}</div>
-          </div>
-        </div>
-        <div class="status-card">
-          <div class="status-icon">
-            <fa-icon [icon]="['fas', 'clock']"></fa-icon>
-          </div>
-          <div class="status-content">
-            <div class="status-label">Remaining EMIs</div>
-            <div class="status-value">{{ loan.remainingEMIs || 0 }}</div>
-          </div>
-        </div>
-        <div class="status-card">
-          <div class="status-icon">
-            <fa-icon [icon]="['fas', 'calendar']"></fa-icon>
-          </div>
-          <div class="status-content">
-            <div class="status-label">Next EMI Date</div>
-            <div class="status-value">{{ loan.nextRepaymentDate || '—' }}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="action-buttons">
-        <button class="download-btn" (click)="downloadStatement()">
-          <fa-icon [icon]="['fas', 'arrow-down']"></fa-icon>
-          Download Statement (PDF)
-        </button>
-        <button class="download-btn" (click)="downloadSchedule()">
-          <fa-icon [icon]="['fas', 'arrow-down']"></fa-icon>
-          Download Repayment Schedule
-        </button>
-      </div>
-
-      <!-- EMI Schedule Table -->
-      <div class="emi-schedule-section">
-        <h3>EMI Schedule</h3>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>EMI #</th>
-                <th>Due Date</th>
-                <th>EMI Amount</th>
-                <th>Principal</th>
-                <th>Interest</th>
-                <th>Status</th>
-                <th>Payment Date</th>
-                <th>Reference</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let emi of emiSchedule">
-                <td>{{ emi.period || emi.emiNumber }}</td>
-                <td>{{ formatDate(emi.dueDate) }}</td>
-                <td>₹{{ emi.totalDueForPeriod || emi.emiAmount || 0 | number: '1.0-0' }}</td>
-                <td>₹{{ emi.principalDue || emi.principal || 0 | number: '1.0-0' }}</td>
-                <td>₹{{ emi.interestDue || emi.interest || 0 | number: '1.0-0' }}</td>
-                <td>
-                  <span class="status-badge" [class.paid]="emi.complete" [class.pending]="!emi.complete">
-                    <fa-icon *ngIf="emi.complete" [icon]="['fas', 'check']" class="status-icon"></fa-icon>
-                    <fa-icon *ngIf="!emi.complete" [icon]="['fas', 'clock']" class="status-icon"></fa-icon>
-                    {{ emi.complete ? 'Paid' : 'Pending' }}
-                  </span>
-                </td>
-                <td>{{ emi.complete ? formatDate(emi.paymentDate || emi.dueDate) : '—' }}</td>
-                <td>{{ emi.reference || '—' }}</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="summary-item">
+          <span class="label">Interest Rate</span>
+          <span class="value">{{ loan.interestRate || '—' }}% p.a.</span>
         </div>
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div class="loading-state" *ngIf="loading">
-      <div class="spinner"></div>
-      <p>Loading loan details...</p>
+    <!-- Status Overview Cards -->
+    <div class="status-cards">
+      <div class="status-card">
+        <div class="status-icon">
+          <fa-icon [icon]="['fas', 'calendar']"></fa-icon>
+        </div>
+        <div class="status-content">
+          <div class="status-label">Tenure</div>
+          <div class="status-value">{{ loan.tenure || '—' }} months</div>
+        </div>
+      </div>
+      <div class="status-card">
+        <div class="status-icon">
+          <fa-icon [icon]="['fas', 'check-circle']"></fa-icon>
+        </div>
+        <div class="status-content">
+          <div class="status-label">Paid EMIs</div>
+          <div class="status-value">{{ loan.paidEMIs || 0 }} / {{ loan.tenure || 0 }}</div>
+        </div>
+      </div>
+      <div class="status-card">
+        <div class="status-icon">
+          <fa-icon [icon]="['fas', 'clock']"></fa-icon>
+        </div>
+        <div class="status-content">
+          <div class="status-label">Remaining EMIs</div>
+          <div class="status-value">{{ loan.remainingEMIs || 0 }}</div>
+        </div>
+      </div>
+      <div class="status-card">
+        <div class="status-icon">
+          <fa-icon [icon]="['fas', 'calendar']"></fa-icon>
+        </div>
+        <div class="status-content">
+          <div class="status-label">Next EMI Date</div>
+          <div class="status-value">{{ loan.nextRepaymentDate || '—' }}</div>
+        </div>
+      </div>
     </div>
 
-    <!-- Error State -->
-    <div class="error-state" *ngIf="error">
-      <p class="error">{{ error }}</p>
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button class="download-btn" (click)="downloadStatement()">
+        <fa-icon [icon]="['fas', 'arrow-down']"></fa-icon>
+        Download Statement (PDF)
+      </button>
+      <button class="download-btn" (click)="downloadSchedule()">
+        <fa-icon [icon]="['fas', 'arrow-down']"></fa-icon>
+        Download Repayment Schedule
+      </button>
+    </div>
+
+    <!-- EMI Schedule Table -->
+    <div class="emi-schedule-section">
+      <h3>EMI Schedule</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>EMI #</th>
+              <th>Due Date</th>
+              <th>EMI Amount</th>
+              <th>Principal</th>
+              <th>Interest</th>
+              <th>Status</th>
+              <th>Payment Date</th>
+              <th>Reference</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let emi of emiSchedule">
+              <td>{{ emi.period || emi.emiNumber }}</td>
+              <td>{{ formatDate(emi.dueDate) }}</td>
+              <td>₹{{ emi.totalDueForPeriod || emi.emiAmount || 0 | number: '1.0-0' }}</td>
+              <td>₹{{ emi.principalDue || emi.principal || 0 | number: '1.0-0' }}</td>
+              <td>₹{{ emi.interestDue || emi.interest || 0 | number: '1.0-0' }}</td>
+              <td>
+                <span class="status-badge" [class.paid]="emi.complete" [class.pending]="!emi.complete">
+                  <fa-icon *ngIf="emi.complete" [icon]="['fas', 'check']" class="status-icon"></fa-icon>
+                  <fa-icon *ngIf="!emi.complete" [icon]="['fas', 'clock']" class="status-icon"></fa-icon>
+                  {{ emi.complete ? 'Paid' : 'Pending' }}
+                </span>
+              </td>
+              <td>{{ emi.complete ? formatDate(emi.paymentDate || emi.dueDate) : '—' }}</td>
+              <td>{{ emi.reference || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
-</div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading loan details...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error">
+    <p class="error">{{ error }}</p>
+  </div>
+</mifosx-clientportal-layout>

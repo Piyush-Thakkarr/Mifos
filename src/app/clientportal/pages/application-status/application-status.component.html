@@ -1,321 +1,264 @@
-<div class="clientportal-application-status">
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="logo">
-        <fa-icon [icon]="['fas', 'home']" class="logo-icon"></fa-icon>
-        <div class="logo-text">
-          <div class="logo-title">MFI Client Portal</div>
-          <div class="logo-subtitle">Microfinance Services</div>
+<mifosx-clientportal-layout [userName]="getUserName()">
+  <div class="content-wrapper">
+    <div class="page-header">
+      <h1>Application Status</h1>
+    </div>
+
+    <!-- Loan Applications List View -->
+    <div *ngIf="!showDetailView" class="loans-list-view">
+      <div *ngIf="loading" class="loading-state">
+        <p>Loading loan applications...</p>
+      </div>
+
+      <div
+        *ngIf="dataUnavailable && error"
+        class="error-state"
+        style="
+          padding: 20px;
+          background-color: #fff3cd;
+          border-left: 4px solid #ffc107;
+          border-radius: 4px;
+          margin: 20px 0;
+        "
+      >
+        <h3 style="margin-top: 0; color: #856404">⚠️ Data Unavailable</h3>
+        <p style="color: #856404; margin-bottom: 0">{{ error }}</p>
+      </div>
+
+      <div *ngIf="!loading && !error && allLoans.length > 0" class="loans-list">
+        <h2 style="margin-bottom: 20px">Your Loan Applications ({{ allLoans.length }})</h2>
+
+        <div class="loans-grid">
+          <div
+            *ngFor="let loan of allLoans"
+            class="loan-card"
+            [class.clickable]="
+              getStatus(loan.status).toLowerCase().includes('approved') ||
+              getStatus(loan.status).toLowerCase().includes('disbursed') ||
+              getStatus(loan.status).toLowerCase().includes('active') ||
+              getStatus(loan.status).toLowerCase().includes('pending') ||
+              getStatus(loan.status).toLowerCase().includes('submitted')
+            "
+            (click)="viewLoanDetails(loan)"
+          >
+            <div class="loan-card-header">
+              <div class="loan-id">Application #{{ loan.id || 'N/A' }}</div>
+              <div
+                class="loan-status-badge"
+                [ngClass]="'status-' + getStatusBadgeType(loan.status).toLowerCase().replace(' ', '-')"
+              >
+                {{ getStatusLabel(loan.status) }}
+              </div>
+            </div>
+
+            <div class="loan-card-body">
+              <div class="loan-info-row">
+                <span class="loan-label">Product:</span>
+                <span class="loan-value">{{ loan.productName || 'N/A' }}</span>
+              </div>
+              <div class="loan-info-row">
+                <span class="loan-label">Principal:</span>
+                <span class="loan-value">{{ formatCurrency(loan.principal || 0) }}</span>
+              </div>
+              <div class="loan-info-row">
+                <span class="loan-label">Account No:</span>
+                <span class="loan-value">{{ loan.accountNo || 'N/A' }}</span>
+              </div>
+              <div class="loan-info-row" *ngIf="loan.nextRepaymentDate">
+                <span class="loan-label">Next Payment:</span>
+                <span class="loan-value">{{ loan.nextRepaymentDate }}</span>
+              </div>
+              <div class="loan-info-row" *ngIf="loan.outstanding !== null && loan.outstanding !== undefined">
+                <span class="loan-label">Outstanding:</span>
+                <span class="loan-value">{{ formatCurrency(loan.outstanding) }}</span>
+              </div>
+              <div class="loan-info-row" *ngIf="loan.interestRate">
+                <span class="loan-label">Interest Rate:</span>
+                <span class="loan-value">{{ loan.interestRate }}%</span>
+              </div>
+            </div>
+
+            <div class="loan-card-footer">
+              <span class="loan-date">Applied: {{ formatDate(getAppliedDate(loan)) || 'N/A' }}</span>
+              <button
+                *ngIf="
+                  getStatus(loan.status).toLowerCase().includes('approved') ||
+                  getStatus(loan.status).toLowerCase().includes('disbursed') ||
+                  getStatus(loan.status).toLowerCase().includes('active') ||
+                  getStatus(loan.status).toLowerCase().includes('pending') ||
+                  getStatus(loan.status).toLowerCase().includes('submitted')
+                "
+                class="btn-view-details-inline"
+                (click)="viewLoanDetails(loan)"
+              >
+                View Details <fa-icon [icon]="['fas', 'arrow-right']"></fa-icon>
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div *ngIf="!loading && !error && allLoans.length === 0 && !dataUnavailable" class="empty-state">
+        <p>No loan applications found.</p>
       </div>
     </div>
-    <nav class="sidebar-nav">
-      <a routerLink="/clientportal/dashboard" routerLinkActive="active" class="nav-item">
-        <fa-icon [icon]="['fas', 'home']" class="nav-icon"></fa-icon>
-        <span>Dashboard</span>
-      </a>
-      <a routerLink="/clientportal/loan-application" class="nav-item">
-        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
-        <span>Loan Application</span>
-      </a>
-      <a routerLink="/clientportal/application-status" routerLinkActive="active" class="nav-item">
-        <fa-icon [icon]="['fas', 'check-circle']" class="nav-icon"></fa-icon>
-        <span>Application Status</span>
-      </a>
-      <a routerLink="/clientportal/calculators" class="nav-item">
-        <fa-icon [icon]="['fas', 'calculator']" class="nav-icon"></fa-icon>
-        <span>Financial Calculators</span>
-      </a>
-      <a routerLink="/clientportal/loans" class="nav-item">
-        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
-        <span>Loans</span>
-      </a>
-      <a routerLink="/clientportal/transactions" class="nav-item">
-        <fa-icon [icon]="['fas', 'credit-card']" class="nav-icon"></fa-icon>
-        <span>Transactions</span>
-      </a>
-      <a routerLink="/clientportal/notifications" class="nav-item">
-        <fa-icon [icon]="['fas', 'bell']" class="nav-icon"></fa-icon>
-        <span>Notifications</span>
-      </a>
-      <a routerLink="/clientportal/support" class="nav-item">
-        <fa-icon [icon]="['fas', 'comment-alt']" class="nav-icon"></fa-icon>
-        <span>Support</span>
-      </a>
-      <a routerLink="/clientportal/login" class="nav-item logout">
-        <fa-icon [icon]="['fas', 'sign-out-alt']" class="nav-icon"></fa-icon>
-        <span>Logout</span>
-      </a>
-    </nav>
-  </aside>
 
-  <!-- Main Content -->
-  <main class="main-content">
-    <div class="content-wrapper">
-      <div class="page-header">
-        <h1>Application Status</h1>
+    <!-- Loan Application Detail View -->
+    <div *ngIf="showDetailView" class="application-content">
+      <div *ngIf="loading" class="loading-state">
+        <p>Loading application status...</p>
       </div>
 
-      <!-- Loan Applications List View -->
-      <div *ngIf="!showDetailView" class="loans-list-view">
-        <div *ngIf="loading" class="loading-state">
-          <p>Loading loan applications...</p>
-        </div>
+      <div
+        *ngIf="dataUnavailable && error"
+        class="error-state"
+        style="
+          padding: 20px;
+          background-color: #fff3cd;
+          border-left: 4px solid #ffc107;
+          border-radius: 4px;
+          margin: 20px 0;
+        "
+      >
+        <h3 style="margin-top: 0; color: #856404">⚠️ Data Unavailable</h3>
+        <p style="color: #856404; margin-bottom: 10px">{{ error }}</p>
+        <button (click)="backToList()" class="btn btn-secondary" style="margin-top: 10px">
+          <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon> Back to Loans
+        </button>
+      </div>
 
-        <div
-          *ngIf="dataUnavailable && error"
-          class="error-state"
-          style="
-            padding: 20px;
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-            border-radius: 4px;
-            margin: 20px 0;
-          "
-        >
-          <h3 style="margin-top: 0; color: #856404">⚠️ Data Unavailable</h3>
-          <p style="color: #856404; margin-bottom: 0">{{ error }}</p>
-        </div>
-
-        <div *ngIf="!loading && !error && allLoans.length > 0" class="loans-list">
-          <h2 style="margin-bottom: 20px">Your Loan Applications ({{ allLoans.length }})</h2>
-
-          <div class="loans-grid">
+      <div *ngIf="!loading && !error && application" class="application-detail-content">
+        <!-- Application Overview Card -->
+        <div class="overview-card">
+          <div class="overview-header">
+            <div class="overview-info">
+              <div class="info-row">
+                <span class="info-label">Application ID:</span>
+                <span class="info-value highlight">{{ generateApplicationId(application) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Loan Product:</span>
+                <span class="info-value">{{ application.productName || 'N/A' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Principal Amount:</span>
+                <span class="info-value">{{ formatCurrency(application.principal || 0) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Applied Date:</span>
+                <span class="info-value">{{
+                  formatDate(application.timeline?.submittedOnDate || application.submittedOnDate)
+                }}</span>
+              </div>
+            </div>
             <div
-              *ngFor="let loan of allLoans"
-              class="loan-card"
-              [class.clickable]="
-                getStatus(loan.status).toLowerCase().includes('approved') ||
-                getStatus(loan.status).toLowerCase().includes('disbursed') ||
-                getStatus(loan.status).toLowerCase().includes('active') ||
-                getStatus(loan.status).toLowerCase().includes('pending') ||
-                getStatus(loan.status).toLowerCase().includes('submitted')
-              "
-              (click)="viewLoanDetails(loan)"
+              class="status-badge"
+              [ngClass]="'status-' + getStatusBadgeType(application.status).toLowerCase().replace(' ', '-')"
             >
-              <div class="loan-card-header">
-                <div class="loan-id">Application #{{ loan.id || 'N/A' }}</div>
-                <div
-                  class="loan-status-badge"
-                  [ngClass]="'status-' + getStatusBadgeType(loan.status).toLowerCase().replace(' ', '-')"
-                >
-                  {{ getStatusLabel(loan.status) }}
-                </div>
-              </div>
-
-              <div class="loan-card-body">
-                <div class="loan-info-row">
-                  <span class="loan-label">Product:</span>
-                  <span class="loan-value">{{ loan.productName || 'N/A' }}</span>
-                </div>
-                <div class="loan-info-row">
-                  <span class="loan-label">Principal:</span>
-                  <span class="loan-value">{{ formatCurrency(loan.principal || 0) }}</span>
-                </div>
-                <div class="loan-info-row">
-                  <span class="loan-label">Account No:</span>
-                  <span class="loan-value">{{ loan.accountNo || 'N/A' }}</span>
-                </div>
-                <div class="loan-info-row" *ngIf="loan.nextRepaymentDate">
-                  <span class="loan-label">Next Payment:</span>
-                  <span class="loan-value">{{ loan.nextRepaymentDate }}</span>
-                </div>
-                <div class="loan-info-row" *ngIf="loan.outstanding !== null && loan.outstanding !== undefined">
-                  <span class="loan-label">Outstanding:</span>
-                  <span class="loan-value">{{ formatCurrency(loan.outstanding) }}</span>
-                </div>
-                <div class="loan-info-row" *ngIf="loan.interestRate">
-                  <span class="loan-label">Interest Rate:</span>
-                  <span class="loan-value">{{ loan.interestRate }}%</span>
-                </div>
-              </div>
-
-              <div class="loan-card-footer">
-                <span class="loan-date">Applied: {{ formatDate(getAppliedDate(loan)) || 'N/A' }}</span>
-                <button
-                  *ngIf="
-                    getStatus(loan.status).toLowerCase().includes('approved') ||
-                    getStatus(loan.status).toLowerCase().includes('disbursed') ||
-                    getStatus(loan.status).toLowerCase().includes('active') ||
-                    getStatus(loan.status).toLowerCase().includes('pending') ||
-                    getStatus(loan.status).toLowerCase().includes('submitted')
-                  "
-                  class="btn-view-details-inline"
-                  (click)="viewLoanDetails(loan)"
-                >
-                  View Details <fa-icon [icon]="['fas', 'arrow-right']"></fa-icon>
-                </button>
-              </div>
+              {{ getStatusLabel(application.status) }}
             </div>
           </div>
         </div>
 
-        <div *ngIf="!loading && !error && allLoans.length === 0 && !dataUnavailable" class="empty-state">
-          <p>No loan applications found.</p>
+        <!-- Application Journey -->
+        <div class="journey-card">
+          <h2>Application Journey</h2>
+          <div class="journey-timeline">
+            <div
+              *ngFor="let stage of getJourneyStages(); let i = index"
+              class="journey-stage"
+              [ngClass]="{ completed: stage.completed, active: stage.active }"
+            >
+              <div class="stage-icon">
+                <fa-icon *ngIf="stage.completed" [icon]="['fas', 'check']"></fa-icon>
+                <fa-icon *ngIf="!stage.completed && stage.active" [icon]="['fas', 'clock']"></fa-icon>
+                <span *ngIf="!stage.completed && !stage.active">{{ stage.icon }}</span>
+              </div>
+              <div class="stage-content">
+                <div class="stage-name">{{ stage.name }}</div>
+                <div class="stage-date">{{ stage.date }}</div>
+                <div class="stage-by" *ngIf="stage.by">by {{ stage.by }}</div>
+              </div>
+              <div
+                class="stage-connector"
+                *ngIf="i < getJourneyStages().length - 1"
+                [ngClass]="{ filled: stage.completed }"
+              ></div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <!-- Loan Application Detail View -->
-      <div *ngIf="showDetailView" class="application-content">
-        <div *ngIf="loading" class="loading-state">
-          <p>Loading application status...</p>
+        <!-- Status Details -->
+        <div class="status-details-card">
+          <h2>Status Details</h2>
+          <div class="status-info">
+            <div
+              class="status-badge-large"
+              [ngClass]="'status-' + getStatusBadgeType(application.status).toLowerCase().replace(' ', '-')"
+            >
+              {{ getStatusLabel(application.status) }}
+            </div>
+            <div class="status-meta">
+              <div class="meta-item">
+                <span class="meta-label">Status Code:</span>
+                <span class="meta-value">{{ getStatusCode(application.status) }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Last Updated:</span>
+                <span class="meta-value"
+                  >{{ formatDate(application.timeline?.lastModifiedDate || application.lastModifiedDate) }} at
+                  {{ getLastModifiedTime(application) }}</span
+                >
+              </div>
+            </div>
+            <div class="next-action">
+              {{ getNextAction(application.status) }}
+            </div>
+          </div>
         </div>
 
-        <div
-          *ngIf="dataUnavailable && error"
-          class="error-state"
-          style="
-            padding: 20px;
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-            border-radius: 4px;
-            margin: 20px 0;
-          "
-        >
-          <h3 style="margin-top: 0; color: #856404">⚠️ Data Unavailable</h3>
-          <p style="color: #856404; margin-bottom: 10px">{{ error }}</p>
-          <button (click)="backToList()" class="btn btn-secondary" style="margin-top: 10px">
+        <!-- Timeline Events -->
+        <div class="timeline-events-card">
+          <h2>Timeline Events</h2>
+          <table class="events-table">
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Performed By</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let event of timelineEvents">
+                <td>
+                  <strong>{{ event.event }}</strong>
+                </td>
+                <td>{{ event.date }}</td>
+                <td>{{ event.time }}</td>
+                <td>{{ event.performedBy }}</td>
+                <td>
+                  <span class="event-status-badge" [ngClass]="'status-' + event.status.toLowerCase().replace(' ', '-')">
+                    {{ event.status }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation-actions">
+          <button (click)="backToList()" class="btn btn-secondary">
             <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon> Back to Loans
           </button>
-        </div>
-
-        <div *ngIf="!loading && !error && application" class="application-detail-content">
-          <!-- Application Overview Card -->
-          <div class="overview-card">
-            <div class="overview-header">
-              <div class="overview-info">
-                <div class="info-row">
-                  <span class="info-label">Application ID:</span>
-                  <span class="info-value highlight">{{ generateApplicationId(application) }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Loan Product:</span>
-                  <span class="info-value">{{ application.productName || 'N/A' }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Principal Amount:</span>
-                  <span class="info-value">{{ formatCurrency(application.principal || 0) }}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Applied Date:</span>
-                  <span class="info-value">{{
-                    formatDate(application.timeline?.submittedOnDate || application.submittedOnDate)
-                  }}</span>
-                </div>
-              </div>
-              <div
-                class="status-badge"
-                [ngClass]="'status-' + getStatusBadgeType(application.status).toLowerCase().replace(' ', '-')"
-              >
-                {{ getStatusLabel(application.status) }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Application Journey -->
-          <div class="journey-card">
-            <h2>Application Journey</h2>
-            <div class="journey-timeline">
-              <div
-                *ngFor="let stage of getJourneyStages(); let i = index"
-                class="journey-stage"
-                [ngClass]="{ completed: stage.completed, active: stage.active }"
-              >
-                <div class="stage-icon">
-                  <fa-icon *ngIf="stage.completed" [icon]="['fas', 'check']"></fa-icon>
-                  <fa-icon *ngIf="!stage.completed && stage.active" [icon]="['fas', 'clock']"></fa-icon>
-                  <span *ngIf="!stage.completed && !stage.active">{{ stage.icon }}</span>
-                </div>
-                <div class="stage-content">
-                  <div class="stage-name">{{ stage.name }}</div>
-                  <div class="stage-date">{{ stage.date }}</div>
-                  <div class="stage-by" *ngIf="stage.by">by {{ stage.by }}</div>
-                </div>
-                <div
-                  class="stage-connector"
-                  *ngIf="i < getJourneyStages().length - 1"
-                  [ngClass]="{ filled: stage.completed }"
-                ></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Status Details -->
-          <div class="status-details-card">
-            <h2>Status Details</h2>
-            <div class="status-info">
-              <div
-                class="status-badge-large"
-                [ngClass]="'status-' + getStatusBadgeType(application.status).toLowerCase().replace(' ', '-')"
-              >
-                {{ getStatusLabel(application.status) }}
-              </div>
-              <div class="status-meta">
-                <div class="meta-item">
-                  <span class="meta-label">Status Code:</span>
-                  <span class="meta-value">{{ getStatusCode(application.status) }}</span>
-                </div>
-                <div class="meta-item">
-                  <span class="meta-label">Last Updated:</span>
-                  <span class="meta-value"
-                    >{{ formatDate(application.timeline?.lastModifiedDate || application.lastModifiedDate) }} at
-                    {{ getLastModifiedTime(application) }}</span
-                  >
-                </div>
-              </div>
-              <div class="next-action">
-                {{ getNextAction(application.status) }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Timeline Events -->
-          <div class="timeline-events-card">
-            <h2>Timeline Events</h2>
-            <table class="events-table">
-              <thead>
-                <tr>
-                  <th>Event</th>
-                  <th>Date</th>
-                  <th>Time</th>
-                  <th>Performed By</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let event of timelineEvents">
-                  <td>
-                    <strong>{{ event.event }}</strong>
-                  </td>
-                  <td>{{ event.date }}</td>
-                  <td>{{ event.time }}</td>
-                  <td>{{ event.performedBy }}</td>
-                  <td>
-                    <span
-                      class="event-status-badge"
-                      [ngClass]="'status-' + event.status.toLowerCase().replace(' ', '-')"
-                    >
-                      {{ event.status }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Navigation -->
-          <div class="navigation-actions">
-            <button (click)="backToList()" class="btn btn-secondary">
-              <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon> Back to Loans
-            </button>
-            <button (click)="viewApplicationDetails()" class="btn-view-details" *ngIf="loanId">
-              <span>👁️</span>
-              View Full Loan Details
-            </button>
-          </div>
+          <button (click)="viewApplicationDetails()" class="btn-view-details" *ngIf="loanId">
+            <span>👁️</span>
+            View Full Loan Details
+          </button>
         </div>
       </div>
     </div>
-  </main>
-</div>
+  </div>
+</mifosx-clientportal-layout>

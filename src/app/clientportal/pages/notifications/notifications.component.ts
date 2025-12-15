@@ -146,9 +146,4 @@ export class ClientportalNotificationsComponent implements OnInit {
   getUserName(): string {
     return this.clientProfile?.displayName || 'User';
   }
-
-  navigateToNotifications(): void {
-    // Already on notifications page, do nothing or scroll to top
-    window.scrollTo(0, 0);
-  }
 }
