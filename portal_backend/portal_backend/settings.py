@@ -211,6 +211,10 @@ if not cloudflare_tunnel_url and is_local:
     except Exception:
         pass  # Ignore errors reading tunnel URL
 
+# On Railway, ignore local tunnel URLs (trycloudflare.com) - they won't work from Railway
+if is_railway and cloudflare_tunnel_url and "trycloudflare.com" in cloudflare_tunnel_url:
+    cloudflare_tunnel_url = None  # Ignore local tunnel URLs on Railway
+
 # Add /fineract-provider/api/v1 suffix if needed
 if cloudflare_tunnel_url and not cloudflare_tunnel_url.endswith("/fineract-provider/api/v1"):
     if not cloudflare_tunnel_url.endswith("/"):
