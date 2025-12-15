@@ -1,8 +1,6 @@
 /* stylelint-disable selector-max-compound-selectors, max-nesting-depth, no-descending-specificity, selector-no-qualifying-type, unit-allowed-list, keyframes-name-pattern, color-function-notation, alpha-value-notation */
-.clientportal-loan-application {
-  // Page-specific styles only (sidebar and main-content are in shared layout component)
-
-  h1 {
+// Page-specific styles only (sidebar and main-content are in shared layout component)
+h1 {
     margin: 0 0 32px;
     font-size: 28px;
     font-weight: 600;
@@ -518,9 +516,8 @@
     }
   }
 
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }

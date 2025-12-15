@@ -1,8 +1,6 @@
 /* stylelint-disable selector-max-compound-selectors, max-nesting-depth, no-descending-specificity, selector-no-qualifying-type, unit-allowed-list, keyframes-name-pattern, color-function-notation, alpha-value-notation, media-feature-range-notation */
-.clientportal-transactions {
-  // Page-specific styles only (sidebar and main-content are in shared layout component)
-
-  h1 {
+// Page-specific styles only (sidebar and main-content are in shared layout component)
+h1 {
     margin: 0 0 8px;
     font-size: 28px;
     font-weight: 600;
@@ -359,7 +357,6 @@
       color: #d32f2f;
       font-size: 16px;
     }
-  }
 }
 
 @keyframes spin {

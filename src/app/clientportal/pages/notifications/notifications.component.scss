@@ -1,8 +1,6 @@
 /* stylelint-disable selector-max-compound-selectors, max-nesting-depth, no-descending-specificity, selector-no-qualifying-type, unit-allowed-list, keyframes-name-pattern, color-function-notation, alpha-value-notation */
-.clientportal-notifications {
-  // Page-specific styles only (sidebar and main-content are in shared layout component)
-
-  .page-header {
+// Page-specific styles only (sidebar and main-content are in shared layout component)
+.page-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -196,7 +194,6 @@
       font-size: 16px;
     }
   }
-}
 
 @keyframes spin {
   to {

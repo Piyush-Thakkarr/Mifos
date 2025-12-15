@@ -1,5 +1,5 @@
-.clientportal-loans {
-  h1 {
+// Page-specific styles only (sidebar and main-content are in shared layout component)
+h1 {
     margin: 0 0 8px;
     font-size: 28px;
     font-weight: 600;
@@ -267,7 +267,6 @@
     .loan-details {
       grid-template-columns: 1fr !important;
     }
-  }
 }
 
 @keyframes spin {
