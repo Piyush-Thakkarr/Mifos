@@ -115,7 +115,9 @@ import {
   faTableCells,
   faSave,
   faCreditCard,
-  faRocket
+  faRocket,
+  faSpinner,
+  faPaperPlane
 } from '@fortawesome/free-solid-svg-icons';
 
 /**
@@ -243,7 +245,9 @@ export class IconsModule {
       faTableCells,
       faSave,
       faCreditCard,
-      faRocket
+      faRocket,
+      faSpinner,
+      faPaperPlane
     );
   }
 }
