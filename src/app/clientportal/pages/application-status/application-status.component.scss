@@ -1,0 +1,572 @@
+/* stylelint-disable selector-max-compound-selectors, max-nesting-depth, no-descending-specificity, selector-no-qualifying-type, unit-allowed-list, keyframes-name-pattern, color-function-notation, alpha-value-notation */
+.clientportal-application-status {
+  // Page-specific styles only (sidebar and main-content are in shared layout component)
+
+  .page-header {
+    margin-bottom: 24px;
+
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+    }
+  }
+
+  .loading-state,
+  .error-state {
+    text-align: center;
+    padding: 48px;
+    color: #666;
+  }
+
+  .error-state {
+    color: #d32f2f;
+  }
+
+  .application-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  // Overview Card
+  .overview-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+
+    .overview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+
+      .overview-info {
+        flex: 1;
+
+        .info-row {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 12px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .info-label {
+            font-weight: 500;
+            color: #666;
+            min-width: 140px;
+          }
+
+          .info-value {
+            color: #333;
+
+            &.highlight {
+              color: #1976d2;
+              font-weight: 600;
+            }
+          }
+        }
+      }
+
+      .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+
+        &.status-completed {
+          background: #e8f5e9;
+          color: #2e7d32;
+        }
+
+        &.status-in-progress {
+          background: #fff3e0;
+          color: #e65100;
+        }
+      }
+    }
+  }
+
+  // Journey Card
+  .journey-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin: 0 0 32px;
+    }
+
+    .journey-timeline {
+      display: flex;
+      gap: 32px;
+      position: relative;
+
+      .journey-stage {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+
+        .stage-icon {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          background: #e0e0e0;
+          color: #999;
+          margin-bottom: 12px;
+          position: relative;
+          z-index: 2;
+        }
+
+        .stage-content {
+          text-align: center;
+
+          .stage-name {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
+          }
+
+          .stage-date {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+          }
+
+          .stage-by {
+            font-size: 12px;
+            color: #999;
+          }
+        }
+
+        .stage-connector {
+          position: absolute;
+          top: 24px;
+          left: calc(50% + 24px);
+          width: calc(100% - 48px);
+          height: 2px;
+          background: #e0e0e0;
+          z-index: 1;
+
+          &.filled {
+            background: #4caf50;
+          }
+        }
+
+        &.completed {
+          .stage-icon {
+            background: #4caf50;
+            color: #fff;
+          }
+
+          .stage-name {
+            color: #2e7d32;
+          }
+        }
+
+        &.active {
+          .stage-icon {
+            background: #1976d2;
+            color: #fff;
+          }
+
+          .stage-name {
+            color: #1976d2;
+            font-weight: 600;
+          }
+        }
+
+        &:last-child {
+          .stage-connector {
+            display: none;
+          }
+        }
+      }
+    }
+  }
+
+  // Status Details Card
+  .status-details-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin: 0 0 24px;
+    }
+
+    .status-info {
+      .status-badge-large {
+        display: inline-block;
+        padding: 12px 24px;
+        border-radius: 20px;
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 24px;
+
+        &.status-completed {
+          background: #e8f5e9;
+          color: #2e7d32;
+        }
+
+        &.status-in-progress {
+          background: #fff3e0;
+          color: #e65100;
+        }
+      }
+
+      .status-meta {
+        margin-bottom: 24px;
+
+        .meta-item {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 12px;
+
+          .meta-label {
+            font-weight: 500;
+            color: #666;
+            min-width: 120px;
+          }
+
+          .meta-value {
+            color: #333;
+          }
+        }
+      }
+
+      .next-action {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 16px;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+    }
+  }
+
+  // Timeline Events Card
+  .timeline-events-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin: 0 0 24px;
+    }
+
+    .events-table {
+      width: 100%;
+      border-collapse: collapse;
+
+      thead {
+        background: #f5f5f5;
+
+        th {
+          padding: 12px 16px;
+          text-align: left;
+          font-weight: 600;
+          color: #333;
+          border-bottom: 2px solid #ddd;
+          font-size: 14px;
+        }
+      }
+
+      tbody {
+        tr {
+          border-bottom: 1px solid #e0e0e0;
+
+          &:hover {
+            background: #f9f9f9;
+          }
+
+          td {
+            padding: 16px;
+            color: #666;
+            font-size: 14px;
+
+            strong {
+              color: #333;
+              font-weight: 600;
+            }
+          }
+        }
+      }
+
+      .event-status-badge {
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+
+        &.status-completed {
+          background: #e8f5e9;
+          color: #2e7d32;
+        }
+
+        &.status-in-progress {
+          background: #fff3e0;
+          color: #e65100;
+        }
+      }
+    }
+  }
+
+  // Loans List View
+  .loans-list-view {
+    .loans-list h2 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 24px;
+    }
+
+    .loans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1px));
+      gap: 24px;
+    }
+
+    .loan-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .loan-card.clickable {
+      cursor: pointer;
+    }
+
+    .loan-card.clickable:hover {
+      box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+      border-color: #1976d2;
+      transform: translateY(-2px);
+    }
+
+    .loan-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .loan-id {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1976d2;
+    }
+
+    .loan-status-badge {
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .loan-status-badge.status-completed {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .loan-status-badge.status-in-progress {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .loan-card-body {
+      margin-bottom: 16px;
+    }
+
+    .loan-info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .loan-info-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .loan-label {
+      color: #666;
+      font-weight: 500;
+    }
+
+    .loan-value {
+      color: #333;
+      font-weight: 600;
+    }
+
+    .loan-card-footer {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .loan-date {
+      color: #999;
+    }
+
+    .btn-view-details-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: #e3f2fd;
+      color: #1976d2;
+      border: 1px solid #bbdefb;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+
+      fa-icon {
+        font-size: 11px;
+      }
+
+      &:hover {
+        background: #1976d2;
+        color: white;
+        border-color: #1976d2;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px;
+      color: #666;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+    }
+  }
+
+  // Navigation Actions
+  .navigation-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 0;
+
+    .nav-link {
+      color: #1976d2;
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    .btn-view-details {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      fa-icon {
+        font-size: 12px;
+      }
+
+      &:hover {
+        background: #1565c0;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      span {
+        font-size: 16px;
+      }
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &.btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #f5f5f5;
+        color: #333;
+        border: 1px solid #e0e0e0;
+
+        fa-icon {
+          font-size: 12px;
+        }
+
+        &:hover {
+          background: #e0e0e0;
+          border-color: #bdbdbd;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+}

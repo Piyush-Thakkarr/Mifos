@@ -1,136 +1,76 @@
-# Environment Variables - NEVER COMMIT THESE
+# See http://help.github.com/ignore-files/ for more about ignoring files.
 .env
-.env.local
-.env.*.local
-*.env
-!*.env.sample
-!*.env.example
+.angular/*
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-.venv/
-venv/
-ENV/
-env/
+# Compiled output
+/dist
+/tmp
+/out-tsc
 
-# Django
-*.log
-*.pot
-*.pyc
-db.sqlite3
-db.sqlite3-journal
-/media
-/staticfiles
-/static
+# Dependencies
+/node_modules
 
-# Node / Angular
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-.pnpm-debug.log*
-.npm
-.eslintcache
-.angular/
-dist/
-dist-ssr/
-*.local
-.vercel
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
+# Cordova
+/www
+/plugins
+/platforms
 
-# OS Files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-Desktop.ini
-
-# IDE
-.idea/
-.vscode/
-*.iml
-*.ipr
-*.iws
+# IDEs and editors
+.idea/*
+!.idea/runConfigurations/
+!.idea/codeStyleSettings.xml
 .project
 .classpath
+.c9/
+*.launch
 .settings/
+xcuserdata/
+*.sublime-workspace
 
-# Build outputs
-build/
-target/
-out/
-*.class
-*.jar
-*.war
-*.ear
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Temporary files
-*.tmp
-*.temp
-*.bak
-*.backup
-*.old
-*.orig
-
-# Coverage reports
-coverage/
-.nyc_output/
-*.lcov
+# Maven
+/target
+/log
 
 # Misc
-.cache/
-.temp/
-.tmp/
-*.pid
-*.seed
-*.pid.lock
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+/reports
+/src/translations/template.*
+.eslintcache
 
-# Portal Backend specific
+# System Files
+.DS_Store
+Thumbs.db
+.vscode/
+cypress/
+
+src/assets/env.js
+src/environments/.env.ts
+
+# Portal Backend (Django)
+portal_backend/.env
 portal_backend/db.sqlite3
+portal_backend/db.sqlite3-journal
 portal_backend/__pycache__/
 portal_backend/**/__pycache__/
 portal_backend/**/*.pyc
-portal_backend/.env
+portal_backend/**/*.pyo
 portal_backend/cookies.txt
-
-# Backup files
-backups/
-backup/
-*.tgz
-*.tar.gz
-
+portal_backend/*.log
+portal_backend/.venv/
+portal_backend/venv/
+portal_backend/ENV/
+portal_backend/env/

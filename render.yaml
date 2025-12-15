@@ -1,0 +1,73 @@
+services:
+  # Django Backend Service (Client Portal API)
+  - type: web
+    name: client-portal-backend
+    env: python
+    plan: free
+    buildCommand: |
+      cd portal_backend &&
+      pip install -r requirements.txt &&
+      python manage.py collectstatic --noinput
+    startCommand: |
+      cd portal_backend &&
+      gunicorn portal_backend.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: false
+      # Fineract Configuration - Using Public Fineract Server
+      - key: MIFOS_BASE_URL
+        sync: false  # Set manually: https://demo.mifos.io/fineract-provider/api/v1
+      - key: MIFOS_TENANT_ID
+        value: default
+      - key: MIFOS_ADMIN_USER
+        sync: false  # Set manually: mifos (or your public server username)
+      - key: MIFOS_ADMIN_PASS
+        sync: false  # Set manually: password (or your public server password)
+      - key: MIFOS_VERIFY_SSL
+        value: true  # true for public servers (they have valid SSL certificates)
+      - key: MIFOS_CLIENT_ID
+        value: 3
+      # Frontend URL for CORS (will be auto-populated after frontend deploys)
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: client-portal-frontend
+          property: host
+      - key: CORS_ALLOWED_ORIGINS
+        fromService:
+          type: web
+          name: client-portal-frontend
+          property: host
+
+  # Angular Frontend Service (Static Site)
+  - type: web
+    name: client-portal-frontend
+    env: node
+    plan: free
+    buildCommand: |
+      chmod +x build-frontend.sh &&
+      ./build-frontend.sh
+    startCommand: npx serve -s dist/web-app/browser -l $PORT
+    envVars:
+      - key: NODE_VERSION
+        value: 20.x
+      # Django Backend URL (auto-populated from backend service)
+      - key: DJANGO_API_URL
+        fromService:
+          type: web
+          name: client-portal-backend
+          property: host
+      # Fineract API URL (for main Mifos app, not client portal)
+      # Using Public Fineract Server
+      - key: FINERACT_API_URL
+        sync: false  # Set manually: https://demo.mifos.io (base URL only, no /fineract-provider)
+      - key: FINERACT_API_PROVIDER
+        value: /fineract-provider/api
+      - key: FINERACT_API_VERSION
+        value: /v1
+      - key: FINERACT_PLATFORM_TENANT_IDENTIFIER
+        value: default

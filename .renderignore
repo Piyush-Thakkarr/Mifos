@@ -1,0 +1,4 @@
+# Render should ignore Dockerfile and use build commands instead
+Dockerfile
+.dockerignore
+

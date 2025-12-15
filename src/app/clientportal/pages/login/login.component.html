@@ -1,0 +1,34 @@
+<div class="clientportal-login">
+  <mat-card>
+    <mat-card-title>Client Portal Login</mat-card-title>
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Username</mat-label>
+          <input matInput formControlName="username" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" formControlName="password" />
+        </mat-form-field>
+
+        <div class="error" *ngIf="error">
+          {{ error }}
+        </div>
+
+        <button mat-raised-button color="primary" class="full-width" type="submit" [disabled]="loading">
+          {{ loading ? 'Signing in...' : 'Sign in' }}
+        </button>
+      </form>
+
+      <div class="back-to-main-login">
+        <div class="divider-line"></div>
+        <button mat-stroked-button class="back-button" (click)="navigateToMainLogin()">
+          <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon> Back to Admin Login
+        </button>
+        <p class="back-description">Are you an administrator? Login here</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

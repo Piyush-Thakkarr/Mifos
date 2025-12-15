@@ -1,0 +1,53 @@
+<mifosx-clientportal-layout [userName]="getUserName()">
+  <div class="content-wrapper" *ngIf="!loading && !error">
+    <div class="page-header">
+      <div>
+        <h1>Notifications</h1>
+        <p class="subtitle">
+          You have {{ unreadCount }} unread {{ unreadCount === 1 ? 'notification' : 'notifications' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="notifications-list" *ngIf="notifications.length > 0">
+      <div
+        class="notification-card"
+        *ngFor="let notification of notifications"
+        [class.unread]="!notification.read"
+        (click)="!notification.read && markAsRead(notification.id)"
+      >
+        <div class="notification-icon" [ngClass]="getNotificationIconClass(notification.type)">
+          <span>{{ getNotificationIcon(notification.type) }}</span>
+        </div>
+        <div class="notification-content">
+          <div class="notification-header">
+            <h3 class="notification-title">{{ notification.title }}</h3>
+            <span class="status-badge new" *ngIf="!notification.read">New</span>
+          </div>
+          <p class="notification-description">{{ notification.description }}</p>
+          <span class="notification-time">{{ formatDate(notification.timestamp) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="notifications.length === 0">
+      <div class="empty-icon">
+        <fa-icon [icon]="['fas', 'bell']"></fa-icon>
+      </div>
+      <p>No notifications</p>
+      <p class="empty-subtitle">You're all caught up!</p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading notifications...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error">
+    <p class="error">{{ error }}</p>
+  </div>
+</mifosx-clientportal-layout>

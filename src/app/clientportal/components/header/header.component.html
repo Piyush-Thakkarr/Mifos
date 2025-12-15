@@ -1,0 +1,21 @@
+<header class="top-header">
+  <div class="header-left">
+    <button
+      class="mobile-menu-toggle mobile-only"
+      (click)="toggleSidebar()"
+      aria-label="Toggle menu"
+      *ngIf="showSidebarToggle"
+    >
+      <fa-icon [icon]="['fas', 'bars']"></fa-icon>
+    </button>
+  </div>
+  <div class="header-right">
+    <button class="icon-button" (click)="navigateToNotifications()" aria-label="Notifications">
+      <fa-icon [icon]="['fas', 'bell']"></fa-icon>
+    </button>
+    <div class="user-info">
+      <fa-icon [icon]="['fas', 'user-circle']" class="user-icon"></fa-icon>
+      <span class="user-name">{{ userName }}</span>
+    </div>
+  </div>
+</header>
