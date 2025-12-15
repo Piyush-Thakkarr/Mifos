@@ -1,69 +1,9 @@
 <div class="clientportal-dashboard">
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="logo">
-        <fa-icon [icon]="['fas', 'home']" class="logo-icon"></fa-icon>
-        <div class="logo-text">
-          <div class="logo-title">MFI Client Portal</div>
-          <div class="logo-subtitle">Microfinance Services</div>
-        </div>
-      </div>
-    </div>
-    <nav class="sidebar-nav">
-      <a routerLink="/clientportal/dashboard" routerLinkActive="active" class="nav-item">
-        <fa-icon [icon]="['fas', 'home']" class="nav-icon"></fa-icon>
-        <span>Dashboard</span>
-      </a>
-      <a routerLink="/clientportal/loan-application" class="nav-item">
-        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
-        <span>Loan Application</span>
-      </a>
-      <a routerLink="/clientportal/application-status" class="nav-item">
-        <fa-icon [icon]="['fas', 'check-circle']" class="nav-icon"></fa-icon>
-        <span>Application Status</span>
-      </a>
-      <a routerLink="/clientportal/calculators" class="nav-item">
-        <fa-icon [icon]="['fas', 'calculator']" class="nav-icon"></fa-icon>
-        <span>Financial Calculators</span>
-      </a>
-      <a routerLink="/clientportal/loans" class="nav-item">
-        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
-        <span>Loans</span>
-      </a>
-      <a routerLink="/clientportal/transactions" class="nav-item">
-        <fa-icon [icon]="['fas', 'credit-card']" class="nav-icon"></fa-icon>
-        <span>Transactions</span>
-      </a>
-      <a routerLink="/clientportal/notifications" class="nav-item">
-        <fa-icon [icon]="['fas', 'bell']" class="nav-icon"></fa-icon>
-        <span>Notifications</span>
-      </a>
-      <a routerLink="/clientportal/support" class="nav-item">
-        <fa-icon [icon]="['fas', 'comment-alt']" class="nav-icon"></fa-icon>
-        <span>Support</span>
-      </a>
-      <a routerLink="/clientportal/login" class="nav-item logout">
-        <fa-icon [icon]="['fas', 'sign-out-alt']" class="nav-icon"></fa-icon>
-        <span>Logout</span>
-      </a>
-    </nav>
-  </aside>
+  <mifosx-clientportal-sidebar></mifosx-clientportal-sidebar>
 
   <!-- Main Content -->
   <div class="main-content">
-    <!-- Header -->
-    <header class="top-header">
-      <div class="header-right">
-        <button class="icon-button" (click)="navigateToNotifications()">
-          <fa-icon [icon]="['fas', 'bell']"></fa-icon>
-        </button>
-        <div class="user-info">
-          <fa-icon [icon]="['fas', 'user-circle']" class="user-icon"></fa-icon>
-          <span class="user-name">{{ dashboard?.client?.profile?.displayName || 'User' }}</span>
-        </div>
-      </div>
-    </header>
+    <mifosx-clientportal-header [userName]="getUserName()" [showSidebarToggle]="true"> </mifosx-clientportal-header>
 
     <div class="content-wrapper" *ngIf="!loading && !error && dashboard as d">
       <!-- User Profile Card -->
@@ -85,10 +25,7 @@
           <h3>Need Additional Funds?</h3>
           <p>Apply for a new loan today! Quick approval process with competitive interest rates.</p>
         </div>
-        <a
-          routerLink="/clientportal/loan-application"
-          class="apply-loan-btn"
-        >
+        <a routerLink="/clientportal/loan-application" class="apply-loan-btn">
           <fa-icon [icon]="['fas', 'plus']"></fa-icon> Apply for New Loan
         </a>
       </div>
@@ -170,9 +107,7 @@
                   <span class="status-badge active">{{ getStatus(loan.status) }}</span>
                 </td>
                 <td>
-                  <a [routerLink]="['/clientportal/loans', loan.id]" class="btn-view-details">
-                    View Details
-                  </a>
+                  <a [routerLink]="['/clientportal/loans', loan.id]" class="btn-view-details"> View Details </a>
                 </td>
               </tr>
             </tbody>

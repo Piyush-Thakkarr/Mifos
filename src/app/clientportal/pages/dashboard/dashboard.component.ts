@@ -23,6 +23,10 @@ export class ClientportalDashboardComponent {
     this.load();
   }
 
+  getUserName(): string {
+    return this.dashboard?.client?.profile?.displayName || 'User';
+  }
+
   load(): void {
     this.loading = true;
     this.error = null;
@@ -158,9 +162,5 @@ export class ClientportalDashboardComponent {
 
   closeComingSoonPopup(): void {
     this.showComingSoonPopup = false;
-  }
-
-  navigateToNotifications(): void {
-    this.router.navigate(['/clientportal/notifications']);
   }
 }

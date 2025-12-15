@@ -1,0 +1,61 @@
+<!-- Sidebar -->
+<aside class="sidebar" [class.open]="sidebarOpen" [class.closed]="!sidebarOpen">
+  <div class="sidebar-header">
+    <div class="logo">
+      <fa-icon [icon]="['fas', 'home']" class="logo-icon"></fa-icon>
+      <div class="logo-text">
+        <div class="logo-title">MFI Client Portal</div>
+        <div class="logo-subtitle">Microfinance Services</div>
+      </div>
+    </div>
+    <button class="sidebar-toggle mobile-only" (click)="closeSidebar()" aria-label="Close sidebar">
+      <fa-icon [icon]="['fas', 'times']"></fa-icon>
+    </button>
+  </div>
+  <nav class="sidebar-nav">
+    <a routerLink="/clientportal/dashboard" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+      <fa-icon [icon]="['fas', 'home']" class="nav-icon"></fa-icon>
+      <span>Dashboard</span>
+    </a>
+    <a routerLink="/clientportal/loan-application" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+      <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
+      <span>Loan Application</span>
+    </a>
+    <a
+      routerLink="/clientportal/application-status"
+      routerLinkActive="active"
+      class="nav-item"
+      (click)="closeSidebar()"
+    >
+      <fa-icon [icon]="['fas', 'check-circle']" class="nav-icon"></fa-icon>
+      <span>Application Status</span>
+    </a>
+    <a routerLink="/clientportal/calculators" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+      <fa-icon [icon]="['fas', 'calculator']" class="nav-icon"></fa-icon>
+      <span>Financial Calculators</span>
+    </a>
+    <a routerLink="/clientportal/loans" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+      <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
+      <span>Loans</span>
+    </a>
+    <a routerLink="/clientportal/transactions" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+      <fa-icon [icon]="['fas', 'credit-card']" class="nav-icon"></fa-icon>
+      <span>Transactions</span>
+    </a>
+    <a routerLink="/clientportal/notifications" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+      <fa-icon [icon]="['fas', 'bell']" class="nav-icon"></fa-icon>
+      <span>Notifications</span>
+    </a>
+    <a routerLink="/clientportal/support" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+      <fa-icon [icon]="['fas', 'comment-alt']" class="nav-icon"></fa-icon>
+      <span>Support</span>
+    </a>
+    <a routerLink="/clientportal/login" class="nav-item logout" (click)="closeSidebar()">
+      <fa-icon [icon]="['fas', 'sign-out-alt']" class="nav-icon"></fa-icon>
+      <span>Logout</span>
+    </a>
+  </nav>
+</aside>
+
+<!-- Mobile Overlay -->
+<div class="sidebar-overlay" [class.active]="sidebarOpen" (click)="closeSidebar()" *ngIf="sidebarOpen"></div>
