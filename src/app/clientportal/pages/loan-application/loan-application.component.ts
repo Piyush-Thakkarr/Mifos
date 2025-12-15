@@ -479,7 +479,7 @@ export class ClientportalLoanApplicationComponent implements OnInit {
         } else if (result.repaymentSchedule?.periods && Array.isArray(result.repaymentSchedule.periods)) {
           periods = result.repaymentSchedule.periods;
         }
-        
+
         // Filter out disbursement periods (periods with zero principal, interest, and total)
         // These are typically the first period representing the loan disbursement date
         this.repaymentSchedule = periods.filter((period: any) => {
@@ -489,7 +489,7 @@ export class ClientportalLoanApplicationComponent implements OnInit {
           // Keep periods that have at least one non-zero value (actual repayment periods)
           return principal > 0 || interest > 0 || total > 0;
         });
-        
+
         this.calculateTotals();
       },
       error: (err: any) => {
@@ -719,10 +719,6 @@ export class ClientportalLoanApplicationComponent implements OnInit {
 
   getUserName(): string {
     return this.clientProfile?.displayName || 'User';
-  }
-
-  navigateToNotifications(): void {
-    this.router.navigate(['/clientportal/notifications']);
   }
 
   formatDate(date: string | Date | null | undefined): string {

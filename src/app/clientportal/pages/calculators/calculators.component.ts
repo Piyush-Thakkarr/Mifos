@@ -136,6 +136,10 @@ export class ClientportalCalculatorsComponent implements OnInit {
     });
   }
 
+  getUserName(): string {
+    return 'User'; // Calculators doesn't need user profile
+  }
+
   setActiveTab(tab: 'emi' | 'interest' | 'compare'): void {
     this.activeTab = tab;
     this.emiResult = null;

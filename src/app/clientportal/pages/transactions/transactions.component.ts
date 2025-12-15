@@ -189,10 +189,6 @@ export class ClientportalTransactionsComponent implements OnInit {
     return this.clientProfile?.displayName || 'User';
   }
 
-  navigateToNotifications(): void {
-    this.router.navigate(['/clientportal/notifications']);
-  }
-
   downloadStatement(): void {
     this.authService.downloadTransactionsStatement(this.searchQuery, this.transactionType, this.loanAccount).subscribe({
       next: (blob: Blob) => {

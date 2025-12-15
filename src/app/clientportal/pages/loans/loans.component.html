@@ -1,179 +1,112 @@
-<div class="clientportal-loans">
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="logo">
-        <fa-icon [icon]="['fas', 'home']" class="logo-icon"></fa-icon>
-        <div class="logo-text">
-          <div class="logo-title">MFI Client Portal</div>
-          <div class="logo-subtitle">Microfinance Services</div>
+<mifosx-clientportal-layout [userName]="getUserName()">
+  <div class="content-wrapper" *ngIf="!loading && !error">
+    <h1>My Loans</h1>
+    <p class="subtitle">View and manage all your loan accounts</p>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards" *ngIf="summary">
+      <div class="summary-card">
+        <div class="card-icon">
+          <fa-icon [icon]="['fas', 'file-alt']"></fa-icon>
+        </div>
+        <div class="card-content">
+          <div class="card-value">{{ summary.totalLoans }}</div>
+          <div class="card-label">Total Loans</div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="card-icon">
+          <fa-icon [icon]="['fas', 'clock']"></fa-icon>
+        </div>
+        <div class="card-content">
+          <div class="card-value">{{ summary.active }}</div>
+          <div class="card-label">Active</div>
+          <div class="card-sublabel">Closed: {{ summary.closed }}</div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="card-icon">
+          <fa-icon [icon]="['fas', 'dollar-sign']"></fa-icon>
+        </div>
+        <div class="card-content">
+          <div class="card-value">₹{{ summary.totalDisbursed | number: '1.0-0' }}</div>
+          <div class="card-label">Total Disbursed</div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="card-icon">
+          <fa-icon [icon]="['fas', 'chart-line']"></fa-icon>
+        </div>
+        <div class="card-content">
+          <div class="card-value">₹{{ summary.totalOutstanding | number: '1.0-0' }}</div>
+          <div class="card-label">Outstanding</div>
         </div>
       </div>
     </div>
-    <nav class="sidebar-nav">
-      <a routerLink="/clientportal/dashboard" class="nav-item">
-        <fa-icon [icon]="['fas', 'home']" class="nav-icon"></fa-icon>
-        <span>Dashboard</span>
-      </a>
-      <a routerLink="/clientportal/loan-application" class="nav-item">
-        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
-        <span>Loan Application</span>
-      </a>
-      <a routerLink="/clientportal/application-status" class="nav-item">
-        <fa-icon [icon]="['fas', 'check-circle']" class="nav-icon"></fa-icon>
-        <span>Application Status</span>
-      </a>
-      <a routerLink="/clientportal/calculators" class="nav-item">
-        <fa-icon [icon]="['fas', 'calculator']" class="nav-icon"></fa-icon>
-        <span>Financial Calculators</span>
-      </a>
-      <a routerLink="/clientportal/loans" routerLinkActive="active" class="nav-item">
-        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
-        <span>Loans</span>
-      </a>
-      <a routerLink="/clientportal/transactions" class="nav-item">
-        <fa-icon [icon]="['fas', 'credit-card']" class="nav-icon"></fa-icon>
-        <span>Transactions</span>
-      </a>
-      <a routerLink="/clientportal/notifications" class="nav-item">
-        <fa-icon [icon]="['fas', 'bell']" class="nav-icon"></fa-icon>
-        <span>Notifications</span>
-      </a>
-      <a routerLink="/clientportal/support" class="nav-item">
-        <fa-icon [icon]="['fas', 'comment-alt']" class="nav-icon"></fa-icon>
-        <span>Support</span>
-      </a>
-      <a routerLink="/clientportal/login" class="nav-item logout">
-        <fa-icon [icon]="['fas', 'sign-out-alt']" class="nav-icon"></fa-icon>
-        <span>Logout</span>
-      </a>
-    </nav>
-  </aside>
 
-  <!-- Main Content -->
-  <div class="main-content">
-    <!-- Header -->
-    <header class="top-header">
-      <div class="header-right">
-        <button class="icon-button" (click)="navigateToNotifications()">
-          <fa-icon [icon]="['fas', 'bell']"></fa-icon>
-        </button>
-        <div class="user-info">
-          <fa-icon [icon]="['fas', 'user-circle']" class="user-icon"></fa-icon>
-          <span class="user-name">{{ getUserName() }}</span>
+    <!-- Loan Cards -->
+    <div class="loans-list" *ngIf="loans.length > 0">
+      <div class="loan-card" *ngFor="let loan of loans">
+        <div class="loan-header">
+          <div class="loan-id">{{ loan.accountNo || loan.id }}</div>
+          <span
+            class="status-badge"
+            [class.active]="getStatus(loan.status) === 'Active'"
+            [class.closed]="getStatus(loan.status) === 'Closed'"
+          >
+            {{ getStatus(loan.status) }}
+          </span>
         </div>
+        <div class="loan-details">
+          <div class="detail-row">
+            <span class="label">Disbursed Amount:</span>
+            <span class="value">₹{{ loan.principal || 0 | number: '1.0-0' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Outstanding:</span>
+            <span class="value">₹{{ loan.outstanding || loan.principal || 0 | number: '1.0-0' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Interest Rate:</span>
+            <span class="value">{{ loan.interestRate ? loan.interestRate + '% p.a.' : '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Tenure:</span>
+            <span class="value">{{ loan.tenure ? loan.tenure + ' months' : '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">EMI Amount:</span>
+            <span class="value">{{ loan.emiAmount ? '₹' + (loan.emiAmount | number: '1.0-0') : '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Next EMI Date:</span>
+            <span class="value">{{ loan.nextRepaymentDate || '—' }}</span>
+          </div>
+        </div>
+        <div class="loan-progress" *ngIf="getStatus(loan.status) === 'Active'">
+          <div class="progress-info">
+            <span>Paid: {{ loan.paidEMIs || 0 }} EMIs</span>
+            <span>Remaining: {{ loan.remainingEMIs || 0 }} EMIs</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="loan.progressPercentage || 0"></div>
+          </div>
+        </div>
+        <button class="view-details-btn" (click)="viewLoanDetails(loan.id)">View Loan Details</button>
       </div>
-    </header>
-
-    <div class="content-wrapper" *ngIf="!loading && !error">
-      <h1>My Loans</h1>
-      <p class="subtitle">View and manage all your loan accounts</p>
-
-      <!-- Summary Cards -->
-      <div class="summary-cards" *ngIf="summary">
-        <div class="summary-card">
-          <div class="card-icon">
-            <fa-icon [icon]="['fas', 'file-alt']"></fa-icon>
-          </div>
-          <div class="card-content">
-            <div class="card-value">{{ summary.totalLoans }}</div>
-            <div class="card-label">Total Loans</div>
-          </div>
-        </div>
-        <div class="summary-card">
-          <div class="card-icon">
-            <fa-icon [icon]="['fas', 'clock']"></fa-icon>
-          </div>
-          <div class="card-content">
-            <div class="card-value">{{ summary.active }}</div>
-            <div class="card-label">Active</div>
-            <div class="card-sublabel">Closed: {{ summary.closed }}</div>
-          </div>
-        </div>
-        <div class="summary-card">
-          <div class="card-icon">
-            <fa-icon [icon]="['fas', 'dollar-sign']"></fa-icon>
-          </div>
-          <div class="card-content">
-            <div class="card-value">₹{{ summary.totalDisbursed | number: '1.0-0' }}</div>
-            <div class="card-label">Total Disbursed</div>
-          </div>
-        </div>
-        <div class="summary-card">
-          <div class="card-icon">
-            <fa-icon [icon]="['fas', 'chart-line']"></fa-icon>
-          </div>
-          <div class="card-content">
-            <div class="card-value">₹{{ summary.totalOutstanding | number: '1.0-0' }}</div>
-            <div class="card-label">Outstanding</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Loan Cards -->
-      <div class="loans-list" *ngIf="loans.length > 0">
-        <div class="loan-card" *ngFor="let loan of loans">
-          <div class="loan-header">
-            <div class="loan-id">{{ loan.accountNo || loan.id }}</div>
-            <span
-              class="status-badge"
-              [class.active]="getStatus(loan.status) === 'Active'"
-              [class.closed]="getStatus(loan.status) === 'Closed'"
-            >
-              {{ getStatus(loan.status) }}
-            </span>
-          </div>
-          <div class="loan-details">
-            <div class="detail-row">
-              <span class="label">Disbursed Amount:</span>
-              <span class="value">₹{{ loan.principal || 0 | number: '1.0-0' }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="label">Outstanding:</span>
-              <span class="value">₹{{ loan.outstanding || loan.principal || 0 | number: '1.0-0' }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="label">Interest Rate:</span>
-              <span class="value">{{ loan.interestRate ? loan.interestRate + '% p.a.' : '—' }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="label">Tenure:</span>
-              <span class="value">{{ loan.tenure ? loan.tenure + ' months' : '—' }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="label">EMI Amount:</span>
-              <span class="value">{{ loan.emiAmount ? '₹' + (loan.emiAmount | number: '1.0-0') : '—' }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="label">Next EMI Date:</span>
-              <span class="value">{{ loan.nextRepaymentDate || '—' }}</span>
-            </div>
-          </div>
-          <div class="loan-progress" *ngIf="getStatus(loan.status) === 'Active'">
-            <div class="progress-info">
-              <span>Paid: {{ loan.paidEMIs || 0 }} EMIs</span>
-              <span>Remaining: {{ loan.remainingEMIs || 0 }} EMIs</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill" [style.width.%]="loan.progressPercentage || 0"></div>
-            </div>
-          </div>
-          <button class="view-details-btn" (click)="viewLoanDetails(loan.id)">View Loan Details</button>
-        </div>
-      </div>
-
-      <div class="empty-state" *ngIf="loans.length === 0">No loans found.</div>
     </div>
 
-    <!-- Loading State -->
-    <div class="loading-state" *ngIf="loading">
-      <div class="spinner"></div>
-      <p>Loading loans data...</p>
-    </div>
-
-    <!-- Error State -->
-    <div class="error-state" *ngIf="error">
-      <p class="error">{{ error }}</p>
-    </div>
+    <div class="empty-state" *ngIf="loans.length === 0">No loans found.</div>
   </div>
-</div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading loans data...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error">
+    <p class="error">{{ error }}</p>
+  </div>
+</mifosx-clientportal-layout>

@@ -1,205 +1,149 @@
-<div class="clientportal-support">
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="logo">
-        <fa-icon [icon]="['fas', 'home']" class="logo-icon"></fa-icon>
-        <div class="logo-text">
-          <div class="logo-title">MFI Client Portal</div>
-          <div class="logo-subtitle">Microfinance Services</div>
+<mifosx-clientportal-layout [userName]="getUserName()">
+  <h1>Support & Contact</h1>
+  <p class="subtitle">We're here to help you with any questions or concerns</p>
+
+  <!-- Top Cards: Loan Officer and Branch Info -->
+  <div class="top-cards">
+    <!-- Loan Officer Card -->
+    <div class="loan-officer-card">
+      <div class="card-header">
+        <div class="card-icon">
+          <fa-icon [icon]="['fas', 'user-circle']"></fa-icon>
+        </div>
+        <div>
+          <h3>Your Loan Officer</h3>
+          <p class="card-subtitle">Personal assistance</p>
         </div>
       </div>
+      <div class="card-details">
+        <div class="detail-row">
+          <span class="detail-label">Name:</span>
+          <span class="detail-value">{{ loanOfficer.name }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Employee ID:</span>
+          <span class="detail-value">{{ loanOfficer.employeeId }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Phone:</span>
+          <span class="detail-value">{{ loanOfficer.phone }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Email:</span>
+          <span class="detail-value">{{ loanOfficer.email }}</span>
+        </div>
+      </div>
+      <button class="contact-officer-btn" (click)="contactOfficer()">Contact Officer</button>
     </div>
-    <nav class="sidebar-nav">
-      <a routerLink="/clientportal/dashboard" class="nav-item">
-        <fa-icon [icon]="['fas', 'home']" class="nav-icon"></fa-icon>
-        <span>Dashboard</span>
-      </a>
-      <a routerLink="/clientportal/loan-application" class="nav-item">
-        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
-        <span>Loan Application</span>
-      </a>
-      <a routerLink="/clientportal/application-status" class="nav-item">
-        <fa-icon [icon]="['fas', 'check-circle']" class="nav-icon"></fa-icon>
-        <span>Application Status</span>
-      </a>
-      <a routerLink="/clientportal/calculators" class="nav-item">
-        <fa-icon [icon]="['fas', 'calculator']" class="nav-icon"></fa-icon>
-        <span>Financial Calculators</span>
-      </a>
-      <a routerLink="/clientportal/loans" class="nav-item">
-        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
-        <span>Loans</span>
-      </a>
-      <a routerLink="/clientportal/transactions" class="nav-item">
-        <fa-icon [icon]="['fas', 'credit-card']" class="nav-icon"></fa-icon>
-        <span>Transactions</span>
-      </a>
-      <a routerLink="/clientportal/notifications" class="nav-item">
-        <fa-icon [icon]="['fas', 'bell']" class="nav-icon"></fa-icon>
-        <span>Notifications</span>
-      </a>
-      <a routerLink="/clientportal/support" routerLinkActive="active" class="nav-item">
-        <fa-icon [icon]="['fas', 'comment-alt']" class="nav-icon"></fa-icon>
-        <span>Support</span>
-      </a>
-      <a routerLink="/clientportal/login" class="nav-item logout">
-        <fa-icon [icon]="['fas', 'sign-out-alt']" class="nav-icon"></fa-icon>
-        <span>Logout</span>
-      </a>
-    </nav>
-  </aside>
 
-  <!-- Main Content -->
-  <div class="main-content">
-    <!-- Header -->
-    <header class="top-header">
-      <div class="header-right">
-        <button class="icon-button" (click)="navigateToNotifications()">
-          <fa-icon [icon]="['fas', 'bell']"></fa-icon>
-        </button>
-        <div class="user-info">
-          <fa-icon [icon]="['fas', 'user-circle']" class="user-icon"></fa-icon>
-          <span class="user-name">{{ getUserName() }}</span>
+    <!-- Branch Information Card -->
+    <div class="branch-card">
+      <div class="card-header">
+        <div class="card-icon branch-icon">📍</div>
+        <div>
+          <h3>Branch Information</h3>
+          <p class="card-subtitle">Your local branch</p>
         </div>
       </div>
-    </header>
-
-    <div class="content-wrapper">
-      <h1>Support & Contact</h1>
-      <p class="subtitle">We're here to help you with any questions or concerns</p>
-
-      <!-- Top Cards: Loan Officer and Branch Info -->
-      <div class="top-cards">
-        <!-- Loan Officer Card -->
-        <div class="loan-officer-card">
-          <div class="card-header">
-            <div class="card-icon">
-              <fa-icon [icon]="['fas', 'user-circle']"></fa-icon>
-            </div>
-            <div>
-              <h3>Your Loan Officer</h3>
-              <p class="card-subtitle">Personal assistance</p>
-            </div>
-          </div>
-          <div class="card-details">
-            <div class="detail-row">
-              <span class="detail-label">Name:</span>
-              <span class="detail-value">{{ loanOfficer.name }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Employee ID:</span>
-              <span class="detail-value">{{ loanOfficer.employeeId }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Phone:</span>
-              <span class="detail-value">{{ loanOfficer.phone }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Email:</span>
-              <span class="detail-value">{{ loanOfficer.email }}</span>
-            </div>
-          </div>
-          <button class="contact-officer-btn" (click)="contactOfficer()">Contact Officer</button>
+      <div class="card-details">
+        <div class="detail-row">
+          <span class="detail-label">Branch Name:</span>
+          <span class="detail-value">{{ branchInfo.name }}</span>
         </div>
-
-        <!-- Branch Information Card -->
-        <div class="branch-card">
-          <div class="card-header">
-            <div class="card-icon branch-icon">📍</div>
-            <div>
-              <h3>Branch Information</h3>
-              <p class="card-subtitle">Your local branch</p>
-            </div>
-          </div>
-          <div class="card-details">
-            <div class="detail-row">
-              <span class="detail-label">Branch Name:</span>
-              <span class="detail-value">{{ branchInfo.name }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Branch Code:</span>
-              <span class="detail-value">{{ branchInfo.code }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Address:</span>
-              <span class="detail-value">{{ branchInfo.address }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Working Hours:</span>
-              <span class="detail-value">{{ branchInfo.workingHours }}</span>
-            </div>
-          </div>
+        <div class="detail-row">
+          <span class="detail-label">Branch Code:</span>
+          <span class="detail-value">{{ branchInfo.code }}</span>
         </div>
-      </div>
-
-      <!-- Contact Options -->
-      <div class="contact-options">
-        <div class="contact-card">
-          <div class="contact-icon">📞</div>
-          <div class="contact-label">Call Us</div>
-          <div class="contact-value">{{ contactInfo.tollFree }}</div>
+        <div class="detail-row">
+          <span class="detail-label">Address:</span>
+          <span class="detail-value">{{ branchInfo.address }}</span>
         </div>
-        <div class="contact-card">
-          <div class="contact-icon">✉️</div>
-          <div class="contact-label">Email Us</div>
-          <div class="contact-value">{{ contactInfo.email }}</div>
+        <div class="detail-row">
+          <span class="detail-label">Working Hours:</span>
+          <span class="detail-value">{{ branchInfo.workingHours }}</span>
         </div>
-        <div class="contact-card">
-          <div class="contact-icon">
-            <fa-icon [icon]="['fas', 'clock']"></fa-icon>
-          </div>
-          <div class="contact-label">Response Time</div>
-          <div class="contact-value">Average: {{ contactInfo.responseTime }}</div>
-        </div>
-      </div>
-
-      <!-- Raise a Complaint or Request -->
-      <div class="request-section">
-        <h2>Raise a Complaint or Request</h2>
-        <p class="section-subtitle">Submit your issue and we'll get back to you</p>
-        <form class="request-form" (ngSubmit)="submitRequest()">
-          <div class="form-group">
-            <label>Issue Type</label>
-            <select class="form-control" [(ngModel)]="issueType" name="issueType" required>
-              <option *ngFor="let type of issueTypes" [value]="type">{{ type }}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Subject</label>
-            <input
-              type="text"
-              class="form-control"
-              placeholder="Brief description of your issue"
-              [(ngModel)]="subject"
-              name="subject"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label>Message</label>
-            <textarea
-              class="form-control textarea"
-              placeholder="Describe your issue in detail..."
-              rows="5"
-              [(ngModel)]="message"
-              name="message"
-              required
-            ></textarea>
-          </div>
-          <button type="submit" class="submit-btn">
-            <span>✈️</span>
-            Submit Request
-          </button>
-        </form>
-      </div>
-
-      <!-- Frequently Asked Questions -->
-      <div class="faq-section">
-        <h2>Frequently Asked Questions</h2>
-        <p class="section-subtitle">Quick answers to common questions</p>
-        <!-- FAQ content would go here -->
       </div>
     </div>
   </div>
-</div>
+
+  <!-- Contact Options -->
+  <div class="contact-options">
+    <div class="contact-card">
+      <div class="contact-icon">📞</div>
+      <div class="contact-label">Call Us</div>
+      <div class="contact-value">{{ contactInfo.tollFree }}</div>
+    </div>
+    <div class="contact-card">
+      <div class="contact-icon">✉️</div>
+      <div class="contact-label">Email Us</div>
+      <div class="contact-value">{{ contactInfo.email }}</div>
+    </div>
+    <div class="contact-card">
+      <div class="contact-icon">
+        <fa-icon [icon]="['fas', 'clock']"></fa-icon>
+      </div>
+      <div class="contact-label">Response Time</div>
+      <div class="contact-value">Average: {{ contactInfo.responseTime }}</div>
+    </div>
+  </div>
+
+  <!-- Error/Success Messages -->
+  <div class="message-container" *ngIf="error || success">
+    <div class="error-message" *ngIf="error">
+      <fa-icon [icon]="['fas', 'exclamation-circle']"></fa-icon>
+      {{ error }}
+    </div>
+    <div class="success-message" *ngIf="success">
+      <fa-icon [icon]="['fas', 'check-circle']"></fa-icon>
+      {{ success }}
+    </div>
+  </div>
+
+  <!-- Raise a Complaint or Request -->
+  <div class="request-section">
+    <h2>Raise a Complaint or Request</h2>
+    <p class="section-subtitle">Submit your issue and we'll get back to you</p>
+    <form class="request-form" (ngSubmit)="submitRequest()" [class.loading]="loading">
+      <div class="form-group">
+        <label>Issue Type</label>
+        <select class="form-control" [(ngModel)]="issueType" name="issueType" required>
+          <option *ngFor="let type of issueTypes" [value]="type">{{ type }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Subject</label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Brief description of your issue"
+          [(ngModel)]="subject"
+          name="subject"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label>Message</label>
+        <textarea
+          class="form-control textarea"
+          placeholder="Describe your issue in detail..."
+          rows="5"
+          [(ngModel)]="message"
+          name="message"
+          required
+        ></textarea>
+      </div>
+      <button type="submit" class="submit-btn" [disabled]="loading">
+        <fa-icon [icon]="['fas', 'paper-plane']" *ngIf="!loading"></fa-icon>
+        <fa-icon [icon]="['fas', 'spinner']" [spin]="true" *ngIf="loading"></fa-icon>
+        {{ loading ? 'Submitting...' : 'Submit Request' }}
+      </button>
+    </form>
+  </div>
+
+  <!-- Frequently Asked Questions -->
+  <div class="faq-section">
+    <h2>Frequently Asked Questions</h2>
+    <p class="section-subtitle">Quick answers to common questions</p>
+    <!-- FAQ content would go here -->
+  </div>
+</mifosx-clientportal-layout>

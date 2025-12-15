@@ -1,379 +1,325 @@
-<div class="clientportal-calculators">
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="logo">
-        <fa-icon [icon]="['fas', 'home']" class="logo-icon"></fa-icon>
-        <div class="logo-text">
-          <div class="logo-title">MFI Client Portal</div>
-          <div class="logo-subtitle">Microfinance Services</div>
-        </div>
-      </div>
+<mifosx-clientportal-layout [userName]="getUserName()">
+  <div class="content-wrapper">
+    <div class="page-header">
+      <h1>Financial Calculators</h1>
     </div>
-    <nav class="sidebar-nav">
-      <a routerLink="/clientportal/dashboard" routerLinkActive="active" class="nav-item">
-        <fa-icon [icon]="['fas', 'home']" class="nav-icon"></fa-icon>
-        <span>Dashboard</span>
-      </a>
-      <a routerLink="/clientportal/loan-application" class="nav-item">
-        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
-        <span>Loan Application</span>
-      </a>
-      <a routerLink="/clientportal/application-status" class="nav-item">
-        <fa-icon [icon]="['fas', 'check-circle']" class="nav-icon"></fa-icon>
-        <span>Application Status</span>
-      </a>
-      <a routerLink="/clientportal/calculators" routerLinkActive="active" class="nav-item">
-        <fa-icon [icon]="['fas', 'calculator']" class="nav-icon"></fa-icon>
-        <span>Financial Calculators</span>
-      </a>
-      <a routerLink="/clientportal/loans" class="nav-item">
-        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
-        <span>Loans</span>
-      </a>
-      <a routerLink="/clientportal/transactions" class="nav-item">
-        <fa-icon [icon]="['fas', 'credit-card']" class="nav-icon"></fa-icon>
-        <span>Transactions</span>
-      </a>
-      <a routerLink="/clientportal/notifications" class="nav-item">
-        <fa-icon [icon]="['fas', 'bell']" class="nav-icon"></fa-icon>
-        <span>Notifications</span>
-      </a>
-      <a routerLink="/clientportal/support" class="nav-item">
-        <fa-icon [icon]="['fas', 'comment-alt']" class="nav-icon"></fa-icon>
-        <span>Support</span>
-      </a>
-      <a routerLink="/clientportal/login" class="nav-item logout">
-        <fa-icon [icon]="['fas', 'sign-out-alt']" class="nav-icon"></fa-icon>
-        <span>Logout</span>
-      </a>
-    </nav>
-  </aside>
 
-  <!-- Main Content -->
-  <main class="main-content">
-    <div class="content-wrapper">
-      <div class="page-header">
-        <h1>Financial Calculators</h1>
-      </div>
+    <!-- Calculator Tabs -->
+    <div class="calculator-tabs">
+      <button class="tab-button" [class.active]="activeTab === 'emi'" (click)="setActiveTab('emi')">
+        <fa-icon [icon]="['fas', 'calculator']" class="tab-icon"></fa-icon>
+        <span>EMI Calculator</span>
+      </button>
+      <button class="tab-button" [class.active]="activeTab === 'interest'" (click)="setActiveTab('interest')">
+        <span class="tab-icon">%</span>
+        <span>Interest Calculator</span>
+      </button>
+      <button class="tab-button" [class.active]="activeTab === 'compare'" (click)="setActiveTab('compare')">
+        <span class="tab-icon">⚖️</span>
+        <span>Compare Products</span>
+      </button>
+    </div>
 
-      <!-- Calculator Tabs -->
-      <div class="calculator-tabs">
-        <button class="tab-button" [class.active]="activeTab === 'emi'" (click)="setActiveTab('emi')">
-          <fa-icon [icon]="['fas', 'calculator']" class="tab-icon"></fa-icon>
-          <span>EMI Calculator</span>
-        </button>
-        <button class="tab-button" [class.active]="activeTab === 'interest'" (click)="setActiveTab('interest')">
-          <span class="tab-icon">%</span>
-          <span>Interest Calculator</span>
-        </button>
-        <button class="tab-button" [class.active]="activeTab === 'compare'" (click)="setActiveTab('compare')">
-          <span class="tab-icon">⚖️</span>
-          <span>Compare Products</span>
-        </button>
-      </div>
+    <!-- EMI Calculator -->
+    <div class="calculator-section" *ngIf="activeTab === 'emi'">
+      <div class="calculator-card">
+        <h2 class="calculator-title">
+          <fa-icon [icon]="['fas', 'calculator']" class="title-icon"></fa-icon>
+          Loan EMI Calculator
+        </h2>
 
-      <!-- EMI Calculator -->
-      <div class="calculator-section" *ngIf="activeTab === 'emi'">
-        <div class="calculator-card">
-          <h2 class="calculator-title">
-            <fa-icon [icon]="['fas', 'calculator']" class="title-icon"></fa-icon>
-            Loan EMI Calculator
-          </h2>
-
-          <form [formGroup]="emiForm" class="calculator-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="loanAmount">Loan Amount</label>
-                <div class="input-with-prefix">
-                  <span class="prefix">$</span>
-                  <input
-                    type="number"
-                    id="loanAmount"
-                    formControlName="loanAmount"
-                    class="form-control"
-                    placeholder="100,000.00"
-                  />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="annualInterestRate">Annual Interest Rate (%)</label>
-                <div class="input-with-suffix">
-                  <input
-                    type="number"
-                    id="annualInterestRate"
-                    formControlName="annualInterestRate"
-                    class="form-control"
-                    placeholder="10"
-                    step="0.01"
-                  />
-                  <span class="suffix">%</span>
-                </div>
-                <div class="helper-text">Annual interest rate</div>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="loanTenure">Loan Tenure</label>
+        <form [formGroup]="emiForm" class="calculator-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="loanAmount">Loan Amount</label>
+              <div class="input-with-prefix">
+                <span class="prefix">$</span>
                 <input
                   type="number"
-                  id="loanTenure"
-                  formControlName="loanTenure"
+                  id="loanAmount"
+                  formControlName="loanAmount"
                   class="form-control"
-                  placeholder="24"
-                  min="1"
+                  placeholder="100,000.00"
                 />
               </div>
-
-              <div class="form-group">
-                <label for="tenureType">Tenure Type</label>
-                <select id="tenureType" formControlName="tenureType" class="form-control">
-                  <option value="Months">Months</option>
-                  <option value="Years">Years</option>
-                  <option value="Weeks">Weeks</option>
-                  <option value="Days">Days</option>
-                </select>
-              </div>
             </div>
 
-            <div class="form-actions">
-              <button type="button" class="btn btn-primary" (click)="calculateEMI()">
-                <fa-icon [icon]="['fas', 'calculator']"></fa-icon>
-                Calculate
-              </button>
-              <button type="button" class="btn btn-secondary" (click)="resetEMI()">
-                <fa-icon [icon]="['fas', 'sync']"></fa-icon>
-                Reset
-              </button>
-            </div>
-          </form>
-
-          <!-- EMI Results -->
-          <div class="results-section" *ngIf="emiResult">
-            <h3>Calculation Results</h3>
-            <div class="results-grid">
-              <div class="result-item">
-                <div class="result-label">Monthly EMI</div>
-                <div class="result-value">{{ formatCurrency(emiResult.emi) }}</div>
-              </div>
-              <div class="result-item">
-                <div class="result-label">Total Amount</div>
-                <div class="result-value">{{ formatCurrency(emiResult.totalAmount) }}</div>
-              </div>
-              <div class="result-item">
-                <div class="result-label">Total Interest</div>
-                <div class="result-value">{{ formatCurrency(emiResult.totalInterest) }}</div>
-              </div>
-              <div class="result-item">
-                <div class="result-label">Principal Amount</div>
-                <div class="result-value">{{ formatCurrency(emiResult.principal) }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Interest Calculator -->
-      <div class="calculator-section" *ngIf="activeTab === 'interest'">
-        <div class="calculator-card">
-          <h2 class="calculator-title">
-            <span class="title-icon">%</span>
-            Simple Interest Calculator
-          </h2>
-
-          <form [formGroup]="interestForm" class="calculator-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="principalAmount">Principal Amount</label>
-                <div class="input-with-prefix">
-                  <span class="prefix">$</span>
-                  <input
-                    type="number"
-                    id="principalAmount"
-                    formControlName="principalAmount"
-                    class="form-control"
-                    placeholder="10,000.00"
-                    step="0.01"
-                  />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="interestRate">Interest Rate (%)</label>
-                <div class="input-with-suffix">
-                  <input
-                    type="number"
-                    id="interestRate"
-                    formControlName="interestRate"
-                    class="form-control"
-                    placeholder="8"
-                    step="0.01"
-                  />
-                  <span class="suffix">%</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="timePeriod">Time Period</label>
+            <div class="form-group">
+              <label for="annualInterestRate">Annual Interest Rate (%)</label>
+              <div class="input-with-suffix">
                 <input
                   type="number"
-                  id="timePeriod"
-                  formControlName="timePeriod"
+                  id="annualInterestRate"
+                  formControlName="annualInterestRate"
                   class="form-control"
-                  placeholder="1"
+                  placeholder="10"
                   step="0.01"
-                  min="0.01"
                 />
+                <span class="suffix">%</span>
               </div>
-
-              <div class="form-group">
-                <label for="timeUnit">Time Unit</label>
-                <select id="timeUnit" formControlName="timeUnit" class="form-control">
-                  <option value="Years">Years</option>
-                  <option value="Months">Months</option>
-                  <option value="Weeks">Weeks</option>
-                  <option value="Days">Days</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-actions">
-              <button type="button" class="btn btn-primary" (click)="calculateInterest()">
-                <fa-icon [icon]="['fas', 'calculator']"></fa-icon>
-                Calculate
-              </button>
-              <button type="button" class="btn btn-secondary" (click)="resetInterest()">
-                <fa-icon [icon]="['fas', 'sync']"></fa-icon>
-                Reset
-              </button>
-            </div>
-          </form>
-
-          <!-- Interest Results -->
-          <div class="results-section" *ngIf="interestResult">
-            <h3>Calculation Results</h3>
-            <div class="results-grid">
-              <div class="result-item">
-                <div class="result-label">Principal Amount</div>
-                <div class="result-value">{{ formatCurrency(interestResult.principal) }}</div>
-              </div>
-              <div class="result-item">
-                <div class="result-label">Interest Amount</div>
-                <div class="result-value">{{ formatCurrency(interestResult.interest) }}</div>
-              </div>
-              <div class="result-item">
-                <div class="result-label">Total Amount</div>
-                <div class="result-value">{{ formatCurrency(interestResult.totalAmount) }}</div>
-              </div>
-              <div class="result-item">
-                <div class="result-label">Interest Rate</div>
-                <div class="result-value">{{ formatPercentage(interestResult.rate) }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Compare Products -->
-      <div class="calculator-section" *ngIf="activeTab === 'compare'">
-        <div class="calculator-card">
-          <h2 class="calculator-title">
-            <span class="title-icon">⚖️</span>
-            Compare Loan Products
-          </h2>
-
-          <form [formGroup]="compareForm" class="calculator-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="product1">Select Product 1</label>
-                <select id="product1" formControlName="product1" class="form-control">
-                  <option value="">Select a product</option>
-                  <option *ngFor="let product of loanProducts" [value]="product.id">
-                    {{ product.name }}
-                  </option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="product2">Select Product 2</label>
-                <select id="product2" formControlName="product2" class="form-control">
-                  <option value="">Select a product</option>
-                  <option *ngFor="let product of loanProducts" [value]="product.id">
-                    {{ product.name }}
-                  </option>
-                </select>
-              </div>
-            </div>
-          </form>
-
-          <!-- Comparison Table -->
-          <div class="comparison-table" *ngIf="product1 && product2">
-            <table>
-              <thead>
-                <tr>
-                  <th>Feature</th>
-                  <th>{{ product1.name }}</th>
-                  <th>{{ product2.name }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>Product Name</strong></td>
-                  <td>{{ product1.name }}</td>
-                  <td>{{ product2.name }}</td>
-                </tr>
-                <tr>
-                  <td><strong>Interest Rate</strong></td>
-                  <td>{{ formatPercentage(product1.interestRatePerPeriod || 0) }}</td>
-                  <td>{{ formatPercentage(product2.interestRatePerPeriod || 0) }}</td>
-                </tr>
-                <tr>
-                  <td><strong>Minimum Amount</strong></td>
-                  <td>{{ formatCurrency(product1.minPrincipal || 0) }}</td>
-                  <td>{{ formatCurrency(product2.minPrincipal || 0) }}</td>
-                </tr>
-                <tr>
-                  <td><strong>Maximum Amount</strong></td>
-                  <td>{{ formatCurrency(product1.maxPrincipal || product1.principal || 0) }}</td>
-                  <td>{{ formatCurrency(product2.maxPrincipal || product2.principal || 0) }}</td>
-                </tr>
-                <tr>
-                  <td><strong>Loan Tenure</strong></td>
-                  <td>
-                    {{ product1.numberOfRepayments || 'N/A' }} {{ product1.repaymentFrequencyType?.value || 'months' }}
-                  </td>
-                  <td>
-                    {{ product2.numberOfRepayments || 'N/A' }} {{ product2.repaymentFrequencyType?.value || 'months' }}
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>Processing Fee</strong></td>
-                  <td>N/A</td>
-                  <td>N/A</td>
-                </tr>
-                <tr>
-                  <td><strong>Features/Benefits</strong></td>
-                  <td>{{ product1.description || 'Standard features' }}</td>
-                  <td>{{ product2.description || 'Standard features' }}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <div class="comparison-actions">
-              <button class="btn btn-primary" (click)="applyForLoan(product1.id)">Apply for {{ product1.name }}</button>
-              <button class="btn btn-primary" (click)="applyForLoan(product2.id)">Apply for {{ product2.name }}</button>
+              <div class="helper-text">Annual interest rate</div>
             </div>
           </div>
 
-          <div class="empty-state" *ngIf="!product1 || !product2">
-            <p>Please select two products to compare</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="loanTenure">Loan Tenure</label>
+              <input
+                type="number"
+                id="loanTenure"
+                formControlName="loanTenure"
+                class="form-control"
+                placeholder="24"
+                min="1"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="tenureType">Tenure Type</label>
+              <select id="tenureType" formControlName="tenureType" class="form-control">
+                <option value="Months">Months</option>
+                <option value="Years">Years</option>
+                <option value="Weeks">Weeks</option>
+                <option value="Days">Days</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-primary" (click)="calculateEMI()">
+              <fa-icon [icon]="['fas', 'calculator']"></fa-icon>
+              Calculate
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="resetEMI()">
+              <fa-icon [icon]="['fas', 'sync']"></fa-icon>
+              Reset
+            </button>
+          </div>
+        </form>
+
+        <!-- EMI Results -->
+        <div class="results-section" *ngIf="emiResult">
+          <h3>Calculation Results</h3>
+          <div class="results-grid">
+            <div class="result-item">
+              <div class="result-label">Monthly EMI</div>
+              <div class="result-value">{{ formatCurrency(emiResult.emi) }}</div>
+            </div>
+            <div class="result-item">
+              <div class="result-label">Total Amount</div>
+              <div class="result-value">{{ formatCurrency(emiResult.totalAmount) }}</div>
+            </div>
+            <div class="result-item">
+              <div class="result-label">Total Interest</div>
+              <div class="result-value">{{ formatCurrency(emiResult.totalInterest) }}</div>
+            </div>
+            <div class="result-item">
+              <div class="result-label">Principal Amount</div>
+              <div class="result-value">{{ formatCurrency(emiResult.principal) }}</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </main>
-</div>
+
+    <!-- Interest Calculator -->
+    <div class="calculator-section" *ngIf="activeTab === 'interest'">
+      <div class="calculator-card">
+        <h2 class="calculator-title">
+          <span class="title-icon">%</span>
+          Simple Interest Calculator
+        </h2>
+
+        <form [formGroup]="interestForm" class="calculator-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="principalAmount">Principal Amount</label>
+              <div class="input-with-prefix">
+                <span class="prefix">$</span>
+                <input
+                  type="number"
+                  id="principalAmount"
+                  formControlName="principalAmount"
+                  class="form-control"
+                  placeholder="10,000.00"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="interestRate">Interest Rate (%)</label>
+              <div class="input-with-suffix">
+                <input
+                  type="number"
+                  id="interestRate"
+                  formControlName="interestRate"
+                  class="form-control"
+                  placeholder="8"
+                  step="0.01"
+                />
+                <span class="suffix">%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="timePeriod">Time Period</label>
+              <input
+                type="number"
+                id="timePeriod"
+                formControlName="timePeriod"
+                class="form-control"
+                placeholder="1"
+                step="0.01"
+                min="0.01"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="timeUnit">Time Unit</label>
+              <select id="timeUnit" formControlName="timeUnit" class="form-control">
+                <option value="Years">Years</option>
+                <option value="Months">Months</option>
+                <option value="Weeks">Weeks</option>
+                <option value="Days">Days</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-primary" (click)="calculateInterest()">
+              <fa-icon [icon]="['fas', 'calculator']"></fa-icon>
+              Calculate
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="resetInterest()">
+              <fa-icon [icon]="['fas', 'sync']"></fa-icon>
+              Reset
+            </button>
+          </div>
+        </form>
+
+        <!-- Interest Results -->
+        <div class="results-section" *ngIf="interestResult">
+          <h3>Calculation Results</h3>
+          <div class="results-grid">
+            <div class="result-item">
+              <div class="result-label">Principal Amount</div>
+              <div class="result-value">{{ formatCurrency(interestResult.principal) }}</div>
+            </div>
+            <div class="result-item">
+              <div class="result-label">Interest Amount</div>
+              <div class="result-value">{{ formatCurrency(interestResult.interest) }}</div>
+            </div>
+            <div class="result-item">
+              <div class="result-label">Total Amount</div>
+              <div class="result-value">{{ formatCurrency(interestResult.totalAmount) }}</div>
+            </div>
+            <div class="result-item">
+              <div class="result-label">Interest Rate</div>
+              <div class="result-value">{{ formatPercentage(interestResult.rate) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compare Products -->
+    <div class="calculator-section" *ngIf="activeTab === 'compare'">
+      <div class="calculator-card">
+        <h2 class="calculator-title">
+          <span class="title-icon">⚖️</span>
+          Compare Loan Products
+        </h2>
+
+        <form [formGroup]="compareForm" class="calculator-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="product1">Select Product 1</label>
+              <select id="product1" formControlName="product1" class="form-control">
+                <option value="">Select a product</option>
+                <option *ngFor="let product of loanProducts" [value]="product.id">
+                  {{ product.name }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="product2">Select Product 2</label>
+              <select id="product2" formControlName="product2" class="form-control">
+                <option value="">Select a product</option>
+                <option *ngFor="let product of loanProducts" [value]="product.id">
+                  {{ product.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </form>
+
+        <!-- Comparison Table -->
+        <div class="comparison-table" *ngIf="product1 && product2">
+          <table>
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>{{ product1.name }}</th>
+                <th>{{ product2.name }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Product Name</strong></td>
+                <td>{{ product1.name }}</td>
+                <td>{{ product2.name }}</td>
+              </tr>
+              <tr>
+                <td><strong>Interest Rate</strong></td>
+                <td>{{ formatPercentage(product1.interestRatePerPeriod || 0) }}</td>
+                <td>{{ formatPercentage(product2.interestRatePerPeriod || 0) }}</td>
+              </tr>
+              <tr>
+                <td><strong>Minimum Amount</strong></td>
+                <td>{{ formatCurrency(product1.minPrincipal || 0) }}</td>
+                <td>{{ formatCurrency(product2.minPrincipal || 0) }}</td>
+              </tr>
+              <tr>
+                <td><strong>Maximum Amount</strong></td>
+                <td>{{ formatCurrency(product1.maxPrincipal || product1.principal || 0) }}</td>
+                <td>{{ formatCurrency(product2.maxPrincipal || product2.principal || 0) }}</td>
+              </tr>
+              <tr>
+                <td><strong>Loan Tenure</strong></td>
+                <td>
+                  {{ product1.numberOfRepayments || 'N/A' }} {{ product1.repaymentFrequencyType?.value || 'months' }}
+                </td>
+                <td>
+                  {{ product2.numberOfRepayments || 'N/A' }} {{ product2.repaymentFrequencyType?.value || 'months' }}
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Processing Fee</strong></td>
+                <td>N/A</td>
+                <td>N/A</td>
+              </tr>
+              <tr>
+                <td><strong>Features/Benefits</strong></td>
+                <td>{{ product1.description || 'Standard features' }}</td>
+                <td>{{ product2.description || 'Standard features' }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="comparison-actions">
+            <button class="btn btn-primary" (click)="applyForLoan(product1.id)">Apply for {{ product1.name }}</button>
+            <button class="btn btn-primary" (click)="applyForLoan(product2.id)">Apply for {{ product2.name }}</button>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="!product1 || !product2">
+          <p>Please select two products to compare</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</mifosx-clientportal-layout>

@@ -1,0 +1,11 @@
+<div class="clientportal-layout">
+  <mifosx-clientportal-sidebar></mifosx-clientportal-sidebar>
+
+  <div class="main-content">
+    <mifosx-clientportal-header [userName]="userName" [showSidebarToggle]="true"> </mifosx-clientportal-header>
+
+    <div class="content-wrapper">
+      <ng-content></ng-content>
+    </div>
+  </div>
+</div>

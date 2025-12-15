@@ -1,700 +1,625 @@
-<div class="clientportal-loan-application">
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="logo">
-        <fa-icon [icon]="['fas', 'home']" class="logo-icon"></fa-icon>
-        <div class="logo-text">
-          <div class="logo-title">MFI Client Portal</div>
-          <div class="logo-subtitle">Microfinance Services</div>
-        </div>
+<mifosx-clientportal-layout [userName]="getUserName()">
+  <div class="content-wrapper">
+    <h1>Loan Application</h1>
+
+    <!-- Progress Indicator -->
+    <div class="progress-indicator">
+      <div class="progress-step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1">
+        <div class="step-number">1</div>
+        <div class="step-label">Product Selection</div>
+      </div>
+      <div class="progress-line" [class.completed]="currentStep > 1"></div>
+      <div class="progress-step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2">
+        <div class="step-number">2</div>
+        <div class="step-label">Loan Terms</div>
+      </div>
+      <div class="progress-line" [class.completed]="currentStep > 2"></div>
+      <div class="progress-step" [class.active]="currentStep === 3">
+        <div class="step-number">3</div>
+        <div class="step-label">Review & Submit</div>
       </div>
     </div>
-    <nav class="sidebar-nav">
-      <a routerLink="/clientportal/dashboard" class="nav-item">
-        <fa-icon [icon]="['fas', 'home']" class="nav-icon"></fa-icon>
-        <span>Dashboard</span>
-      </a>
-      <a routerLink="/clientportal/loan-application" routerLinkActive="active" class="nav-item">
-        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
-        <span>Loan Application</span>
-      </a>
-      <a routerLink="/clientportal/application-status" class="nav-item">
-        <fa-icon [icon]="['fas', 'check-circle']" class="nav-icon"></fa-icon>
-        <span>Application Status</span>
-      </a>
-      <a routerLink="/clientportal/calculators" class="nav-item">
-        <fa-icon [icon]="['fas', 'calculator']" class="nav-icon"></fa-icon>
-        <span>Financial Calculators</span>
-      </a>
-      <a routerLink="/clientportal/loans" class="nav-item">
-        <fa-icon [icon]="['fas', 'file-alt']" class="nav-icon"></fa-icon>
-        <span>Loans</span>
-      </a>
-      <a routerLink="/clientportal/transactions" class="nav-item">
-        <fa-icon [icon]="['fas', 'credit-card']" class="nav-icon"></fa-icon>
-        <span>Transactions</span>
-      </a>
-      <a routerLink="/clientportal/notifications" class="nav-item">
-        <fa-icon [icon]="['fas', 'bell']" class="nav-icon"></fa-icon>
-        <span>Notifications</span>
-      </a>
-      <a routerLink="/clientportal/support" class="nav-item">
-        <fa-icon [icon]="['fas', 'comment-alt']" class="nav-icon"></fa-icon>
-        <span>Support</span>
-      </a>
-      <a routerLink="/clientportal/login" class="nav-item logout">
-        <fa-icon [icon]="['fas', 'sign-out-alt']" class="nav-icon"></fa-icon>
-        <span>Logout</span>
-      </a>
-    </nav>
-  </aside>
 
-  <!-- Main Content -->
-  <div class="main-content">
-    <!-- Header -->
-    <header class="top-header">
-      <div class="header-right">
-        <button class="icon-button" (click)="navigateToNotifications()">
-          <fa-icon [icon]="['fas', 'bell']"></fa-icon>
-        </button>
-        <div class="user-info">
-          <fa-icon [icon]="['fas', 'user-circle']" class="user-icon"></fa-icon>
-          <span class="user-name">{{ getUserName() }}</span>
-        </div>
-      </div>
-    </header>
+    <!-- Step 1: Product Selection -->
+    <div class="step-container" *ngIf="currentStep === 1">
+      <div class="form-card">
+        <h2>Product Selection & Basic Details</h2>
 
-    <div class="content-wrapper">
-      <h1>Loan Application</h1>
+        <form [formGroup]="step1Form">
+          <!-- Product Name -->
+          <div class="form-group">
+            <label for="productId">Product Name <span class="required">*</span></label>
+            <select id="productId" formControlName="productId" class="form-control" [disabled]="loading">
+              <option value="">{{ loading ? 'Loading products...' : 'Search and select loan product' }}</option>
+              <option *ngFor="let product of loanProducts" [value]="product.id">
+                {{ product.name }} {{ product.shortName ? '(' + product.shortName + ')' : '' }}
+              </option>
+            </select>
+            <div
+              class="error-message"
+              *ngIf="step1Form.get('productId')?.invalid && step1Form.get('productId')?.touched"
+            >
+              Please select a loan product
+            </div>
+            <div class="error-message" *ngIf="error && currentStep === 1">
+              {{ error }}
+            </div>
+            <div class="helper-text" *ngIf="loanProducts.length > 0 && !loading">
+              {{ loanProducts.length }} product(s) available
+            </div>
+          </div>
 
-      <!-- Progress Indicator -->
-      <div class="progress-indicator">
-        <div class="progress-step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1">
-          <div class="step-number">1</div>
-          <div class="step-label">Product Selection</div>
-        </div>
-        <div class="progress-line" [class.completed]="currentStep > 1"></div>
-        <div class="progress-step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2">
-          <div class="step-number">2</div>
-          <div class="step-label">Loan Terms</div>
-        </div>
-        <div class="progress-line" [class.completed]="currentStep > 2"></div>
-        <div class="progress-step" [class.active]="currentStep === 3">
-          <div class="step-number">3</div>
-          <div class="step-label">Review & Submit</div>
-        </div>
-      </div>
-
-      <!-- Step 1: Product Selection -->
-      <div class="step-container" *ngIf="currentStep === 1">
-        <div class="form-card">
-          <h2>Product Selection & Basic Details</h2>
-
-          <form [formGroup]="step1Form">
-            <!-- Product Name -->
+          <!-- Dates -->
+          <div class="form-row">
             <div class="form-group">
-              <label for="productId">Product Name <span class="required">*</span></label>
-              <select id="productId" formControlName="productId" class="form-control" [disabled]="loading">
-                <option value="">{{ loading ? 'Loading products...' : 'Search and select loan product' }}</option>
-                <option *ngFor="let product of loanProducts" [value]="product.id">
-                  {{ product.name }} {{ product.shortName ? '(' + product.shortName + ')' : '' }}
-                </option>
-              </select>
+              <label for="submittedOnDate">Submitted On Date <span class="required">*</span></label>
+              <input type="date" id="submittedOnDate" formControlName="submittedOnDate" class="form-control" />
               <div
                 class="error-message"
-                *ngIf="step1Form.get('productId')?.invalid && step1Form.get('productId')?.touched"
+                *ngIf="step1Form.get('submittedOnDate')?.invalid && step1Form.get('submittedOnDate')?.touched"
               >
-                Please select a loan product
-              </div>
-              <div class="error-message" *ngIf="error && currentStep === 1">
-                {{ error }}
-              </div>
-              <div class="helper-text" *ngIf="loanProducts.length > 0 && !loading">
-                {{ loanProducts.length }} product(s) available
+                Please select a date
               </div>
             </div>
 
-            <!-- Dates -->
-            <div class="form-row">
-              <div class="form-group">
-                <label for="submittedOnDate">Submitted On Date <span class="required">*</span></label>
-                <input type="date" id="submittedOnDate" formControlName="submittedOnDate" class="form-control" />
-                <div
-                  class="error-message"
-                  *ngIf="step1Form.get('submittedOnDate')?.invalid && step1Form.get('submittedOnDate')?.touched"
-                >
-                  Please select a date
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="expectedDisbursementDate">Expected Disbursement Date <span class="required">*</span></label>
-                <input
-                  type="date"
-                  id="expectedDisbursementDate"
-                  formControlName="expectedDisbursementDate"
-                  class="form-control"
-                />
-                <div
-                  class="error-message"
-                  *ngIf="
-                    step1Form.get('expectedDisbursementDate')?.invalid &&
-                    step1Form.get('expectedDisbursementDate')?.touched
-                  "
-                >
-                  Please select a date
-                </div>
+            <div class="form-group">
+              <label for="expectedDisbursementDate">Expected Disbursement Date <span class="required">*</span></label>
+              <input
+                type="date"
+                id="expectedDisbursementDate"
+                formControlName="expectedDisbursementDate"
+                class="form-control"
+              />
+              <div
+                class="error-message"
+                *ngIf="
+                  step1Form.get('expectedDisbursementDate')?.invalid &&
+                  step1Form.get('expectedDisbursementDate')?.touched
+                "
+              >
+                Please select a date
               </div>
             </div>
+          </div>
 
-            <!-- Additional Details (Collapsible) -->
-            <div class="collapsible-section">
-              <div class="collapsible-header" (click)="showAdditionalDetails = !showAdditionalDetails">
-                <span>Additional Details (Optional)</span>
-                <span class="chevron">{{ showAdditionalDetails ? '▼' : '▶' }}</span>
-              </div>
-              <div class="collapsible-content" *ngIf="showAdditionalDetails">
-                <div class="form-row">
-                  <!-- External ID - Hidden for microfinance (not typically needed) -->
-                  <!-- Loan Officer - Hidden (auto-assigned by MFI) -->
-                  <!-- Fund - Hidden (most MFIs have single fund) -->
+          <!-- Additional Details (Collapsible) -->
+          <div class="collapsible-section">
+            <div class="collapsible-header" (click)="showAdditionalDetails = !showAdditionalDetails">
+              <span>Additional Details (Optional)</span>
+              <span class="chevron">{{ showAdditionalDetails ? '▼' : '▶' }}</span>
+            </div>
+            <div class="collapsible-content" *ngIf="showAdditionalDetails">
+              <div class="form-row">
+                <!-- External ID - Hidden for microfinance (not typically needed) -->
+                <!-- Loan Officer - Hidden (auto-assigned by MFI) -->
+                <!-- Fund - Hidden (most MFIs have single fund) -->
 
-                  <div class="form-group" *ngIf="productTemplate?.loanPurposeOptions">
-                    <label for="loanPurposeId">Loan Purpose (Optional)</label>
-                    <select id="loanPurposeId" formControlName="loanPurposeId" class="form-control">
-                      <option value="">Select purpose (optional)</option>
-                      <option *ngFor="let purpose of productTemplate.loanPurposeOptions" [value]="purpose.id">
-                        {{ purpose.name }}
-                      </option>
-                    </select>
-                    <div class="helper-text">Optional - helps categorize your loan</div>
-                  </div>
+                <div class="form-group" *ngIf="productTemplate?.loanPurposeOptions">
+                  <label for="loanPurposeId">Loan Purpose (Optional)</label>
+                  <select id="loanPurposeId" formControlName="loanPurposeId" class="form-control">
+                    <option value="">Select purpose (optional)</option>
+                    <option *ngFor="let purpose of productTemplate.loanPurposeOptions" [value]="purpose.id">
+                      {{ purpose.name }}
+                    </option>
+                  </select>
+                  <div class="helper-text">Optional - helps categorize your loan</div>
                 </div>
+              </div>
 
-                <!-- Removed for microfinance:
+              <!-- Removed for microfinance:
                   - External ID (not needed for client applications)
                   - Loan Officer selection (auto-assigned by MFI)
                   - Fund selection (most MFIs have single fund)
                   - Link Savings Account (less common in microfinance)
                   - Standing Instructions (less common, more for traditional banks)
                 -->
-              </div>
             </div>
-
-            <!-- Navigation -->
-            <div class="form-actions">
-              <button type="button" class="btn btn-primary" (click)="nextStep()" [disabled]="!step1Form.valid">
-                Next
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Step 2: Loan Terms -->
-      <div class="step-container" *ngIf="currentStep === 2">
-        <div class="form-card">
-          <h2>Loan Terms & Amount</h2>
-
-          <form [formGroup]="step2Form">
-            <!-- Loan Amount -->
-            <div class="form-group">
-              <label for="principalAmount">Loan Amount <span class="required">*</span></label>
-              <div class="currency-input">
-                <span class="currency-symbol">$</span>
-                <input
-                  type="number"
-                  id="principalAmount"
-                  formControlName="principalAmount"
-                  class="form-control"
-                  step="0.01"
-                  [min]="selectedProduct?.minPrincipal || 0"
-                  [max]="selectedProduct?.maxPrincipal || undefined"
-                />
-              </div>
-              <div class="helper-text" *ngIf="selectedProduct">
-                <span *ngIf="selectedProduct.minPrincipal || selectedProduct.maxPrincipal">
-                  Enter amount between ${{ selectedProduct.minPrincipal || 0 | number: '1.0-0' }} and ${{
-                    selectedProduct.maxPrincipal || selectedProduct.principal | number: '1.0-0'
-                  }}
-                </span>
-                <span *ngIf="!selectedProduct.minPrincipal && !selectedProduct.maxPrincipal">
-                  Default amount: ${{ selectedProduct.principal | number: '1.0-0' }}
-                </span>
-              </div>
-              <div
-                class="error-message"
-                *ngIf="step2Form.get('principalAmount')?.invalid && step2Form.get('principalAmount')?.touched"
-              >
-                Please enter a valid loan amount
-              </div>
-            </div>
-
-            <!-- Loan Term Section -->
-            <h3>Loan Term</h3>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="numberOfRepayments">Number of Repayments <span class="required">*</span></label>
-                <input
-                  type="number"
-                  id="numberOfRepayments"
-                  formControlName="numberOfRepayments"
-                  class="form-control"
-                  [min]="selectedProduct?.minNumberOfRepayments || 1"
-                  [max]="selectedProduct?.maxNumberOfRepayments || undefined"
-                />
-                <div
-                  class="helper-text"
-                  *ngIf="
-                    selectedProduct && (selectedProduct.minNumberOfRepayments || selectedProduct.maxNumberOfRepayments)
-                  "
-                >
-                  Range: {{ selectedProduct.minNumberOfRepayments || 1 }} -
-                  {{ selectedProduct.maxNumberOfRepayments || 'unlimited' }} repayments
-                </div>
-                <div
-                  class="error-message"
-                  *ngIf="step2Form.get('numberOfRepayments')?.invalid && step2Form.get('numberOfRepayments')?.touched"
-                >
-                  Required
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="repaymentEvery">Repaid Every <span class="required">*</span></label>
-                <input
-                  type="number"
-                  id="repaymentEvery"
-                  formControlName="repaymentEvery"
-                  class="form-control"
-                  min="1"
-                />
-                <div
-                  class="error-message"
-                  *ngIf="step2Form.get('repaymentEvery')?.invalid && step2Form.get('repaymentEvery')?.touched"
-                >
-                  Required
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="repaymentFrequencyType">Frequency <span class="required">*</span></label>
-                <select id="repaymentFrequencyType" formControlName="repaymentFrequencyType" class="form-control">
-                  <option value="">Select</option>
-                  <option *ngFor="let type of repaymentFrequencyTypes" [value]="type.id">
-                    {{ type.value }}
-                  </option>
-                </select>
-                <div
-                  class="error-message"
-                  *ngIf="
-                    step2Form.get('repaymentFrequencyType')?.invalid && step2Form.get('repaymentFrequencyType')?.touched
-                  "
-                >
-                  Required
-                </div>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="loanTermFrequency">Loan Term (Auto-calculated)</label>
-                <input
-                  type="number"
-                  id="loanTermFrequency"
-                  formControlName="loanTermFrequency"
-                  class="form-control"
-                  disabled
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="loanTermFrequencyType">Term Frequency <span class="required">*</span></label>
-                <select id="loanTermFrequencyType" formControlName="loanTermFrequencyType" class="form-control">
-                  <option value="">Select</option>
-                  <option *ngFor="let type of termFrequencyTypes" [value]="type.id">
-                    {{ type.value }}
-                  </option>
-                </select>
-                <div
-                  class="error-message"
-                  *ngIf="
-                    step2Form.get('loanTermFrequencyType')?.invalid && step2Form.get('loanTermFrequencyType')?.touched
-                  "
-                >
-                  Required
-                </div>
-              </div>
-            </div>
-
-            <!-- Interest Settings -->
-            <h3>Interest Settings</h3>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="interestRatePerPeriod">Interest Rate Per Period (%) <span class="required">*</span></label>
-                <div class="percentage-input">
-                  <input
-                    type="number"
-                    id="interestRatePerPeriod"
-                    formControlName="interestRatePerPeriod"
-                    class="form-control"
-                    step="0.01"
-                    disabled
-                  />
-                  <span class="percentage-symbol">%</span>
-                </div>
-                <div class="helper-text">
-                  <span *ngIf="selectedProduct?.isLinkedToFloatingInterestRates"
-                    >Floating interest rate - set by bank/MFI</span
-                  >
-                  <span *ngIf="!selectedProduct?.isLinkedToFloatingInterestRates"
-                    >Fixed rate - set by bank/MFI (cannot be edited)</span
-                  >
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="interestRateFrequencyType">Interest Rate Frequency</label>
-                <select
-                  id="interestRateFrequencyType"
-                  formControlName="interestRateFrequencyType"
-                  class="form-control"
-                  disabled
-                >
-                  <option value="">Select</option>
-                  <option *ngFor="let type of interestRateFrequencyTypes" [value]="type.id">
-                    {{ type.value }}
-                  </option>
-                </select>
-                <div class="helper-text">Set by bank/MFI (cannot be edited)</div>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="interestType">Interest Method <span class="required">*</span></label>
-                <select id="interestType" formControlName="interestType" class="form-control">
-                  <option value="">Select</option>
-                  <option *ngFor="let type of interestTypes" [value]="type.id">
-                    {{ type.value }}
-                  </option>
-                </select>
-                <div
-                  class="error-message"
-                  *ngIf="step2Form.get('interestType')?.invalid && step2Form.get('interestType')?.touched"
-                >
-                  Required
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="amortizationType">Amortization Type <span class="required">*</span></label>
-                <select id="amortizationType" formControlName="amortizationType" class="form-control">
-                  <option value="">Select</option>
-                  <option *ngFor="let type of amortizationTypes" [value]="type.id">
-                    {{ type.value }}
-                  </option>
-                </select>
-                <div
-                  class="error-message"
-                  *ngIf="step2Form.get('amortizationType')?.invalid && step2Form.get('amortizationType')?.touched"
-                >
-                  Required
-                </div>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="interestCalculationPeriodType"
-                  >Interest Calculation Period <span class="required">*</span></label
-                >
-                <select
-                  id="interestCalculationPeriodType"
-                  formControlName="interestCalculationPeriodType"
-                  class="form-control"
-                >
-                  <option value="">Select</option>
-                  <option *ngFor="let type of interestCalculationPeriodTypes" [value]="type.id">
-                    {{ type.value }}
-                  </option>
-                </select>
-                <div class="helper-text">Typically same as repayment period for microfinance</div>
-                <div
-                  class="error-message"
-                  *ngIf="
-                    step2Form.get('interestCalculationPeriodType')?.invalid &&
-                    step2Form.get('interestCalculationPeriodType')?.touched
-                  "
-                >
-                  Required
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="transactionProcessingStrategyCode"
-                  >Repayment Strategy <span class="required">*</span></label
-                >
-                <select
-                  id="transactionProcessingStrategyCode"
-                  formControlName="transactionProcessingStrategyCode"
-                  class="form-control"
-                >
-                  <option value="">Select</option>
-                  <option *ngFor="let strategy of transactionProcessingStrategies" [value]="strategy.code">
-                    {{ strategy.name }}
-                  </option>
-                </select>
-                <div
-                  class="error-message"
-                  *ngIf="
-                    step2Form.get('transactionProcessingStrategyCode')?.invalid &&
-                    step2Form.get('transactionProcessingStrategyCode')?.touched
-                  "
-                >
-                  Required
-                </div>
-              </div>
-            </div>
-
-            <!-- Optional Settings (Collapsible) - Simplified for microfinance -->
-            <div class="collapsible-section">
-              <div class="collapsible-header" (click)="showOptionalSettings = !showOptionalSettings">
-                <span>Advanced Options (Optional)</span>
-                <span class="chevron">{{ showOptionalSettings ? '▼' : '▶' }}</span>
-              </div>
-              <div class="collapsible-content" *ngIf="showOptionalSettings">
-                <div
-                  class="helper-text"
-                  style="margin-bottom: 16px; padding: 12px; background: #f5f5f5; border-radius: 8px"
-                >
-                  These advanced options are rarely needed for microfinance loans. Most loans use standard terms set by
-                  the product.
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="repaymentsStartingFromDate">First Repayment Date (Optional)</label>
-                    <input
-                      type="date"
-                      id="repaymentsStartingFromDate"
-                      formControlName="repaymentsStartingFromDate"
-                      class="form-control"
-                    />
-                    <div class="helper-text">Leave blank to use default (disbursement date)</div>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="graceOnPrincipalPayment">Grace Period on Principal (Weeks)</label>
-                    <input
-                      type="number"
-                      id="graceOnPrincipalPayment"
-                      formControlName="graceOnPrincipalPayment"
-                      class="form-control"
-                      min="0"
-                      placeholder="0"
-                    />
-                    <div class="helper-text">Number of weeks before principal repayment starts</div>
-                  </div>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="graceOnInterestPayment">Grace Period on Interest (Weeks)</label>
-                    <input
-                      type="number"
-                      id="graceOnInterestPayment"
-                      formControlName="graceOnInterestPayment"
-                      class="form-control"
-                      min="0"
-                      placeholder="0"
-                    />
-                    <div class="helper-text">Number of weeks before interest payment starts</div>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="graceOnInterestCharged">Interest-Free Period (Weeks)</label>
-                    <input
-                      type="number"
-                      id="graceOnInterestCharged"
-                      formControlName="graceOnInterestCharged"
-                      class="form-control"
-                      min="0"
-                      placeholder="0"
-                    />
-                    <div class="helper-text">Number of weeks with no interest charges</div>
-                  </div>
-                </div>
-
-                <!-- Removed for microfinance:
-                  - Interest Charged From Date (usually same as disbursement)
-                  - Arrears Tolerance (handled at product level)
-                  - Calculate Interest for Exact Days (usually not needed)
-                -->
-              </div>
-            </div>
-
-            <!-- Navigation -->
-            <div class="form-actions">
-              <button type="button" class="btn btn-secondary" (click)="previousStep()">
-                <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon> Previous
-              </button>
-              <button type="button" class="btn btn-primary" (click)="nextStep()" [disabled]="!step2Form.valid">
-                Next
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Step 3: Review & Submit -->
-      <div class="step-container" *ngIf="currentStep === 3">
-        <div class="form-card">
-          <h2>Review & Submit</h2>
-
-          <!-- Application Summary -->
-          <div class="summary-section">
-            <h3>Application Summary</h3>
-            <div class="summary-grid">
-              <div class="summary-item">
-                <span class="summary-label">Loan Product:</span>
-                <span class="summary-value">{{ selectedProduct?.name || '—' }}</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">Principal Amount:</span>
-                <span class="summary-value">${{ step2Form.get('principalAmount')?.value || 0 | number: '1.2-2' }}</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">Loan Term:</span>
-                <span class="summary-value">
-                  {{ step2Form.get('loanTermFrequency')?.value || 0 }}
-                  {{ getFrequencyLabel(step2Form.get('loanTermFrequencyType')?.value) }}
-                </span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">Number of Repayments:</span>
-                <span class="summary-value">{{ step2Form.get('numberOfRepayments')?.value || 0 }}</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">Repayment Frequency:</span>
-                <span class="summary-value">
-                  Every {{ step2Form.get('repaymentEvery')?.value || 0 }}
-                  {{ getFrequencyLabel(step2Form.get('repaymentFrequencyType')?.value) }}
-                </span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">Interest Rate:</span>
-                <span class="summary-value">
-                  {{ step2Form.get('interestRatePerPeriod')?.value || 0 }}% per
-                  {{ getFrequencyLabel(step2Form.get('interestRateFrequencyType')?.value) }}
-                </span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">Expected Disbursement Date:</span>
-                <span class="summary-value">{{ formatDate(step1Form.get('expectedDisbursementDate')?.value) }}</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">Submitted On Date:</span>
-                <span class="summary-value">{{ formatDate(step1Form.get('submittedOnDate')?.value) }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- EMI Summary -->
-          <div class="emi-summary" *ngIf="calculatedEMI > 0">
-            <div class="emi-item">
-              <span class="emi-label">Monthly EMI</span>
-              <span class="emi-value">${{ calculatedEMI | number: '1.2-2' }}</span>
-            </div>
-            <div class="emi-item">
-              <span class="emi-label">Total Interest</span>
-              <span class="emi-value">${{ totalInterest | number: '1.2-2' }}</span>
-            </div>
-            <div class="emi-item">
-              <span class="emi-label">Total Amount</span>
-              <span class="emi-value">${{ totalAmount | number: '1.2-2' }}</span>
-            </div>
-          </div>
-
-          <!-- Repayment Schedule Preview -->
-          <div class="schedule-section" *ngIf="repaymentSchedule.length > 0">
-            <h3>Repayment Schedule Preview</h3>
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Installment #</th>
-                    <th>Due Date</th>
-                    <th>Principal</th>
-                    <th>Interest</th>
-                    <th>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let period of repaymentSchedule.slice(0, 10); let i = index">
-                    <td>{{ i + 1 }}</td>
-                    <td>{{ formatDate(period.dueDate) }}</td>
-                    <td>${{ period.principalDue || 0 | number: '1.2-2' }}</td>
-                    <td>${{ period.interestCharged || 0 | number: '1.2-2' }}</td>
-                    <td>${{ period.totalDueForPeriod || 0 | number: '1.2-2' }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <a href="#" class="view-full-link" *ngIf="repaymentSchedule.length > 10">
-              View Full Schedule ({{ repaymentSchedule.length }} installments)
-            </a>
           </div>
 
           <!-- Navigation -->
           <div class="form-actions">
-            <a
-              href="#"
-              class="cancel-link"
-              (click)="$event.preventDefault(); router.navigate(['/clientportal/dashboard'])"
-              >Cancel</a
+            <button type="button" class="btn btn-primary" (click)="nextStep()" [disabled]="!step1Form.valid">
+              Next
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Step 2: Loan Terms -->
+    <div class="step-container" *ngIf="currentStep === 2">
+      <div class="form-card">
+        <h2>Loan Terms & Amount</h2>
+
+        <form [formGroup]="step2Form">
+          <!-- Loan Amount -->
+          <div class="form-group">
+            <label for="principalAmount">Loan Amount <span class="required">*</span></label>
+            <div class="currency-input">
+              <span class="currency-symbol">$</span>
+              <input
+                type="number"
+                id="principalAmount"
+                formControlName="principalAmount"
+                class="form-control"
+                step="0.01"
+                [min]="selectedProduct?.minPrincipal || 0"
+                [max]="selectedProduct?.maxPrincipal || undefined"
+              />
+            </div>
+            <div class="helper-text" *ngIf="selectedProduct">
+              <span *ngIf="selectedProduct.minPrincipal || selectedProduct.maxPrincipal">
+                Enter amount between ${{ selectedProduct.minPrincipal || 0 | number: '1.0-0' }} and ${{
+                  selectedProduct.maxPrincipal || selectedProduct.principal | number: '1.0-0'
+                }}
+              </span>
+              <span *ngIf="!selectedProduct.minPrincipal && !selectedProduct.maxPrincipal">
+                Default amount: ${{ selectedProduct.principal | number: '1.0-0' }}
+              </span>
+            </div>
+            <div
+              class="error-message"
+              *ngIf="step2Form.get('principalAmount')?.invalid && step2Form.get('principalAmount')?.touched"
             >
+              Please enter a valid loan amount
+            </div>
+          </div>
+
+          <!-- Loan Term Section -->
+          <h3>Loan Term</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="numberOfRepayments">Number of Repayments <span class="required">*</span></label>
+              <input
+                type="number"
+                id="numberOfRepayments"
+                formControlName="numberOfRepayments"
+                class="form-control"
+                [min]="selectedProduct?.minNumberOfRepayments || 1"
+                [max]="selectedProduct?.maxNumberOfRepayments || undefined"
+              />
+              <div
+                class="helper-text"
+                *ngIf="
+                  selectedProduct && (selectedProduct.minNumberOfRepayments || selectedProduct.maxNumberOfRepayments)
+                "
+              >
+                Range: {{ selectedProduct.minNumberOfRepayments || 1 }} -
+                {{ selectedProduct.maxNumberOfRepayments || 'unlimited' }} repayments
+              </div>
+              <div
+                class="error-message"
+                *ngIf="step2Form.get('numberOfRepayments')?.invalid && step2Form.get('numberOfRepayments')?.touched"
+              >
+                Required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="repaymentEvery">Repaid Every <span class="required">*</span></label>
+              <input type="number" id="repaymentEvery" formControlName="repaymentEvery" class="form-control" min="1" />
+              <div
+                class="error-message"
+                *ngIf="step2Form.get('repaymentEvery')?.invalid && step2Form.get('repaymentEvery')?.touched"
+              >
+                Required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="repaymentFrequencyType">Frequency <span class="required">*</span></label>
+              <select id="repaymentFrequencyType" formControlName="repaymentFrequencyType" class="form-control">
+                <option value="">Select</option>
+                <option *ngFor="let type of repaymentFrequencyTypes" [value]="type.id">
+                  {{ type.value }}
+                </option>
+              </select>
+              <div
+                class="error-message"
+                *ngIf="
+                  step2Form.get('repaymentFrequencyType')?.invalid && step2Form.get('repaymentFrequencyType')?.touched
+                "
+              >
+                Required
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="loanTermFrequency">Loan Term (Auto-calculated)</label>
+              <input
+                type="number"
+                id="loanTermFrequency"
+                formControlName="loanTermFrequency"
+                class="form-control"
+                disabled
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="loanTermFrequencyType">Term Frequency <span class="required">*</span></label>
+              <select id="loanTermFrequencyType" formControlName="loanTermFrequencyType" class="form-control">
+                <option value="">Select</option>
+                <option *ngFor="let type of termFrequencyTypes" [value]="type.id">
+                  {{ type.value }}
+                </option>
+              </select>
+              <div
+                class="error-message"
+                *ngIf="
+                  step2Form.get('loanTermFrequencyType')?.invalid && step2Form.get('loanTermFrequencyType')?.touched
+                "
+              >
+                Required
+              </div>
+            </div>
+          </div>
+
+          <!-- Interest Settings -->
+          <h3>Interest Settings</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="interestRatePerPeriod">Interest Rate Per Period (%) <span class="required">*</span></label>
+              <div class="percentage-input">
+                <input
+                  type="number"
+                  id="interestRatePerPeriod"
+                  formControlName="interestRatePerPeriod"
+                  class="form-control"
+                  step="0.01"
+                  disabled
+                />
+                <span class="percentage-symbol">%</span>
+              </div>
+              <div class="helper-text">
+                <span *ngIf="selectedProduct?.isLinkedToFloatingInterestRates"
+                  >Floating interest rate - set by bank/MFI</span
+                >
+                <span *ngIf="!selectedProduct?.isLinkedToFloatingInterestRates"
+                  >Fixed rate - set by bank/MFI (cannot be edited)</span
+                >
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="interestRateFrequencyType">Interest Rate Frequency</label>
+              <select
+                id="interestRateFrequencyType"
+                formControlName="interestRateFrequencyType"
+                class="form-control"
+                disabled
+              >
+                <option value="">Select</option>
+                <option *ngFor="let type of interestRateFrequencyTypes" [value]="type.id">
+                  {{ type.value }}
+                </option>
+              </select>
+              <div class="helper-text">Set by bank/MFI (cannot be edited)</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="interestType">Interest Method <span class="required">*</span></label>
+              <select id="interestType" formControlName="interestType" class="form-control">
+                <option value="">Select</option>
+                <option *ngFor="let type of interestTypes" [value]="type.id">
+                  {{ type.value }}
+                </option>
+              </select>
+              <div
+                class="error-message"
+                *ngIf="step2Form.get('interestType')?.invalid && step2Form.get('interestType')?.touched"
+              >
+                Required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="amortizationType">Amortization Type <span class="required">*</span></label>
+              <select id="amortizationType" formControlName="amortizationType" class="form-control">
+                <option value="">Select</option>
+                <option *ngFor="let type of amortizationTypes" [value]="type.id">
+                  {{ type.value }}
+                </option>
+              </select>
+              <div
+                class="error-message"
+                *ngIf="step2Form.get('amortizationType')?.invalid && step2Form.get('amortizationType')?.touched"
+              >
+                Required
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="interestCalculationPeriodType"
+                >Interest Calculation Period <span class="required">*</span></label
+              >
+              <select
+                id="interestCalculationPeriodType"
+                formControlName="interestCalculationPeriodType"
+                class="form-control"
+              >
+                <option value="">Select</option>
+                <option *ngFor="let type of interestCalculationPeriodTypes" [value]="type.id">
+                  {{ type.value }}
+                </option>
+              </select>
+              <div class="helper-text">Typically same as repayment period for microfinance</div>
+              <div
+                class="error-message"
+                *ngIf="
+                  step2Form.get('interestCalculationPeriodType')?.invalid &&
+                  step2Form.get('interestCalculationPeriodType')?.touched
+                "
+              >
+                Required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="transactionProcessingStrategyCode">Repayment Strategy <span class="required">*</span></label>
+              <select
+                id="transactionProcessingStrategyCode"
+                formControlName="transactionProcessingStrategyCode"
+                class="form-control"
+              >
+                <option value="">Select</option>
+                <option *ngFor="let strategy of transactionProcessingStrategies" [value]="strategy.code">
+                  {{ strategy.name }}
+                </option>
+              </select>
+              <div
+                class="error-message"
+                *ngIf="
+                  step2Form.get('transactionProcessingStrategyCode')?.invalid &&
+                  step2Form.get('transactionProcessingStrategyCode')?.touched
+                "
+              >
+                Required
+              </div>
+            </div>
+          </div>
+
+          <!-- Optional Settings (Collapsible) - Simplified for microfinance -->
+          <div class="collapsible-section">
+            <div class="collapsible-header" (click)="showOptionalSettings = !showOptionalSettings">
+              <span>Advanced Options (Optional)</span>
+              <span class="chevron">{{ showOptionalSettings ? '▼' : '▶' }}</span>
+            </div>
+            <div class="collapsible-content" *ngIf="showOptionalSettings">
+              <div
+                class="helper-text"
+                style="margin-bottom: 16px; padding: 12px; background: #f5f5f5; border-radius: 8px"
+              >
+                These advanced options are rarely needed for microfinance loans. Most loans use standard terms set by
+                the product.
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="repaymentsStartingFromDate">First Repayment Date (Optional)</label>
+                  <input
+                    type="date"
+                    id="repaymentsStartingFromDate"
+                    formControlName="repaymentsStartingFromDate"
+                    class="form-control"
+                  />
+                  <div class="helper-text">Leave blank to use default (disbursement date)</div>
+                </div>
+
+                <div class="form-group">
+                  <label for="graceOnPrincipalPayment">Grace Period on Principal (Weeks)</label>
+                  <input
+                    type="number"
+                    id="graceOnPrincipalPayment"
+                    formControlName="graceOnPrincipalPayment"
+                    class="form-control"
+                    min="0"
+                    placeholder="0"
+                  />
+                  <div class="helper-text">Number of weeks before principal repayment starts</div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="graceOnInterestPayment">Grace Period on Interest (Weeks)</label>
+                  <input
+                    type="number"
+                    id="graceOnInterestPayment"
+                    formControlName="graceOnInterestPayment"
+                    class="form-control"
+                    min="0"
+                    placeholder="0"
+                  />
+                  <div class="helper-text">Number of weeks before interest payment starts</div>
+                </div>
+
+                <div class="form-group">
+                  <label for="graceOnInterestCharged">Interest-Free Period (Weeks)</label>
+                  <input
+                    type="number"
+                    id="graceOnInterestCharged"
+                    formControlName="graceOnInterestCharged"
+                    class="form-control"
+                    min="0"
+                    placeholder="0"
+                  />
+                  <div class="helper-text">Number of weeks with no interest charges</div>
+                </div>
+              </div>
+
+              <!-- Removed for microfinance:
+                  - Interest Charged From Date (usually same as disbursement)
+                  - Arrears Tolerance (handled at product level)
+                  - Calculate Interest for Exact Days (usually not needed)
+                -->
+            </div>
+          </div>
+
+          <!-- Navigation -->
+          <div class="form-actions">
             <button type="button" class="btn btn-secondary" (click)="previousStep()">
               <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon> Previous
             </button>
-            <button type="button" class="btn btn-primary btn-large" (click)="submitApplication()" [disabled]="loading">
-              <span *ngIf="!loading">Submit Application</span>
-              <span *ngIf="loading">Submitting...</span>
+            <button type="button" class="btn btn-primary" (click)="nextStep()" [disabled]="!step2Form.valid">
+              Next
             </button>
           </div>
-
-          <!-- Error Message -->
-          <div class="error-banner" *ngIf="error">
-            <span>⚠️</span>
-            <span [innerHTML]="error"></span>
-          </div>
-
-          <!-- Demo Server Notice -->
-          <div
-            class="info-banner"
-            style="
-              margin-top: 20px;
-              padding: 12px;
-              background-color: #e3f2fd;
-              border-left: 4px solid #2196f3;
-              border-radius: 4px;
-              color: #1565c0;
-            "
-          >
-            <strong>ℹ️ Note:</strong> This demo uses the public Fineract demo server (demo.mifos.io) which may be slow
-            or timeout during loan submission. If you experience timeouts, your application may still have been
-            submitted - please check your loan list. For production use, a self-hosted Fineract instance is recommended
-            for better performance.
-          </div>
-        </div>
-      </div>
-
-      <!-- Loading State -->
-      <div class="loading-overlay" *ngIf="loading">
-        <div class="spinner"></div>
-        <p>Loading...</p>
+        </form>
       </div>
     </div>
+
+    <!-- Step 3: Review & Submit -->
+    <div class="step-container" *ngIf="currentStep === 3">
+      <div class="form-card">
+        <h2>Review & Submit</h2>
+
+        <!-- Application Summary -->
+        <div class="summary-section">
+          <h3>Application Summary</h3>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="summary-label">Loan Product:</span>
+              <span class="summary-value">{{ selectedProduct?.name || '—' }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Principal Amount:</span>
+              <span class="summary-value">${{ step2Form.get('principalAmount')?.value || 0 | number: '1.2-2' }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Loan Term:</span>
+              <span class="summary-value">
+                {{ step2Form.get('loanTermFrequency')?.value || 0 }}
+                {{ getFrequencyLabel(step2Form.get('loanTermFrequencyType')?.value) }}
+              </span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Number of Repayments:</span>
+              <span class="summary-value">{{ step2Form.get('numberOfRepayments')?.value || 0 }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Repayment Frequency:</span>
+              <span class="summary-value">
+                Every {{ step2Form.get('repaymentEvery')?.value || 0 }}
+                {{ getFrequencyLabel(step2Form.get('repaymentFrequencyType')?.value) }}
+              </span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Interest Rate:</span>
+              <span class="summary-value">
+                {{ step2Form.get('interestRatePerPeriod')?.value || 0 }}% per
+                {{ getFrequencyLabel(step2Form.get('interestRateFrequencyType')?.value) }}
+              </span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Expected Disbursement Date:</span>
+              <span class="summary-value">{{ formatDate(step1Form.get('expectedDisbursementDate')?.value) }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Submitted On Date:</span>
+              <span class="summary-value">{{ formatDate(step1Form.get('submittedOnDate')?.value) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- EMI Summary -->
+        <div class="emi-summary" *ngIf="calculatedEMI > 0">
+          <div class="emi-item">
+            <span class="emi-label">Monthly EMI</span>
+            <span class="emi-value">${{ calculatedEMI | number: '1.2-2' }}</span>
+          </div>
+          <div class="emi-item">
+            <span class="emi-label">Total Interest</span>
+            <span class="emi-value">${{ totalInterest | number: '1.2-2' }}</span>
+          </div>
+          <div class="emi-item">
+            <span class="emi-label">Total Amount</span>
+            <span class="emi-value">${{ totalAmount | number: '1.2-2' }}</span>
+          </div>
+        </div>
+
+        <!-- Repayment Schedule Preview -->
+        <div class="schedule-section" *ngIf="repaymentSchedule.length > 0">
+          <h3>Repayment Schedule Preview</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Installment #</th>
+                  <th>Due Date</th>
+                  <th>Principal</th>
+                  <th>Interest</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let period of repaymentSchedule.slice(0, 10); let i = index">
+                  <td>{{ i + 1 }}</td>
+                  <td>{{ formatDate(period.dueDate) }}</td>
+                  <td>${{ period.principalDue || 0 | number: '1.2-2' }}</td>
+                  <td>${{ period.interestCharged || 0 | number: '1.2-2' }}</td>
+                  <td>${{ period.totalDueForPeriod || 0 | number: '1.2-2' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <a href="#" class="view-full-link" *ngIf="repaymentSchedule.length > 10">
+            View Full Schedule ({{ repaymentSchedule.length }} installments)
+          </a>
+        </div>
+
+        <!-- Navigation -->
+        <div class="form-actions">
+          <a
+            href="#"
+            class="cancel-link"
+            (click)="$event.preventDefault(); router.navigate(['/clientportal/dashboard'])"
+            >Cancel</a
+          >
+          <button type="button" class="btn btn-secondary" (click)="previousStep()">
+            <fa-icon [icon]="['fas', 'arrow-left']"></fa-icon> Previous
+          </button>
+          <button type="button" class="btn btn-primary btn-large" (click)="submitApplication()" [disabled]="loading">
+            <span *ngIf="!loading">Submit Application</span>
+            <span *ngIf="loading">Submitting...</span>
+          </button>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-banner" *ngIf="error">
+          <span>⚠️</span>
+          <span [innerHTML]="error"></span>
+        </div>
+
+        <!-- Demo Server Notice -->
+        <div
+          class="info-banner"
+          style="
+            margin-top: 20px;
+            padding: 12px;
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            border-radius: 4px;
+            color: #1565c0;
+          "
+        >
+          <strong>ℹ️ Note:</strong> This demo uses the public Fineract demo server (demo.mifos.io) which may be slow or
+          timeout during loan submission. If you experience timeouts, your application may still have been submitted -
+          please check your loan list. For production use, a self-hosted Fineract instance is recommended for better
+          performance.
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-overlay" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Loading...</p>
+    </div>
   </div>
-</div>
+</mifosx-clientportal-layout>

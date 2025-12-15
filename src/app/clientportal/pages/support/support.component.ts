@@ -48,6 +48,8 @@ export class ClientportalSupportComponent implements OnInit {
     'Complaint'
   ];
   clientProfile: any = null;
+  error: string | null = null;
+  success: string | null = null;
 
   constructor(
     private authService: AuthService,
@@ -103,31 +105,51 @@ export class ClientportalSupportComponent implements OnInit {
 
   submitRequest(): void {
     if (!this.issueType || this.issueType === 'Select issue type') {
-      alert('Please select an issue type');
+      this.error = 'Please select an issue type';
       return;
     }
     if (!this.subject.trim()) {
-      alert('Please enter a subject');
+      this.error = 'Please enter a subject';
       return;
     }
     if (!this.message.trim()) {
-      alert('Please enter a message');
+      this.error = 'Please enter a message';
       return;
     }
 
-    // In a real system, this would call the backend
-    console.log('Submitting request:', {
-      issueType: this.issueType,
-      subject: this.subject,
-      message: this.message
-    });
+    this.loading = true;
+    this.error = null;
 
-    alert('Your request has been submitted successfully. We will get back to you soon.');
+    // TODO: Replace with actual API call when backend endpoint is ready
+    // this.authService.submitSupportRequest({
+    //   issueType: this.issueType,
+    //   subject: this.subject,
+    //   message: this.message
+    // }).subscribe({
+    //   next: () => {
+    //     this.loading = false;
+    //     this.success = 'Your request has been submitted successfully. We will get back to you soon.';
+    //     this.issueType = '';
+    //     this.subject = '';
+    //     this.message = '';
+    //   },
+    //   error: (err) => {
+    //     this.loading = false;
+    //     this.error = err?.error?.error || 'Failed to submit request. Please try again.';
+    //   }
+    // });
 
-    // Reset form
-    this.issueType = '';
-    this.subject = '';
-    this.message = '';
+    // Temporary: Simulate API call
+    setTimeout(() => {
+      this.loading = false;
+      this.success = 'Your request has been submitted successfully. We will get back to you soon.';
+      this.issueType = '';
+      this.subject = '';
+      this.message = '';
+      setTimeout(() => {
+        this.success = null;
+      }, 5000);
+    }, 1000);
   }
 
   contactOfficer(): void {

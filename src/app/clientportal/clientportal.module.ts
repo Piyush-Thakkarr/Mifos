@@ -14,6 +14,9 @@ import { ClientportalSupportComponent } from './pages/support/support.component'
 import { ClientportalLoanApplicationComponent } from './pages/loan-application/loan-application.component';
 import { ClientportalCalculatorsComponent } from './pages/calculators/calculators.component';
 import { ClientportalApplicationStatusComponent } from './pages/application-status/application-status.component';
+import { ClientportalSidebarComponent } from './components/sidebar/sidebar.component';
+import { ClientportalHeaderComponent } from './components/header/header.component';
+import { ClientportalLayoutComponent } from './components/layout/layout.component';
 import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
@@ -27,7 +30,10 @@ import { SharedModule } from '../shared/shared.module';
     ClientportalSupportComponent,
     ClientportalLoanApplicationComponent,
     ClientportalCalculatorsComponent,
-    ClientportalApplicationStatusComponent
+    ClientportalApplicationStatusComponent,
+    ClientportalSidebarComponent,
+    ClientportalHeaderComponent,
+    ClientportalLayoutComponent
   ],
   imports: [
     CommonModule,
