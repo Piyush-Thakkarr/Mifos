@@ -1,5 +1,6 @@
 import json as json_module
 import logging
+import os
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
@@ -8,6 +9,9 @@ import requests
 from requests import Response
 
 logger = logging.getLogger(__name__)
+
+# Detect if running on Railway (for timeout adjustments)
+IS_RAILWAY = os.getenv("RAILWAY_ENVIRONMENT") is not None or os.getenv("PORT") is not None
 
 
 class MifosAuthError(Exception):
@@ -83,12 +87,15 @@ class MifosClient:
         content_header = {"Content-Type": "application/json"}
         json_body = {"username": self.admin_user, "password": self.admin_pass}
 
+        # Use longer timeout on Railway (30s) since network latency can be higher
+        # Use shorter timeout locally (5s) for faster failure
+        auth_timeout = 30 if IS_RAILWAY else 5
+        
         attempts: List[Dict[str, Any]] = [
-            # Preferred: POST with JSON body (confirmed working format) - shorter timeout for faster failure
-            # In local dev, we want fast failure so login doesn't hang
-            {"method": "POST", "path": "/authentication", "tenant_strategy": "both", "auth_type": "json_body", "timeout": 5},
+            # Preferred: POST with JSON body (confirmed working format)
+            {"method": "POST", "path": "/authentication", "tenant_strategy": "both", "auth_type": "json_body", "timeout": auth_timeout},
             # Fallback: Basic Auth variant - only try one more
-            {"method": "POST", "path": "/authentication", "tenant_strategy": "both", "auth_type": "basic", "timeout": 5},
+            {"method": "POST", "path": "/authentication", "tenant_strategy": "both", "auth_type": "basic", "timeout": auth_timeout},
         ]
 
         errors: List[str] = []
