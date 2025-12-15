@@ -222,9 +222,14 @@ if cloudflare_tunnel_url and not cloudflare_tunnel_url.endswith("/fineract-provi
     cloudflare_tunnel_url += "fineract-provider/api/v1"
 
 # Set defaults based on environment (only if MIFOS_BASE_URL is not explicitly set)
-if os.getenv("MIFOS_BASE_URL"):
+mifos_base_url_env = os.getenv("MIFOS_BASE_URL")
+# On Railway, ignore local tunnel URLs (trycloudflare.com) - they won't work from Railway
+if is_railway and mifos_base_url_env and "trycloudflare.com" in mifos_base_url_env:
+    mifos_base_url_env = None  # Ignore local tunnel URLs on Railway
+
+if mifos_base_url_env:
     # User has explicitly set MIFOS_BASE_URL - use it (highest priority)
-    default_fineract_url = os.getenv("MIFOS_BASE_URL")
+    default_fineract_url = mifos_base_url_env
     # If URL is explicitly set, default verify_ssl based on URL
     if default_fineract_url.startswith("https://"):
         default_verify_ssl = "true"
