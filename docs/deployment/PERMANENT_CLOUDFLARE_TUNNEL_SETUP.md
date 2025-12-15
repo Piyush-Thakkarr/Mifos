@@ -18,6 +18,7 @@ cd Mifos
 ```
 
 This script will:
+
 1. **Log you into Cloudflare** - Opens your browser to authenticate
 2. **Create a named tunnel** called `fineract-tunnel`
 3. **Configure the tunnel** to route to `localhost:8443`
@@ -28,6 +29,7 @@ This script will:
 If the script doesn't automatically set up DNS, you have two options:
 
 #### Option A: Use Cloudflare's Workers Domain (Free, No Custom Domain Needed)
+
 ```bash
 cloudflared tunnel route dns fineract-tunnel fineract-tunnel
 ```
@@ -35,11 +37,13 @@ cloudflared tunnel route dns fineract-tunnel fineract-tunnel
 This will give you a URL like: `https://fineract-tunnel.your-account.workers.dev`
 
 #### Option B: Use Your Own Domain (If You Have One)
+
 ```bash
 cloudflared tunnel route dns fineract-tunnel fineract.yourdomain.com
 ```
 
 This requires:
+
 - Your domain to be added to Cloudflare
 - DNS management through Cloudflare
 
@@ -50,11 +54,13 @@ This requires:
 ```
 
 Or run it manually:
+
 ```bash
 cloudflared tunnel run fineract-tunnel
 ```
 
 To run in the background:
+
 ```bash
 cloudflared tunnel run fineract-tunnel > /tmp/cloudflared-tunnel.log 2>&1 &
 ```
@@ -69,26 +75,31 @@ cloudflared tunnel run fineract-tunnel > /tmp/cloudflared-tunnel.log 2>&1 &
 ## Managing the Tunnel
 
 ### Check Tunnel Status
+
 ```bash
 cloudflared tunnel list
 ```
 
 ### View Tunnel Info
+
 ```bash
 cloudflared tunnel info fineract-tunnel
 ```
 
 ### Stop the Tunnel
+
 ```bash
 pkill -f 'cloudflared tunnel run fineract-tunnel'
 ```
 
 Or if you saved the PID:
+
 ```bash
 kill $(cat /tmp/cloudflared-pid.txt)
 ```
 
 ### Delete the Tunnel (if needed)
+
 ```bash
 cloudflared tunnel delete fineract-tunnel
 ```
@@ -100,6 +111,7 @@ To make the tunnel start automatically when your computer boots:
 ### macOS (using launchd)
 
 Create a plist file:
+
 ```bash
 cat > ~/Library/LaunchAgents/com.cloudflare.tunnel.fineract.plist <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -129,6 +141,7 @@ EOF
 ```
 
 Load it:
+
 ```bash
 launchctl load ~/Library/LaunchAgents/com.cloudflare.tunnel.fineract.plist
 ```
@@ -136,16 +149,19 @@ launchctl load ~/Library/LaunchAgents/com.cloudflare.tunnel.fineract.plist
 ## Troubleshooting
 
 ### Tunnel won't start
+
 - Check if you're logged in: `cloudflared tunnel list`
 - Verify the tunnel exists: `cloudflared tunnel list | grep fineract-tunnel`
 - Check logs: `tail -f /tmp/cloudflared-tunnel.log`
 
 ### Can't connect from Railway
+
 - Verify the tunnel is running: `ps aux | grep cloudflared`
 - Test the URL locally: `curl https://your-tunnel-url/fineract-provider/api/v1/authentication?tenantIdentifier=default`
 - Check Railway logs for connection errors
 
 ### DNS not working
+
 - Verify DNS route: `cloudflared tunnel route dns list fineract-tunnel`
 - If using custom domain, ensure it's managed by Cloudflare
 - Wait a few minutes for DNS propagation
@@ -156,16 +172,15 @@ launchctl load ~/Library/LaunchAgents/com.cloudflare.tunnel.fineract.plist
 ✅ **More reliable** - Better uptime guarantee  
 ✅ **Custom domain support** - Use your own domain  
 ✅ **Production-ready** - Suitable for production use  
-✅ **Auto-reconnect** - Automatically reconnects if connection drops  
+✅ **Auto-reconnect** - Automatically reconnects if connection drops
 
 ## Comparison: Temporary vs Permanent
 
-| Feature | Temporary Tunnel | Permanent Tunnel |
-|---------|-----------------|------------------|
-| URL Stability | Changes on restart | Stable |
-| Setup Time | 1 minute | 5 minutes |
-| Cloudflare Account | Not required | Required (free) |
-| Production Ready | No | Yes |
-| Custom Domain | No | Yes |
-| Auto-start | Manual | Can be automated |
-
+| Feature            | Temporary Tunnel   | Permanent Tunnel |
+| ------------------ | ------------------ | ---------------- |
+| URL Stability      | Changes on restart | Stable           |
+| Setup Time         | 1 minute           | 5 minutes        |
+| Cloudflare Account | Not required       | Required (free)  |
+| Production Ready   | No                 | Yes              |
+| Custom Domain      | No                 | Yes              |
+| Auto-start         | Manual             | Can be automated |

@@ -23,11 +23,13 @@ Freenom offers free domains with extensions like `.tk`, `.ml`, `.ga`, `.cf`, and
    - Update nameservers at Freenom to point to Cloudflare
 
 ### Pros:
+
 - ✅ Completely free
 - ✅ Easy to get
 - ✅ Works with Cloudflare
 
 ### Cons:
+
 - ⚠️ Some extensions may be blocked by some services
 - ⚠️ Renewal required every 12 months
 
@@ -49,10 +51,12 @@ No-IP provides free subdomains like `yourname.ddns.net`.
    - Add a CNAME record pointing to your No-IP hostname
 
 ### Pros:
+
 - ✅ Free
 - ✅ Quick setup
 
 ### Cons:
+
 - ⚠️ Requires monthly confirmation (free accounts)
 - ⚠️ Less professional looking
 
@@ -71,11 +75,13 @@ DuckDNS provides free `.duckdns.org` subdomains.
    - Add as a CNAME record
 
 ### Pros:
+
 - ✅ Free
 - ✅ No email confirmation needed
 - ✅ Simple setup
 
 ### Cons:
+
 - ⚠️ Subdomain only (not a full domain)
 
 ---
@@ -95,11 +101,13 @@ Actually, you don't need a custom domain at all! Cloudflare provides a free Work
    - Format: `your-tunnel-name.your-account.workers.dev`
 
 ### Pros:
+
 - ✅ No domain purchase needed
 - ✅ Free forever
 - ✅ Works immediately
 
 ### Cons:
+
 - ⚠️ URL includes `.workers.dev` or `.trycloudflare.com`
 
 ---
@@ -154,9 +162,9 @@ Actually, you don't need a custom domain at all! Cloudflare provides a free Work
 ## Alternative: Just Use Temporary Tunnel
 
 If you don't want to deal with domains, the temporary tunnel works perfectly fine:
+
 - It's already running
 - Just update Railway with the URL
 - Restart it if the URL changes (rarely happens)
 
 The temporary tunnel URL is stable as long as you don't restart the `cloudflared` process.
-
