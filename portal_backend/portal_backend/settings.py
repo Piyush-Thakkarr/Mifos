@@ -225,6 +225,8 @@ if cloudflare_tunnel_url and not cloudflare_tunnel_url.endswith("/fineract-provi
 mifos_base_url_env = os.getenv("MIFOS_BASE_URL")
 # On Railway, ignore local tunnel URLs (trycloudflare.com) - they won't work from Railway
 if is_railway and mifos_base_url_env and "trycloudflare.com" in mifos_base_url_env:
+    # Log warning (using print since logger might not be initialized yet)
+    print(f"⚠️  WARNING: Ignoring local Cloudflare tunnel URL on Railway: {mifos_base_url_env}")
     mifos_base_url_env = None  # Ignore local tunnel URLs on Railway
 
 if mifos_base_url_env:
