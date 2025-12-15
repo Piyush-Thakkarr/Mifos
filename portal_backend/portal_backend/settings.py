@@ -211,9 +211,8 @@ if not cloudflare_tunnel_url and is_local:
     except Exception:
         pass  # Ignore errors reading tunnel URL
 
-# On Railway, ignore local tunnel URLs (trycloudflare.com) - they won't work from Railway
-if is_railway and cloudflare_tunnel_url and "trycloudflare.com" in cloudflare_tunnel_url:
-    cloudflare_tunnel_url = None  # Ignore local tunnel URLs on Railway
+# Note: Cloudflare tunnels (trycloudflare.com) CAN work from Railway if the tunnel is running
+# and accessible from the internet. We don't filter them out anymore.
 
 # Add /fineract-provider/api/v1 suffix if needed
 if cloudflare_tunnel_url and not cloudflare_tunnel_url.endswith("/fineract-provider/api/v1"):
@@ -223,11 +222,8 @@ if cloudflare_tunnel_url and not cloudflare_tunnel_url.endswith("/fineract-provi
 
 # Set defaults based on environment (only if MIFOS_BASE_URL is not explicitly set)
 mifos_base_url_env = os.getenv("MIFOS_BASE_URL")
-# On Railway, ignore local tunnel URLs (trycloudflare.com) - they won't work from Railway
-if is_railway and mifos_base_url_env and "trycloudflare.com" in mifos_base_url_env:
-    # Log warning (using print since logger might not be initialized yet)
-    print(f"⚠️  WARNING: Ignoring local Cloudflare tunnel URL on Railway: {mifos_base_url_env}")
-    mifos_base_url_env = None  # Ignore local tunnel URLs on Railway
+# Note: Cloudflare tunnels (trycloudflare.com) CAN work from Railway if the tunnel is running
+# and accessible from the internet. We allow them to be used.
 
 if mifos_base_url_env:
     # User has explicitly set MIFOS_BASE_URL - use it (highest priority)
