@@ -1,6 +1,5 @@
 /* stylelint-disable selector-max-compound-selectors, max-nesting-depth, no-descending-specificity, selector-no-qualifying-type, unit-allowed-list, keyframes-name-pattern, color-function-notation, alpha-value-notation */
-.clientportal-loan-details {
-  // Page-specific styles only (sidebar and main-content are in shared layout component)
+// Page-specific styles only (sidebar and main-content are in shared layout component)
 
   .back-link {
     display: inline-flex;
@@ -292,7 +291,6 @@
       font-size: 16px;
     }
   }
-}
 
 @keyframes spin {
   to {
