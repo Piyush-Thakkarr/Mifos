@@ -37,7 +37,7 @@
             <fa-icon [icon]="['fas', 'dollar-sign']"></fa-icon>
           </div>
           <div class="card-content">
-            <div class="card-amount">₹{{ getTotalOutstanding(d.loans?.loans) | number: '1.0-0' }}</div>
+            <div class="card-amount">${{ getTotalOutstanding(d.loans?.loans) | number: '1.0-0' }}</div>
             <div class="card-label">Across all active loans</div>
           </div>
         </div>
@@ -46,7 +46,7 @@
             <fa-icon [icon]="['fas', 'calendar']"></fa-icon>
           </div>
           <div class="card-content">
-            <div class="card-amount">₹{{ getNextEMI(d.loans?.loans) | number: '1.0-0' }}</div>
+            <div class="card-amount">${{ getNextEMI(d.loans?.loans) | number: '1.0-0' }}</div>
             <div class="card-label">Due: {{ getNextEMIDate(d.loans?.loans) }}</div>
             <span class="status-badge upcoming">Upcoming</span>
           </div>
@@ -66,7 +66,7 @@
             <fa-icon [icon]="['fas', 'piggy-bank']"></fa-icon>
           </div>
           <div class="card-content">
-            <div class="card-amount">₹{{ getTotalSavings(d.savings?.savings) | number: '1.0-0' }}</div>
+            <div class="card-amount">${{ getTotalSavings(d.savings?.savings) | number: '1.0-0' }}</div>
             <div class="card-label">In savings account</div>
           </div>
         </div>
@@ -100,8 +100,8 @@
               <tr *ngFor="let loan of d.loans.loans">
                 <td>{{ loan.accountNo || loan.id }}</td>
                 <td>{{ loan.productName || '—' }}</td>
-                <td>₹{{ loan.principal || 0 | number: '1.0-0' }}</td>
-                <td>₹{{ loan.outstanding || loan.principal || 0 | number: '1.0-0' }}</td>
+                <td>${{ loan.principal || 0 | number: '1.0-0' }}</td>
+                <td>${{ loan.outstanding || loan.principal || 0 | number: '1.0-0' }}</td>
                 <td>{{ loan.nextRepaymentDate || '—' }}</td>
                 <td>
                   <span class="status-badge active">{{ getStatus(loan.status) }}</span>
@@ -143,7 +143,7 @@
               <div class="transaction-date">{{ formatDate(txn.date) }}</div>
             </div>
             <div class="transaction-amount" [class.positive]="(txn.amount || 0) > 0">
-              {{ (txn.amount || 0) > 0 ? '+' : '' }}₹{{ txn.amount || 0 | number: '1.0-0' }}
+              {{ (txn.amount || 0) > 0 ? '+' : '' }}${{ txn.amount || 0 | number: '1.0-0' }}
             </div>
             <div class="transaction-status success">Success</div>
           </div>

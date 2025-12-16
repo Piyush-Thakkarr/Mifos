@@ -29,7 +29,7 @@
           <fa-icon [icon]="['fas', 'dollar-sign']"></fa-icon>
         </div>
         <div class="card-content">
-          <div class="card-value">₹{{ summary.totalDisbursed | number: '1.0-0' }}</div>
+          <div class="card-value">${{ summary.totalDisbursed | number: '1.0-0' }}</div>
           <div class="card-label">Total Disbursed</div>
         </div>
       </div>
@@ -38,7 +38,7 @@
           <fa-icon [icon]="['fas', 'chart-line']"></fa-icon>
         </div>
         <div class="card-content">
-          <div class="card-value">₹{{ summary.totalOutstanding | number: '1.0-0' }}</div>
+          <div class="card-value">${{ summary.totalOutstanding | number: '1.0-0' }}</div>
           <div class="card-label">Outstanding</div>
         </div>
       </div>
@@ -60,11 +60,11 @@
         <div class="loan-details">
           <div class="detail-row">
             <span class="label">Disbursed Amount:</span>
-            <span class="value">₹{{ loan.principal || 0 | number: '1.0-0' }}</span>
+            <span class="value">${{ loan.principal || 0 | number: '1.0-0' }}</span>
           </div>
           <div class="detail-row">
             <span class="label">Outstanding:</span>
-            <span class="value">₹{{ loan.outstanding || loan.principal || 0 | number: '1.0-0' }}</span>
+            <span class="value">${{ loan.outstanding || loan.principal || 0 | number: '1.0-0' }}</span>
           </div>
           <div class="detail-row">
             <span class="label">Interest Rate:</span>
@@ -76,7 +76,7 @@
           </div>
           <div class="detail-row">
             <span class="label">EMI Amount:</span>
-            <span class="value">{{ loan.emiAmount ? '₹' + (loan.emiAmount | number: '1.0-0') : '—' }}</span>
+            <span class="value">{{ loan.emiAmount ? '$' + (loan.emiAmount | number: '1.0-0') : '—' }}</span>
           </div>
           <div class="detail-row">
             <span class="label">Next EMI Date:</span>

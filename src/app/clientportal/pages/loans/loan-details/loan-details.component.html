@@ -16,15 +16,15 @@
       <div class="summary-grid">
         <div class="summary-item">
           <span class="label">Disbursed Amount</span>
-          <span class="value">₹{{ loan.principal || 0 | number: '1.0-0' }}</span>
+          <span class="value">${{ loan.principal || 0 | number: '1.0-0' }}</span>
         </div>
         <div class="summary-item">
           <span class="label">Outstanding Balance</span>
-          <span class="value">₹{{ loan.outstanding || loan.principal || 0 | number: '1.0-0' }}</span>
+          <span class="value">${{ loan.outstanding || loan.principal || 0 | number: '1.0-0' }}</span>
         </div>
         <div class="summary-item">
           <span class="label">EMI Amount</span>
-          <span class="value">₹{{ loan.emiAmount || 0 | number: '1.0-0' }}</span>
+          <span class="value">${{ loan.emiAmount || 0 | number: '1.0-0' }}</span>
         </div>
         <div class="summary-item">
           <span class="label">Interest Rate</span>
@@ -106,9 +106,9 @@
             <tr *ngFor="let emi of emiSchedule">
               <td>{{ emi.period || emi.emiNumber }}</td>
               <td>{{ formatDate(emi.dueDate) }}</td>
-              <td>₹{{ emi.totalDueForPeriod || emi.emiAmount || 0 | number: '1.0-0' }}</td>
-              <td>₹{{ emi.principalDue || emi.principal || 0 | number: '1.0-0' }}</td>
-              <td>₹{{ emi.interestDue || emi.interest || 0 | number: '1.0-0' }}</td>
+              <td>${{ emi.totalDueForPeriod || emi.emiAmount || 0 | number: '1.0-0' }}</td>
+              <td>${{ emi.principalDue || emi.principal || 0 | number: '1.0-0' }}</td>
+              <td>${{ emi.interestDue || emi.interest || 0 | number: '1.0-0' }}</td>
               <td>
                 <span class="status-badge" [class.paid]="emi.complete" [class.pending]="!emi.complete">
                   <fa-icon *ngIf="emi.complete" [icon]="['fas', 'check']" class="status-icon"></fa-icon>

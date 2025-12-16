@@ -19,7 +19,7 @@
           <fa-icon [icon]="['fas', 'chart-line']"></fa-icon>
         </div>
         <div class="card-content">
-          <div class="card-value credit">₹{{ summary.totalCredit | number: '1.0-0' }}</div>
+          <div class="card-value credit">${{ summary.totalCredit | number: '1.0-0' }}</div>
           <div class="card-label">Total Credit</div>
           <div class="card-sublabel">Money Received</div>
         </div>
@@ -29,7 +29,7 @@
           <fa-icon [icon]="['fas', 'arrow-down']"></fa-icon>
         </div>
         <div class="card-content">
-          <div class="card-value debit">₹{{ summary.totalDebit | number: '1.0-0' }}</div>
+          <div class="card-value debit">${{ summary.totalDebit | number: '1.0-0' }}</div>
           <div class="card-label">Total Debit</div>
           <div class="card-sublabel">Money Paid</div>
         </div>
@@ -48,7 +48,7 @@
             [class.remaining-positive]="summary.remaining >= 0"
             [class.remaining-negative]="summary.remaining < 0"
           >
-            ₹{{ summary.remaining || 0 | number: '1.0-0' }}
+            ${{ summary.remaining || 0 | number: '1.0-0' }}
           </div>
           <div class="card-label">Remaining</div>
           <div class="card-sublabel">{{ summary.remaining >= 0 ? 'Amount Owed' : 'Overpaid' }}</div>
@@ -128,7 +128,7 @@
                   [class.credit]="isCredit(txn.type, txn.amount)"
                   [class.debit]="!isCredit(txn.type, txn.amount)"
                 >
-                  {{ isCredit(txn.type, txn.amount) ? '+' : '' }}₹{{ txn.amount || 0 | number: '1.0-0' }}
+                  {{ isCredit(txn.type, txn.amount) ? '+' : '' }}${{ txn.amount || 0 | number: '1.0-0' }}
                 </span>
               </td>
               <td>
