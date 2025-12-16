@@ -480,15 +480,49 @@ export class ClientportalLoanApplicationComponent implements OnInit {
           periods = result.repaymentSchedule.periods;
         }
 
-        // Filter out disbursement periods (periods with zero principal, interest, and total)
-        // These are typically the first period representing the loan disbursement date
-        this.repaymentSchedule = periods.filter((period: any) => {
-          const principal = period.principalDue || period.principal || 0;
-          const interest = period.interestCharged || period.interest || 0;
-          const total = period.totalDueForPeriod || period.totalDue || 0;
-          // Keep periods that have at least one non-zero value (actual repayment periods)
-          return principal > 0 || interest > 0 || total > 0;
-        });
+        // Normalize periods to consistent fields that Fineract returns:
+        // interest* fields vary across endpoints (interestDue, interestOriginalDueForPeriod, interestCharged, etc.)
+        const normalized = periods
+          .map((p: any) => {
+            const principal =
+              p.principalDue ??
+              p.principalOriginalDueForPeriod ??
+              p.principalOriginalDue ??
+              p.principal ??
+              0;
+            const interest =
+              p.interestDueForPeriod ??
+              p.interestOriginalDueForPeriod ??
+              p.interestDue ??
+              p.interestCharged ??
+              p.interest ??
+              0;
+            const total =
+              p.totalDueForPeriod ??
+              p.totalOriginalDueForPeriod ??
+              p.totalDue ??
+              p.total ??
+              0;
+
+            // Convert dueDate array [yyyy, m, d] to string for display
+            let dueDate = p.dueDate;
+            if (Array.isArray(dueDate) && dueDate.length === 3) {
+              const [y, m, d] = dueDate;
+              dueDate = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            }
+
+            return {
+              ...p,
+              principal,
+              interest,
+              total,
+              dueDate
+            };
+          })
+          // Filter out disbursement periods (all zero)
+          .filter((p: any) => (p.principal || 0) > 0 || (p.interest || 0) > 0 || (p.total || 0) > 0);
+
+        this.repaymentSchedule = normalized;
 
         this.calculateTotals();
       },
@@ -519,15 +553,15 @@ export class ClientportalLoanApplicationComponent implements OnInit {
     if (this.repaymentSchedule.length > 0) {
       const principal = this.step2Form.get('principalAmount')?.value || 0;
       this.totalInterest = this.repaymentSchedule.reduce((sum: number, period: any) => {
-        return sum + (period.interestCharged || period.interest || 0);
+        return sum + (period.interest || period.interestCharged || 0);
       }, 0);
       this.totalAmount = principal + this.totalInterest;
       // Get EMI from first actual repayment period (not disbursement period)
       const firstRepayment = this.repaymentSchedule.find((p: any) => {
-        const total = p.totalDueForPeriod || p.totalDue || 0;
+        const total = p.total || p.totalDueForPeriod || p.totalDue || 0;
         return total > 0;
       });
-      this.calculatedEMI = firstRepayment?.totalDueForPeriod || firstRepayment?.totalDue || 0;
+      this.calculatedEMI = firstRepayment?.total || firstRepayment?.totalDueForPeriod || firstRepayment?.totalDue || 0;
     }
   }
 
@@ -721,10 +755,18 @@ export class ClientportalLoanApplicationComponent implements OnInit {
     return this.clientProfile?.displayName || 'User';
   }
 
-  formatDate(date: string | Date | null | undefined): string {
+  formatDate(date: string | Date | number[] | null | undefined): string {
     if (!date) return 'N/A';
     try {
-      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      let dateObj: Date;
+      if (Array.isArray(date) && date.length === 3) {
+        const [y, m, d] = date;
+        dateObj = new Date(y, m - 1, d);
+      } else if (typeof date === 'string') {
+        dateObj = new Date(date);
+      } else {
+        dateObj = date as Date;
+      }
       if (isNaN(dateObj.getTime())) return 'N/A';
       return dateObj.toLocaleDateString('en-US', {
         year: 'numeric',

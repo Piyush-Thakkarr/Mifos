@@ -561,9 +561,9 @@
                 <tr *ngFor="let period of repaymentSchedule.slice(0, 10); let i = index">
                   <td>{{ i + 1 }}</td>
                   <td>{{ formatDate(period.dueDate) }}</td>
-                  <td>${{ period.principalDue || 0 | number: '1.2-2' }}</td>
-                  <td>${{ period.interestCharged || 0 | number: '1.2-2' }}</td>
-                  <td>${{ period.totalDueForPeriod || 0 | number: '1.2-2' }}</td>
+                  <td>${{ period.principal || 0 | number: '1.2-2' }}</td>
+                  <td>${{ period.interest || 0 | number: '1.2-2' }}</td>
+                  <td>${{ period.total || 0 | number: '1.2-2' }}</td>
                 </tr>
               </tbody>
             </table>
